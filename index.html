@@ -138,6 +138,17 @@ input[type=range]{accent-color:var(--accent);width:100%}
 .sino small{font-weight:400;color:var(--muted);font-size:.78rem}
 .sino.feito small{color:var(--good)}
 .sino.ouvindo{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.sino-wrap{display:flex;flex-direction:column;align-items:stretch}
+.sino-acoes{display:flex;justify-content:center;gap:.1rem;margin-top:.1rem}
+.sino-acoes .ic{border:0;background:none;cursor:pointer;padding:.35rem .7rem;border-radius:8px;color:var(--muted);font-size:1rem;min-height:36px}
+.sino-acoes .ic:hover{background:var(--surface2);color:var(--ink)}
+.sino.irreg small{color:var(--warn)}
+.medidor #pico{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.55}
+.medidor-txt{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:.15rem}
+.ajuste-db{display:flex;align-items:center;gap:.4rem}
+.ajuste-db .btn-ghost{min-width:44px;min-height:44px;font-size:1.2rem;padding:0}
+details.avancado{margin:.8rem 0;border:1px solid var(--line);border-radius:12px;padding:.2rem .9rem}
+details.avancado summary{cursor:pointer;font-weight:700;padding:.5rem 0}
 .mapa-teclas{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem}
 .mapa-teclas span{display:flex;flex-direction:column;align-items:center;padding:.35rem .5rem;border-radius:8px;color:#fff;font-weight:700;min-width:48px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .mapa-teclas kbd{font-family:var(--f-corpo);background:rgba(255,255,255,.25);border-radius:4px;padding:0 .35rem}
@@ -244,7 +255,7 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <div class="aovivo-info">
         <strong id="aovivoTitulo">Toque uma nota para testar a entrada</strong>
         <span id="aovivoFonte">A nota reconhecida aparece aqui na hora.</span>
-        <div id="medidorWrap" class="medidor" hidden=""><div id="medidor"></div><div id="limiar"></div></div>
+        <div id="medidorWrap" hidden=""><div class="medidor"><div id="medidor"></div><div id="pico"></div><div id="limiar"></div></div><div id="medidorTxt" class="medidor-txt"></div></div>
       </div>
       <div id="statusGrav" class="status-grav" hidden=""></div>
     </div>
@@ -263,8 +274,8 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <div class="opcoes">
         <label class="opcao"><input type="radio" name="modo" value="teclado-tela"><span><b>Teclado na tela (toque)</b><small>Para celular e tablet: toque nas teclas coloridas. Não precisa de nenhum equipamento.</small></span></label>
         <label class="opcao"><input type="radio" name="modo" value="midi"><span><b>Teclado com cabo USB (MIDI)</b><small>O mais preciso. Conecte o cabo antes de ativar.</small></span></label>
-        <label class="opcao"><input type="radio" name="modo" value="mic-altura"><span><b>Teclado sem cabo, pelo microfone</b><small>O app reconhece a nota pelo som. Uma nota de cada vez.</small></span></label>
-        <label class="opcao"><input type="radio" name="modo" value="mic-calib"><span><b>Sinos, pelo microfone</b><small>Você ensina ao app o som de cada sino uma vez.</small></span></label>
+        <label class="opcao"><input type="radio" name="modo" value="mic-altura"><span><b>Teclado sem cabo, pelo microfone</b><small>O app reconhece a nota pelo som. Uma nota de cada vez. Dá para ensinar amostras do seu teclado.</small></span></label>
+        <label class="opcao"><input type="radio" name="modo" value="mic-calib"><span><b>Sinos (ou outro instrumento), pelo microfone</b><small>Você ensina ao app o som de cada nota uma vez.</small></span></label>
         <label class="opcao"><input type="radio" name="modo" value="teclado-pc"><span><b>Teclado do computador</b><small>Para testar o app ou gravar um gabarito rápido.</small></span></label>
       </div>
 
@@ -276,16 +287,43 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <div id="cfg-mic" class="bloco" hidden="">
         <button id="btnMic" class="btn">Ativar microfone</button>
         <p id="micStatus" class="nota-status"></p>
-        <label class="campo">Sensibilidade do microfone<input type="range" id="sens" min="1" max="100" value="50"></label>
-        <p class="dica">A linha vermelha no medidor, abaixo da bolinha, é o limite: só sons que passam dela contam. Deixe o som do vídeo no fone do paciente ou bem baixo, para o microfone não confundir a música do vídeo com o que ele toca.</p>
+
+        <h3 style="margin-top:1rem">Sensibilidade do microfone</h3>
+        <div class="campo" style="margin-bottom:.2rem">
+          <label for="limDb">Volume mínimo para contar um toque: <span data-micval="limDb"></span></label>
+          <div class="ajuste-db"><button class="btn-ghost" id="limMenos" aria-label="Diminuir 1 dB" type="button">−</button><input type="range" id="limDb" data-mic="limDb" min="-70" max="-15" step="0.5"><button class="btn-ghost" id="limMais" aria-label="Aumentar 1 dB" type="button">+</button></div>
+        </div>
+        <p class="dica">A linha vermelha no medidor é esse limite: só sons que passam dela contam. Mais para a esquerda (mais negativo) = mais sensível. O traço escuro no medidor mostra o pico recente do som.</p>
+        <div class="linha"><button id="btnRuido" class="btn-ghost small" type="button">Medir o ruído da sala (3 s)</button></div>
+        <p id="ruidoStatus" class="nota-status"></p>
+        <p class="dica">Deixe o som do vídeo no fone do paciente ou bem baixo, para o microfone não confundir a música do vídeo com o que ele toca.</p>
+
+        <details class="avancado"><summary>Ajustes avançados</summary>
+          <label class="campo">Ganho do microfone: <span data-micval="ganho"></span><input type="range" data-mic="ganho" min="0.5" max="8" step="0.1"></label>
+          <p class="dica">Aumente se o microfone do aparelho for fraco. Muito alto pode distorcer.</p>
+          <label class="campo">Intervalo mínimo entre toques: <span data-micval="intervalo"></span><input type="range" data-mic="intervalo" min="50" max="600" step="10"></label>
+          <p class="dica">Evita contar o mesmo toque duas vezes (eco do sino). Diminua para músicas muito rápidas.</p>
+          <label class="campo">Força do ataque: <span data-micval="ataque"></span><input type="range" data-mic="ataque" min="1.1" max="4" step="0.1"></label>
+          <p class="dica">Quanto o som precisa “subir de repente” para ser um toque. Maior = ignora sons que crescem devagar.</p>
+          <label class="campo">Tempo de escuta da nota: <span data-micval="escuta"></span><input type="range" data-mic="escuta" min="30" max="250" step="5"></label>
+          <p class="dica">Espera um instante depois do toque para identificar a nota. Teclados: 60–90 ms. Sinos: 90–150 ms.</p>
+          <div class="dois">
+            <label class="campo">Nota mais grave aceita<select data-mic="grave" id="micGrave"></select></label>
+            <label class="campo">Nota mais aguda aceita<select data-mic="aguda" id="micAguda"></select></label>
+          </div>
+          <label class="campo">Tolerância na identificação da altura: <span data-micval="rigor"></span><input type="range" data-mic="rigor" min="5" max="40" step="1"></label>
+          <p class="dica">Menor = mais exigente (ignora sons incertos). Maior = aceita mais sons, com mais risco de errar a nota.</p>
+          <button id="btnMicPadrao" class="btn-ghost small" type="button">Restaurar ajustes padrão</button>
+        </details>
+
         <div id="cfg-calib" hidden="">
-          <h3>Sons dos sinos</h3>
-          <div class="linha"><select id="perfilSel" aria-label="Conjunto de sinos"></select><button id="btnNovoPerfil" class="btn-ghost small">Novo conjunto</button><button id="btnExcluirPerfil" class="btn-ghost small perigo">Excluir</button></div>
-          <p class="dica">Clique numa nota e toque o sino dela 3 vezes, com uma pequena pausa entre os toques. Faça isso no mesmo lugar onde a sessão vai acontecer.</p>
+          <h3 id="tituloCalib">Amostras de som por nota</h3>
+          <div class="linha"><select id="perfilSel" aria-label="Conjunto de sons"></select><button id="btnNovoPerfil" class="btn-ghost small">Novo conjunto</button><button id="btnExcluirPerfil" class="btn-ghost small perigo">Excluir</button></div>
+          <p class="dica" id="dicaCalib">Cada conjunto é um instrumento (por exemplo: “Teclado da sala 2”, “Sinos coloridos”). Clique numa nota e toque-a 3 vezes, com uma pequena pausa entre os toques, no mesmo lugar onde a sessão vai acontecer. O app guarda o “jeito” do som e um áudio curto que você pode ouvir depois (▶). Se nada acontecer ao tocar, diminua o volume mínimo acima.</p>
           <label class="check"><input type="checkbox" id="mostrarSust"> Mostrar sustenidos</label>
           <div id="gradeCalib" class="grade-calib"></div>
           <label class="campo">Semelhança mínima para aceitar um som: <span id="simVal">60%</span><input type="range" id="simMin" min="30" max="95" value="60"></label>
-          <p class="dica">Sons muito diferentes de todos os sinos ensinados são ignorados. Se o app estiver deixando passar toques reais, diminua.</p>
+          <p class="dica">Sons muito diferentes de todas as amostras são ignorados (modo sinos) ou deixam o app usar só a altura (modo teclado). Se o app estiver deixando passar toques reais, diminua.</p>
         </div>
       </div>
 
@@ -561,12 +599,12 @@ function aplicarModo(){
   document.body.classList.toggle('com-teclado', S.modo === 'teclado-tela');
   $('#cfg-midi').hidden = S.modo !== 'midi';
   $('#cfg-mic').hidden = !S.modo.startsWith('mic');
-  $('#cfg-calib').hidden = S.modo !== 'mic-calib';
+  $('#cfg-calib').hidden = !S.modo.startsWith('mic');
   $('#cfg-teclas').hidden = S.modo !== 'teclado-pc';
   $('#medidorWrap').hidden = !(S.modo.startsWith('mic') && S.micOk);
   db.prefs.modo = S.modo; salvar();
   atualizarChip();
-  if (S.modo === 'mic-calib') renderCalib();
+  if (S.modo.startsWith('mic')) renderCalib();
 }
 $$('input[name=modo]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.modo = r.value; S.calib = null; aplicarModo(); } }));
 function entradaPronta(){
@@ -654,69 +692,125 @@ $('#btnMidi').addEventListener('click', async () => {
 });
 
 /* ---------- entrada: microfone ---------- */
-const Mic = {ctx:null, an:null, buf:null, freq:null, prev:0, ultimo:0, rms:0, thr:0.02, sr:48000};
-function atualizarLimiar(){
-  const s = +$('#sens').value;
-  Mic.thr = 0.002 * Math.pow(10, (100 - s) / 50);
-  $('#limiar').style.left = Math.min(100, nivelPct(Mic.thr)) + '%';
+const MIC_PAD = {limDb:-34, ganho:1, intervalo:140, ataque:1.6, escuta:90, grave:48, aguda:96, rigor:15};
+let micCfg = Object.assign({}, MIC_PAD, db.prefs.mic || {});
+const Mic = {ctx:null, an:null, gain:null, sp:null, buf:null, freq:null, prev:0, ultimo:0, rms:0, thr:0.02, sr:48000, ring:null, rp:0, pico:0, medindo:null};
+const dbDe = r => 20 * Math.log10(Math.max(r, 1e-5));
+const nivelPct = r => Math.max(0, Math.min(100, (dbDe(r) + 80) / 70 * 100));   /* -80 dB a -10 dB */
+const nomeOitava = n => NOMES[n % 12] + (Math.floor(n / 12) - 1);
+const MIC_ROT = {limDb: v => fmt(v, 1) + ' dB', ganho: v => fmt(v, 1) + '×', intervalo: v => v + ' ms', ataque: v => fmt(v, 1) + '×', escuta: v => v + ' ms', rigor: v => v + '%'};
+['#micGrave', '#micAguda'].forEach(id => { let h = ''; for (let n = 36; n <= 96; n++) h += `<option value="${n}">${nomeOitava(n)}</option>`; $(id).innerHTML = h; });
+function aplicarMicCfg(gravar){
+  Mic.thr = Math.pow(10, micCfg.limDb / 20);
+  if (Mic.gain) Mic.gain.gain.value = micCfg.ganho;
+  $$('[data-mic]').forEach(el => { if (document.activeElement !== el || el.tagName === 'SELECT') el.value = micCfg[el.dataset.mic]; });
+  $$('[data-micval]').forEach(el => el.textContent = MIC_ROT[el.dataset.micval](micCfg[el.dataset.micval]));
+  $('#limiar').style.left = nivelPct(Mic.thr) + '%';
+  if (gravar) { db.prefs.mic = Object.assign({}, micCfg); salvar(); }
 }
-const nivelPct = r => Math.max(0, Math.min(100, (Math.log10(Math.max(r,1e-4)) + 4) / 4 * 100 * 1.33));
-$('#sens').addEventListener('input', atualizarLimiar);
+const atualizarLimiar = () => aplicarMicCfg(false);
+$$('[data-mic]').forEach(el => el.addEventListener('input', () => { micCfg[el.dataset.mic] = +el.value; aplicarMicCfg(true); }));
+const ajustarLim = d => { micCfg.limDb = Math.max(-70, Math.min(-15, Math.round((micCfg.limDb + d) * 2) / 2)); aplicarMicCfg(true); };
+$('#limMenos').addEventListener('click', () => ajustarLim(-1));
+$('#limMais').addEventListener('click', () => ajustarLim(1));
+$('#btnMicPadrao').addEventListener('click', () => { micCfg = Object.assign({}, MIC_PAD); aplicarMicCfg(true); toast('Ajustes do microfone restaurados.'); });
+$('#btnRuido').addEventListener('click', () => {
+  const st = $('#ruidoStatus');
+  if (!Mic.ctx) { st.className = 'nota-status erro'; st.textContent = 'Ative o microfone primeiro.'; return; }
+  if (Mic.medindo) return;
+  Mic.medindo = [];
+  st.className = 'nota-status'; st.textContent = 'Medindo… fique em silêncio e deixe o vídeo parado.';
+  setTimeout(() => {
+    const v = Mic.medindo || []; Mic.medindo = null;
+    if (v.length < 20) { st.className = 'nota-status erro'; st.textContent = 'Não deu para medir. Tente de novo.'; return; }
+    v.sort((a, b) => a - b);
+    const ruido = dbDe(v[Math.floor(v.length * 0.95)]);
+    micCfg.limDb = Math.max(-70, Math.min(-15, Math.round(ruido + 10)));
+    aplicarMicCfg(true);
+    st.className = ruido > -30 ? 'nota-status erro' : 'nota-status ok';
+    st.textContent = (ruido > -30 ? 'Havia som alto durante a medição: tente de novo em silêncio. ' : '') + 'Ruído da sala: ' + fmt(ruido, 0) + ' dB. Volume mínimo ajustado para ' + fmt(micCfg.limDb, 0) + ' dB. Toque uma nota para conferir e use − / + se precisar.';
+  }, 3000);
+});
 $('#btnMic').addEventListener('click', async () => {
   const st = $('#micStatus');
   if (Mic.ctx) { st.className='nota-status ok'; st.textContent = 'Microfone já está ativo.'; return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
     Mic.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (Mic.ctx.state === 'suspended') Mic.ctx.resume();
     Mic.sr = Mic.ctx.sampleRate;
     const src = Mic.ctx.createMediaStreamSource(stream);
+    Mic.gain = Mic.ctx.createGain(); Mic.gain.gain.value = micCfg.ganho;
     Mic.an = Mic.ctx.createAnalyser(); Mic.an.fftSize = 4096; Mic.an.smoothingTimeConstant = 0;
-    src.connect(Mic.an);
+    src.connect(Mic.gain); Mic.gain.connect(Mic.an);
     Mic.buf = new Float32Array(4096); Mic.freq = new Float32Array(2048);
+    /* gravador circular de 2 s, usado para guardar o áudio das amostras */
+    try {
+      Mic.ring = new Float32Array(Math.ceil(Mic.sr * 2)); Mic.rp = 0;
+      Mic.sp = Mic.ctx.createScriptProcessor(2048, 1, 1);
+      Mic.sp.onaudioprocess = e => { const d = e.inputBuffer.getChannelData(0), n = Mic.ring.length; for (let i = 0; i < d.length; i++) { Mic.ring[Mic.rp] = d[i]; Mic.rp = (Mic.rp + 1) % n; } };
+      const mudo = Mic.ctx.createGain(); mudo.gain.value = 0;
+      Mic.gain.connect(Mic.sp); Mic.sp.connect(mudo); mudo.connect(Mic.ctx.destination);
+    } catch(e) { Mic.ring = null; }
     setInterval(micTick, 8);
-    S.micOk = true; atualizarLimiar();
+    S.micOk = true; aplicarMicCfg(false);
     st.className = 'nota-status ok'; st.textContent = 'Microfone ativo. Toque uma nota para testar.';
     $('#medidorWrap').hidden = false; atualizarChip();
-    requestAnimationFrame(function m(){ $('#medidor').style.width = nivelPct(Mic.rms) + '%'; requestAnimationFrame(m); });
+    requestAnimationFrame(function m(){
+      const r = Mic.rms; Mic.pico = r > Mic.pico ? r : Mic.pico * 0.985;
+      $('#medidor').style.width = nivelPct(r) + '%'; $('#pico').style.left = nivelPct(Mic.pico) + '%';
+      $('#medidorTxt').textContent = fmt(dbDe(r), 0) + ' dB (limite ' + fmt(micCfg.limDb, 0) + ' dB)';
+      requestAnimationFrame(m);
+    });
   } catch(e) {
     st.className = 'nota-status erro';
     st.textContent = 'Não consegui usar o microfone. Permita o acesso no navegador. Se continuar bloqueado, use o botão “Baixar o app para usar offline” e abra o arquivo no Chrome.';
   }
 });
+/* iPhone/Android deixam o áudio "suspenso" até um toque do usuário */
+document.addEventListener('pointerdown', () => { if (Mic.ctx && Mic.ctx.state === 'suspended') Mic.ctx.resume(); }, {passive: true});
 function micTick(){
-  if (!Mic.an || !S.modo.startsWith('mic')) return;
+  if (!Mic.an || !(S.modo.startsWith('mic') || Mic.medindo)) return;
   Mic.an.getFloatTimeDomainData(Mic.buf);
   let s = 0; for (let i = 4096 - 512; i < 4096; i++) s += Mic.buf[i] * Mic.buf[i];
   const rms = Math.sqrt(s / 512); Mic.rms = rms;
+  if (Mic.medindo) Mic.medindo.push(rms);
   const agora = performance.now();
-  if (rms > Mic.thr && rms > Mic.prev * 1.6 + 0.002 && agora - Mic.ultimo > 140) {
+  if (S.modo.startsWith('mic') && rms > Mic.thr && rms > Mic.prev * micCfg.ataque + 0.002 && agora - Mic.ultimo > micCfg.intervalo) {
     Mic.ultimo = agora;
     const tv = video.currentTime;
-    setTimeout(() => analisarAtaque(tv), 90);
+    setTimeout(() => analisarAtaque(tv), micCfg.escuta);
   }
   Mic.prev = Mic.prev * 0.6 + rms * 0.4;
 }
+const ranquear = (v, p) => p ? Object.entries(p.modelos).map(([n, m]) => ({n: +n, sim: cosseno(v, m)})).sort((a, b) => b.sim - a.sim) : [];
 function analisarAtaque(tv){
+  if (!Mic.an) return;
   const b = new Float32Array(4096); Mic.an.getFloatTimeDomainData(b);
+  Mic.an.getFloatFrequencyData(Mic.freq);
+  const v = espectro(Mic.freq, Mic.sr);
+  if (S.calib) { receberAmostra(v); return; }
+  const p = perfilAtual(), simMin = +$('#simMin').value / 100, rk = ranquear(v, p);
   if (S.modo === 'mic-altura') {
-    const f = yin(b, Mic.sr);
-    if (!f) return;
-    const midi = Math.round(69 + 12 * Math.log2(f / 440));
-    if (midi < 21 || midi > 108) return;
-    registrarNota(midi, tv, 'Microfone (' + Math.round(f) + ' Hz)');
+    const f = yin(b, Mic.sr, micCfg.rigor / 100);
+    const midi = f ? Math.round(69 + 12 * Math.log2(f / 440)) : 0;
+    if (midi && midi >= micCfg.grave && midi <= micCfg.aguda) {
+      const prox = rk.find(c => Math.abs(c.n - midi) <= 2 && c.sim >= simMin);
+      if (prox) registrarNota(prox.n, tv, 'Microfone + amostra (' + Math.round(prox.sim * 100) + '% parecido)');
+      else registrarNota(midi, tv, 'Microfone (' + Math.round(f) + ' Hz)');
+    } else if (rk[0] && rk[0].sim >= simMin) {
+      registrarNota(rk[0].n, tv, 'Amostra (' + Math.round(rk[0].sim * 100) + '% parecido)');
+    } else if (f) {
+      $('#aovivoFonte').textContent = 'Som fora da faixa de notas aceitas (' + Math.round(f) + ' Hz)';
+    }
   } else if (S.modo === 'mic-calib') {
-    Mic.an.getFloatFrequencyData(Mic.freq);
-    const v = espectro(Mic.freq, Mic.sr);
-    if (S.calib) { receberAmostra(v); return; }
-    const p = perfilAtual(); if (!p) return;
-    let melhor = null, ms = -1;
-    for (const [n, mod] of Object.entries(p.modelos)) { const c = cosseno(v, mod); if (c > ms) { ms = c; melhor = +n; } }
-    if (melhor == null) return;
-    if (ms < +$('#simMin').value / 100) { $('#aovivoFonte').textContent = 'Som ignorado (' + Math.round(ms*100) + '% parecido com ' + nomeNota(melhor) + ')'; return; }
-    registrarNota(melhor, tv, 'Sino (' + Math.round(ms*100) + '% parecido)');
+    if (!rk.length) return;
+    const melhor = rk[0].n, ms = rk[0].sim;
+    if (ms < simMin) { $('#aovivoFonte').textContent = 'Som ignorado (' + Math.round(ms*100) + '% parecido com ' + nomeNota(melhor) + ')'; return; }
+    registrarNota(melhor, tv, 'Amostra (' + Math.round(ms*100) + '% parecido)');
   }
 }
-function yin(b, sr){
+function yin(b, sr, limite = 0.15){
   const W = 2048, maxT = Math.min(Math.floor(sr/55), 1000), minT = Math.floor(sr/2200);
   const off = b.length - (W + maxT);
   const d = new Float32Array(maxT + 1), c = new Float32Array(maxT + 1);
@@ -724,7 +818,7 @@ function yin(b, sr){
   c[0] = 1; let run = 0;
   for (let t = 1; t <= maxT; t++) { run += d[t]; c[t] = run ? d[t] * t / run : 1; }
   let tau = -1;
-  for (let t = Math.max(2, minT); t < maxT; t++) { if (c[t] < 0.15) { while (t + 1 < maxT && c[t+1] < c[t]) t++; tau = t; break; } }
+  for (let t = Math.max(2, minT); t < maxT; t++) { if (c[t] < limite) { while (t + 1 < maxT && c[t+1] < c[t]) t++; tau = t; break; } }
   if (tau < 0) return 0;
   const x0 = c[tau-1], x1 = c[tau], x2 = c[tau+1], den = x0 + x2 - 2*x1;
   const t2 = den ? tau + (x0 - x2) / (2*den) : tau;
@@ -743,54 +837,116 @@ function espectro(fdb, sr){
 }
 function cosseno(a, b){ let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }
 
-/* ---------- calibração dos sinos ---------- */
+/* ---------- amostras de som por nota (instrumentos) ---------- */
+/* o "jeito" do som (impressão espectral) fica no conjunto; o áudio curto fica no IndexedDB */
+const IDB = {
+  abrir(){ return this.p || (this.p = new Promise((ok, no) => { try { const r = indexedDB.open('sincronia', 1); r.onupgradeneeded = () => r.result.createObjectStore('clips'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); } catch(e) { no(e); } })); },
+  async tx(modo, fn){ const d = await this.abrir(); return new Promise((ok, no) => { const t = d.transaction('clips', modo); const rq = fn(t.objectStore('clips')); t.oncomplete = () => ok(rq && rq.result); t.onerror = t.onabort = () => no(t.error); }); },
+  put(k, v){ return this.tx('readwrite', s => s.put(v, k)); },
+  get(k){ return this.tx('readonly', s => s.get(k)); },
+  del(k){ return this.tx('readwrite', s => s.delete(k)); },
+  async todos(){ const d = await this.abrir(); return new Promise((ok, no) => { const out = {}; const rq = d.transaction('clips').objectStore('clips').openCursor(); rq.onsuccess = () => { const c = rq.result; if (c) { out[c.key] = c.value; c.continue(); } else ok(out); }; rq.onerror = () => no(rq.error); }); }
+};
+const b64 = buf => { const u = new Uint8Array(buf); let r = ''; for (let i = 0; i < u.length; i += 0x8000) r += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(r); };
+const unb64 = t => { const r = atob(t), u = new Uint8Array(r.length); for (let i = 0; i < r.length; i++) u[i] = r.charCodeAt(i); return u.buffer; };
+function pegarClipe(seg){
+  if (!Mic.ring) return null;
+  const n = Math.min(Mic.ring.length, Math.round(seg * Mic.sr)), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) out[i] = Mic.ring[(Mic.rp - n + i + Mic.ring.length * 2) % Mic.ring.length];
+  return out;
+}
+const energia = (a, i, j) => { let s = 0; for (let k = i; k < j; k++) s += a[k] * a[k]; return s / Math.max(1, j - i); };
+function clipeParaArmazenar(c){
+  let pico = 0; for (const x of c) pico = Math.max(pico, Math.abs(x));
+  const g = pico > 0 ? 0.9 / pico : 1, pcm = new Int16Array(c.length);
+  for (let i = 0; i < c.length; i++) pcm[i] = Math.max(-1, Math.min(1, c[i] * g)) * 32767;
+  return {sr: Mic.sr, pcm: pcm.buffer};
+}
+async function ouvirClipe(nota){
+  try {
+    const r = await IDB.get(S.perfilId + '|' + nota);
+    if (!r) { toast('Esta nota não tem áudio guardado. Ensine de novo.'); return; }
+    somCtx = somCtx || Mic.ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = Mic.ctx || somCtx;
+    if (ctx.state === 'suspended') await ctx.resume();
+    const pcm = new Int16Array(r.pcm), buf = ctx.createBuffer(1, pcm.length, r.sr), ch = buf.getChannelData(0);
+    for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i] / 32767;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination); src.start();
+  } catch(e) { toast('Não consegui tocar a amostra neste navegador.'); }
+}
 function perfilAtual(){ return db.perfis.find(p => p.id === S.perfilId) || null; }
 function garantirPerfil(){
-  if (!db.perfis.length) { db.perfis.push({id: uid(), nome: 'Meus sinos', modelos: {}}); salvar(); }
+  if (!db.perfis.length) { db.perfis.push({id: uid(), nome: 'Meu instrumento', modelos: {}}); salvar(); }
   if (!perfilAtual()) S.perfilId = db.perfis[0].id;
 }
 function renderCalib(){
   garantirPerfil();
+  $('#tituloCalib').textContent = S.modo === 'mic-calib' ? 'Sons do instrumento' : 'Amostras de som (opcional: deixa o reconhecimento mais firme)';
   $('#perfilSel').innerHTML = db.perfis.map(p => `<option value="${p.id}" ${p.id===S.perfilId?'selected':''}>${esc(p.nome)}</option>`).join('');
   const p = perfilAtual();
   const notas = $('#mostrarSust').checked ? [...NATURAIS, ...SUSTENIDOS].sort((a,b)=>a-b) : NATURAIS;
   $('#gradeCalib').innerHTML = notas.map(n => {
-    const feito = !!p.modelos[n], ouv = S.calib && S.calib.nota === n;
-    const sub = ouv ? `toque ${3 - S.calib.amostras.length}x` : (feito ? 'pronto ✓' : 'ensinar');
-    return `<button class="sino ${feito?'feito':''} ${ouv?'ouvindo':''}" data-n="${n}"><i style="background:${corNota(n)}"></i>${nomeNota(n)}<small>${sub}</small></button>`;
+    const feito = !!p.modelos[n], ouv = S.calib && S.calib.nota === n, q = p.qual ? p.qual[n] : null, irreg = feito && q != null && q < 80;
+    const sub = ouv ? `toque ${3 - S.calib.amostras.length}x` : (feito ? (irreg ? 'refazer? ' + q + '%' : 'pronto ✓' + (q != null ? ' ' + q + '%' : '')) : 'ensinar');
+    const acoes = feito && !ouv ? `<div class="sino-acoes">${p.clips && p.clips[n] ? `<button class="ic" data-ouvir="${n}" title="Ouvir a amostra" aria-label="Ouvir a amostra de ${nomeNota(n)}">▶</button>` : ''}<button class="ic" data-apagar="${n}" title="Apagar esta amostra" aria-label="Apagar a amostra de ${nomeNota(n)}">✕</button></div>` : '';
+    return `<div class="sino-wrap"><button class="sino ${feito?'feito':''} ${irreg?'irreg':''} ${ouv?'ouvindo':''}" data-n="${n}"><i style="background:${corNota(n)}"></i>${nomeNota(n)}<small>${sub}</small></button>${acoes}</div>`;
   }).join('');
-  $$('#gradeCalib .sino').forEach(b => b.addEventListener('click', () => {
-    if (!S.micOk) { toast('Ative o microfone primeiro.'); return; }
-    const n = +b.dataset.n;
-    S.calib = (S.calib && S.calib.nota === n) ? null : {nota: n, amostras: []};
-    renderCalib();
-  }));
   atualizarChip();
 }
+$('#gradeCalib').addEventListener('click', e => {
+  const o = e.target.closest('[data-ouvir]'); if (o) { ouvirClipe(+o.dataset.ouvir); return; }
+  const a = e.target.closest('[data-apagar]'); if (a) { apagarAmostra(+a.dataset.apagar); return; }
+  const b = e.target.closest('.sino'); if (!b) return;
+  if (!S.micOk) { toast('Ative o microfone primeiro.'); return; }
+  const n = +b.dataset.n;
+  S.calib = (S.calib && S.calib.nota === n) ? null : {nota: n, amostras: [], clips: []};
+  renderCalib();
+});
+function apagarAmostra(n){
+  const p = perfilAtual(); if (!p) return;
+  delete p.modelos[n]; if (p.qual) delete p.qual[n]; if (p.clips) delete p.clips[n];
+  IDB.del(p.id + '|' + n).catch(() => {});
+  salvar(); renderCalib();
+}
 function receberAmostra(v){
-  S.calib.amostras.push(v);
-  mostrarAoVivo(S.calib.nota, 'Ensinando: toque ' + S.calib.amostras.length + ' de 3');
-  if (S.calib.amostras.length >= 3) {
-    const m = v.map((_, i) => S.calib.amostras.reduce((s, a) => s + a[i], 0) / 3);
+  const C = S.calib, idx = C.amostras.length, p = perfilAtual();
+  C.amostras.push(v);
+  mostrarAoVivo(C.nota, 'Ensinando: toque ' + C.amostras.length + ' de 3');
+  /* o áudio é recortado um pouco depois, para pegar o toque inteiro */
+  const espera = Math.max(300, 640 - micCfg.escuta);
+  const clipe = new Promise(ok => setTimeout(() => ok(pegarClipe(0.7)), espera));
+  if (C.amostras.length >= 3) {
+    const m = v.map((_, i) => C.amostras.reduce((s, a) => s + a[i], 0) / 3);
     const nrm = Math.sqrt(m.reduce((s,x) => s + x*x, 0)) || 1;
-    perfilAtual().modelos[S.calib.nota] = m.map(x => Math.round(x / nrm * 1e4) / 1e4);
+    const modelo = m.map(x => Math.round(x / nrm * 1e4) / 1e4);
+    let qual = 1; for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) qual = Math.min(qual, cosseno(C.amostras[i], C.amostras[j]));
+    const parecido = Object.entries(p.modelos).filter(([k]) => +k !== C.nota).map(([k, o]) => ({n: +k, sim: cosseno(modelo, o)})).sort((a, b) => b.sim - a.sim)[0];
+    p.modelos[C.nota] = modelo; p.qual = p.qual || {}; p.qual[C.nota] = Math.round(Math.max(0, qual) * 100);
     salvar();
-    toast(nomeNota(S.calib.nota) + ' aprendido.');
-    S.calib = null;
-  }
+    toast(nomeNota(C.nota) + ' aprendido.' + (p.qual[C.nota] < 80 ? ' Os 3 toques saíram diferentes entre si: vale refazer.' : '') + (parecido && parecido.sim > 0.92 ? ' Atenção: o som ficou muito parecido com ' + nomeNota(parecido.n) + ' (' + Math.round(parecido.sim * 100) + '%).' : ''));
+    const nota = C.nota, pid = p.id; S.calib = null;
+    Promise.all(C.clips.concat([clipe])).then(async cs => {
+      const bons = cs.filter(Boolean); if (!bons.length) return;
+      /* escolhe o recorte mais limpo: forte no começo e quieto no fim (sem um segundo toque) */
+      const nota_ = c => energia(c, 0, Math.floor(c.length * .4)) / (energia(c, Math.floor(c.length * .7), c.length) + 1e-9);
+      const melhor = bons.sort((a, b) => nota_(b) - nota_(a))[0];
+      try { await IDB.put(pid + '|' + nota, clipeParaArmazenar(melhor)); const pp = db.perfis.find(x => x.id === pid); if (pp && pp.modelos[nota]) { pp.clips = pp.clips || {}; pp.clips[nota] = true; salvar(); renderCalib(); } } catch(e) {}
+    });
+  } else clipe.then(c => C.clips.push(c));
   renderCalib();
 }
 $('#perfilSel').addEventListener('change', e => { S.perfilId = e.target.value; db.prefs.perfilId = S.perfilId; salvar(); renderCalib(); });
 $('#mostrarSust').addEventListener('change', renderCalib);
 $('#simMin').addEventListener('input', e => $('#simVal').textContent = e.target.value + '%');
 $('#btnNovoPerfil').addEventListener('click', () => {
-  const nome = prompt('Nome do conjunto (por exemplo: Sinos coloridos da sala 2)');
+  const nome = prompt('Nome do conjunto (por exemplo: Teclado da sala 2, ou Sinos coloridos)');
   if (!nome) return;
   const p = {id: uid(), nome, modelos: {}}; db.perfis.push(p); S.perfilId = p.id; db.prefs.perfilId = p.id; salvar(); renderCalib();
 });
 $('#btnExcluirPerfil').addEventListener('click', () => {
   const p = perfilAtual(); if (!p) return;
-  if (!confirm('Excluir o conjunto “' + p.nome + '” e os sons ensinados?')) return;
+  if (!confirm('Excluir o conjunto “' + p.nome + '” e as amostras de som dele?')) return;
+  Object.keys(p.clips || {}).forEach(n => IDB.del(p.id + '|' + n).catch(() => {}));
   db.perfis = db.perfis.filter(x => x.id !== p.id); S.perfilId = null; salvar(); renderCalib();
 });
 
@@ -1217,7 +1373,11 @@ function graficoHist(lista){
     ${pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="var(--accent)"/><text x="${p[0]}" y="${H-6}" font-size="9.5" fill="var(--muted)" text-anchor="middle">${new Date(lista[i].data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</text>`).join('')}
   </svg>`;
 }
-$('#btnBackup').addEventListener('click', () => baixar('sincronia_backup_' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(db)));
+$('#btnBackup').addEventListener('click', async () => {
+  const clips = {};
+  try { const t = await IDB.todos(); for (const [k, v] of Object.entries(t)) clips[k] = {sr: v.sr, pcm: b64(v.pcm)}; } catch(e) {}
+  baixar('sincronia_backup_' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(Object.assign({}, db, {clips})));
+});
 $('#arqBackup').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
@@ -1226,7 +1386,8 @@ $('#arqBackup').addEventListener('change', async e => {
     if (!confirm('Juntar a cópia com os dados atuais? Itens repetidos são ignorados.')) return;
     for (const k of ['gabaritos','sessoes','perfis']) { const ids = new Set(db[k].map(x => x.id)); (o[k] || []).forEach(x => { if (!ids.has(x.id)) db[k].push(x); }); }
     db.visCfg = Object.assign({}, o.visCfg || {}, db.visCfg);
-    salvar(); renderGabs(); renderHist(); toast('Cópia restaurada.');
+    for (const [k, v] of Object.entries(o.clips || {})) { try { if (!(await IDB.get(k))) await IDB.put(k, {sr: v.sr, pcm: unb64(v.pcm)}); } catch(err) {} }
+    salvar(); renderGabs(); renderHist(); if (S.modo.startsWith('mic')) renderCalib(); toast('Cópia restaurada.');
   } catch(err) { toast('Este arquivo não é uma cópia do Sincronia.'); }
   e.target.value = '';
 });
@@ -1265,5 +1426,5 @@ function desenharFaixa(){
 }
 
 /* ---------- início ---------- */
-aplicarModo(); renderGabs(); renderPacientes(); atualizarLimiar(); requestAnimationFrame(desenharFaixa);
+aplicarMicCfg(false); aplicarModo(); renderGabs(); renderPacientes(); requestAnimationFrame(desenharFaixa);
 </script></body></html>
