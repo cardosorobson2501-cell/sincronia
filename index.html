@@ -142,6 +142,18 @@ input[type=range]{accent-color:var(--accent);width:100%}
 .mapa-teclas span{display:flex;flex-direction:column;align-items:center;padding:.35rem .5rem;border-radius:8px;color:#fff;font-weight:700;min-width:48px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .mapa-teclas kbd{font-family:var(--f-corpo);background:rgba(255,255,255,.25);border-radius:4px;padding:0 .35rem}
 
+.teclado-tela{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:.5rem;display:flex;gap:.35rem;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.teclado-tela[hidden]{display:none}
+.tecla{flex:1;min-width:0;height:84px;border:0;border-radius:10px;color:#fff;font-weight:800;font-size:1rem;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:0 0 .5rem;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 -5px 0 rgba(0,0,0,.18);transition:transform .05s,filter .05s}
+.tecla.sust{height:62px;font-size:.78rem;flex:.7;align-self:flex-start;box-shadow:inset 0 -4px 0 rgba(0,0,0,.35);filter:saturate(.8) brightness(.85)}
+.tecla.press{transform:translateY(3px) scale(.97);filter:brightness(1.25)}
+.tecla.ritmo{flex:1.1;background:#6B7774}
+@media (max-width:900px){
+  body.com-teclado{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+  .teclado-tela{position:fixed;left:0;right:0;bottom:0;z-index:20;border-radius:14px 14px 0 0;border-width:1px 0 0;padding:.5rem .5rem calc(.5rem + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 18px rgba(0,0,0,.18)}
+  .toast{bottom:calc(8rem + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:600px){.marca p{display:none}.marca h1{font-size:1.4rem}.topo{padding:.6rem 1rem}.tecla{font-size:.82rem;height:76px}}
 .dois{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 @media (max-width:480px){.dois{grid-template-columns:1fr}}
 .cartao-acao{border:1px solid var(--line);border-radius:12px;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
@@ -225,6 +237,7 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       </div>
     </div>
     <div class="barra-video"><span id="nomeVideo">Nenhum vídeo aberto</span><label class="btn-ghost small">Trocar vídeo<input type="file" accept="video/*" id="arquivoVideo2" hidden=""></label></div>
+    <div id="tecladoTela" class="teclado-tela" hidden="" aria-label="Teclado na tela"></div>
     <div class="faixa"><canvas id="faixa" aria-label="Faixa de notas: gabarito em cima, toques embaixo"></canvas></div>
     <div class="aovivo">
       <div id="bolha" class="bolha"><span id="bolhaNome">–</span></div>
@@ -248,6 +261,7 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
     <div class="aba ativa" id="aba-entrada">
       <h2>Como o paciente vai tocar</h2>
       <div class="opcoes">
+        <label class="opcao"><input type="radio" name="modo" value="teclado-tela"><span><b>Teclado na tela (toque)</b><small>Para celular e tablet: toque nas teclas coloridas. Não precisa de nenhum equipamento.</small></span></label>
         <label class="opcao"><input type="radio" name="modo" value="midi"><span><b>Teclado com cabo USB (MIDI)</b><small>O mais preciso. Conecte o cabo antes de ativar.</small></span></label>
         <label class="opcao"><input type="radio" name="modo" value="mic-altura"><span><b>Teclado sem cabo, pelo microfone</b><small>O app reconhece a nota pelo som. Uma nota de cada vez.</small></span></label>
         <label class="opcao"><input type="radio" name="modo" value="mic-calib"><span><b>Sinos, pelo microfone</b><small>Você ensina ao app o som de cada sino uma vez.</small></span></label>
@@ -273,6 +287,13 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
           <label class="campo">Semelhança mínima para aceitar um som: <span id="simVal">60%</span><input type="range" id="simMin" min="30" max="95" value="60"></label>
           <p class="dica">Sons muito diferentes de todos os sinos ensinados são ignorados. Se o app estiver deixando passar toques reais, diminua.</p>
         </div>
+      </div>
+
+      <div id="cfg-tela" class="bloco" hidden="">
+        <p class="dica">As teclas ficam logo abaixo do vídeo (no celular, fixas no pé da tela). Toque nelas no ritmo da música; vários dedos ao mesmo tempo funcionam.</p>
+        <label class="check"><input type="checkbox" id="telaSom" checked=""> Tocar um som ao apertar a tecla</label>
+        <label class="check"><input type="checkbox" id="telaSust"> Mostrar sustenidos (teclas pretas)</label>
+        <label class="check"><input type="checkbox" id="telaVibra" checked=""> Vibrar ao tocar (se o aparelho permitir)</label>
       </div>
 
       <div id="cfg-teclas" class="bloco" hidden="">
@@ -398,8 +419,9 @@ async function baixar(nome, dados){
 }
 
 /* ---------- estado ---------- */
+if (!db.prefs.v2) { db.prefs.v2 = 1; if (matchMedia('(pointer:coarse)').matches && db.prefs.modo === 'teclado-pc') db.prefs.modo = 'teclado-tela'; }
 const S = {
-  modo: db.prefs.modo || 'teclado-pc',
+  modo: db.prefs.modo || (matchMedia('(pointer:coarse)').matches ? 'teclado-tela' : 'teclado-pc'),
   latencia: 0,
   videoKey: null, videoNome: null,
   gravando: null,       // 'gabarito' | 'sessao'
@@ -534,6 +556,9 @@ function mostrarAoVivo(n, fonte){
 /* ---------- entrada: escolha do modo ---------- */
 function aplicarModo(){
   $$('input[name=modo]').forEach(r => r.checked = r.value === S.modo);
+  $('#cfg-tela').hidden = S.modo !== 'teclado-tela';
+  $('#tecladoTela').hidden = S.modo !== 'teclado-tela';
+  document.body.classList.toggle('com-teclado', S.modo === 'teclado-tela');
   $('#cfg-midi').hidden = S.modo !== 'midi';
   $('#cfg-mic').hidden = !S.modo.startsWith('mic');
   $('#cfg-calib').hidden = S.modo !== 'mic-calib';
@@ -551,7 +576,7 @@ function entradaPronta(){
   return true;
 }
 function atualizarChip(){
-  const nomes = {'midi':'Teclado MIDI','mic-altura':'Teclado pelo microfone','mic-calib':'Sinos pelo microfone','teclado-pc':'Teclado do computador'};
+  const nomes = {'teclado-tela':'Teclado na tela','midi':'Teclado MIDI','mic-altura':'Teclado pelo microfone','mic-calib':'Sinos pelo microfone','teclado-pc':'Teclado do computador'};
   const ok = entradaPronta();
   $('#chipEntrada').classList.toggle('ok', ok);
   $('#chipTxt').textContent = nomes[S.modo] + (ok ? ': pronto' : ': falta ativar');
@@ -564,13 +589,45 @@ $('#mapaTeclas').innerHTML = Object.entries(MAPA).filter(([k,n]) => !SUSTENIDOS.
   .map(([k,n]) => `<span style="background:${corNota(n)}"><kbd>${k.toUpperCase()}</kbd>${nomeNota(n)}</span>`).join('')
   + '<span style="background:#6B7774"><kbd>W E T Y U</kbd>sustenidos</span>';
 document.addEventListener('keydown', e => {
-  if (S.modo !== 'teclado-pc' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (!['teclado-pc','teclado-tela'].includes(S.modo) || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   const tag = (e.target.tagName || '').toLowerCase();
   if (['input','select','textarea'].includes(tag)) return;
   const k = e.key.toLowerCase();
   if (k === ' ') { e.preventDefault(); registrarNota(-1, null, 'Teclado do computador'); return; }
   if (k in MAPA) { e.preventDefault(); registrarNota(MAPA[k], null, 'Teclado do computador'); }
 });
+
+/* ---------- entrada: teclado na tela (toque) ---------- */
+let somCtx = null;
+function tocarSom(n){
+  if (!$('#telaSom').checked || n < 0) return;
+  try {
+    somCtx = somCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (somCtx.state === 'suspended') somCtx.resume();
+    const o = somCtx.createOscillator(), g = somCtx.createGain(), t = somCtx.currentTime;
+    o.type = 'triangle'; o.frequency.value = 440 * Math.pow(2, (n - 69) / 12);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+    o.connect(g); g.connect(somCtx.destination); o.start(t); o.stop(t + 0.5);
+  } catch(e) {}
+}
+function montarTeclado(){
+  const ns = ($('#telaSust').checked ? [...NATURAIS, ...SUSTENIDOS] : NATURAIS).slice().sort((a,b) => a - b);
+  $('#tecladoTela').innerHTML = ns.map(n => `<button class="tecla ${SUSTENIDOS.includes(n) ? 'sust' : ''}" data-n="${n}" style="background:${corNota(n)}" aria-label="${nomeNota(n)}">${n === 72 ? 'Dó ↑' : nomeCurto(n)}</button>`).join('')
+    + '<button class="tecla ritmo" data-n="-1" aria-label="Toque sem nota">Ritmo</button>';
+}
+$('#tecladoTela').addEventListener('pointerdown', e => {
+  const b = e.target.closest('.tecla'); if (!b) return;
+  e.preventDefault();
+  const n = +b.dataset.n;
+  b.classList.add('press');
+  registrarNota(n, null, 'Teclado na tela');
+  tocarSom(n);
+  if ($('#telaVibra').checked && navigator.vibrate) navigator.vibrate(12);
+});
+['pointerup','pointercancel','pointerout'].forEach(ev => $('#tecladoTela').addEventListener(ev, e => { const b = e.target.closest && e.target.closest('.tecla'); if (b) b.classList.remove('press'); }));
+$('#tecladoTela').addEventListener('contextmenu', e => e.preventDefault());
+$('#telaSust').addEventListener('change', montarTeclado);
+montarTeclado();
 
 /* ---------- entrada: MIDI ---------- */
 $('#btnMidi').addEventListener('click', async () => {
@@ -793,12 +850,15 @@ $('#btnDeslocar').addEventListener('click', () => {
   g.eventos.forEach(e => e.t = Math.max(0, Math.round((e.t + ms/1000)*1000)/1000)); salvar(); renderGabs(); toast('Todas as notas foram movidas ' + ms + ' ms.');
 });
 
+/* no celular, leva a tela ao vídeo para ele ficar visível acima do teclado */
+function irParaVideo(){ if (matchMedia('(max-width:900px)').matches) window.scrollTo({top: 0}); }
+
 /* gravar gabarito tocando */
 $('#btnGravarGab').addEventListener('click', () => {
   if (S.gravando === 'gabarito') { pararGravacao(); return; }
   if (S.gravando || S.detectando) return;
   if (!entradaPronta()) { toast('Ative a entrada na aba 1 antes de gravar.'); abrirAba('entrada'); return; }
-  S.buf = []; S.gravando = 'gabarito'; destravarVideo();
+  S.buf = []; S.gravando = 'gabarito'; destravarVideo(); irParaVideo();
   $('#btnGravarGab').textContent = 'Parar e salvar'; $('#btnGravarGab').classList.add('parar');
   contagem(() => { video.currentTime = 0; iniciarVideo(); });
   atualizarStatusGrav();
@@ -933,7 +993,7 @@ $('#btnSessao').addEventListener('click', () => {
   if (!entradaPronta()) { toast('Ative a entrada na aba 1 antes de começar.'); abrirAba('entrada'); return; }
   S.sess = {paciente: $('#paciente').value.trim() || 'Sem nome', gabId: g.id,
     cfg: {janela: +$('#janela').value, ignOit: $('#ignOit').checked, soRitmo: $('#soRitmo').checked, modo: S.modo, latencia: S.latencia}};
-  S.buf = []; S.gravando = 'sessao'; destravarVideo();
+  S.buf = []; S.gravando = 'sessao'; destravarVideo(); irParaVideo();
   $('#btnSessao').textContent = 'Encerrar sessão agora'; $('#btnSessao').classList.add('parar');
   atualizarStatusGrav();
   contagem(() => { video.currentTime = 0; iniciarVideo(); });
