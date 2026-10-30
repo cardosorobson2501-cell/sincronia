@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sincronia: atenção com música em cores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0EB; --surface:#FFFFFF; --surface2:#F5F7F3; --ink:#1C2B29; --muted:#566562; --line:#D2D9D1;
+  --accent:#1F5A70; --accent-ink:#FFFFFF; --good:#2E7D4F; --warn:#B86E00; --bad:#B3261E; --lane:#E4E9E2;
+  --sombra:0 1px 0 rgba(28,43,41,.06);
+  --f-corpo:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-titulo:"Bricolage Grotesque", "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111816; --surface:#1A2320; --surface2:#151D1A; --ink:#E3EBE7; --muted:#93A39E; --line:#2D3A36;
+    --accent:#7DBFD8; --accent-ink:#0B1A20; --good:#6CC08F; --warn:#E3A44A; --bad:#F08A80; --lane:#222D29; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111816; --surface:#1A2320; --surface2:#151D1A; --ink:#E3EBE7; --muted:#93A39E; --line:#2D3A36;
+  --accent:#7DBFD8; --accent-ink:#0B1A20; --good:#6CC08F; --warn:#E3A44A; --bad:#F08A80; --lane:#222D29; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-corpo);font-size:16px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-titulo);margin:0;line-height:1.15;letter-spacing:-.01em}
+h2{font-size:1.35rem;font-weight:700;margin-bottom:.75rem}
+h3{font-size:1.02rem;font-weight:700;margin:1.4rem 0 .5rem}
+p{margin:.25rem 0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.topo{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1rem clamp(1rem,3vw,2rem)}
+.marca{display:flex;align-items:center;gap:.85rem}
+.marca h1{font-size:1.7rem;font-weight:800}
+.marca p{color:var(--muted);font-size:.95rem;margin:0}
+.logo{display:grid;grid-template-columns:repeat(4,10px);gap:4px}
+.logo i{width:10px;height:10px;border-radius:50%;display:block}
+.topo-dir{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .75rem;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:.9rem}
+.chip .pt{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.chip.ok .pt{background:var(--good)}
+
+.grade{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);gap:1.25rem;padding:0 clamp(1rem,3vw,2rem) 1.25rem;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:1fr}.caixa-video{max-height:58vh}}
+
+.palco{display:flex;flex-direction:column;gap:.75rem;min-width:0}
+.caixa-video{position:relative;background:#0c1110;border-radius:14px;aspect-ratio:16/9;overflow:hidden}
+.caixa-video video{width:100%;height:100%;display:block;object-fit:contain;background:#0c1110}
+.caixa-video.vazio video{visibility:hidden}
+.vazio-video{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;color:#DDE6E2;text-align:center;padding:1.5rem}
+.vazio-video p{max-width:34ch}
+.vazio-video small{color:#9DB0AA}
+.caixa-video:not(.vazio) .vazio-video{display:none}
+.caixa-video.arrastando{outline:3px dashed var(--accent);outline-offset:-8px}
+.camada{position:absolute;inset:0;pointer-events:none}
+.camada.ativa{pointer-events:auto;cursor:crosshair;background:rgba(0,0,0,.08)}
+.camada .ponto{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #000}
+.camada .dica-camada{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:.35rem .8rem;border-radius:8px;font-size:.9rem;white-space:nowrap}
+.contagem{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-titulo);font-weight:800;font-size:min(30vw,11rem);color:#fff;background:rgba(0,0,0,.45)}
+.play-grande{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:88px;height:88px;border-radius:50%;border:3px solid #fff;background:rgba(0,0,0,.6);color:#fff;font-size:2.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 0 0 .35rem;-webkit-tap-highlight-color:transparent}
+.caixa-video:has(.camada.ativa) .play-grande{display:none}
+.video-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;padding:1rem;text-align:center;background:rgba(12,17,16,.92);color:#fff}
+.video-msg.leve{inset:auto 0 0 0;padding:.5rem;background:rgba(12,17,16,.7);font-size:.9rem}
+.video-msg p{max-width:46ch;margin:0}
+.video-msg .btn-ghost{color:#fff;border-color:rgba(255,255,255,.5)}
+.barra-video{display:flex;justify-content:space-between;align-items:center;gap:.5rem;color:var(--muted);font-size:.9rem;min-height:1.6rem}
+.barra-video span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.faixa{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:.5rem}
+.faixa canvas{width:100%;height:118px;display:block}
+
+.aovivo{display:flex;align-items:center;gap:1rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:.8rem 1rem;flex-wrap:wrap}
+.bolha{width:74px;height:74px;border-radius:50%;background:var(--lane);display:flex;align-items:center;justify-content:center;font-family:var(--f-titulo);font-weight:800;font-size:1.25rem;color:#fff;flex:none;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.bolha.pulso{animation:pulso .28s ease-out}
+@keyframes pulso{from{transform:scale(1.18)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.bolha.pulso{animation:none}}
+.aovivo-info{display:flex;flex-direction:column;gap:.2rem;flex:1;min-width:180px}
+.aovivo-info span{color:var(--muted);font-size:.9rem}
+.medidor{position:relative;height:10px;border-radius:5px;background:var(--lane);overflow:hidden;margin-top:.3rem;max-width:320px}
+.medidor #medidor{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+.medidor #limiar{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--bad)}
+.status-grav{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--bad)}
+.status-grav[hidden]{display:none}
+.status-grav::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--bad);animation:pisca 1s infinite}
+@keyframes pisca{50%{opacity:.25}}
+
+.painel{background:var(--surface);border:1px solid var(--line);border-radius:14px;min-width:0}
+.abas{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+.abas button{border:0;background:none;padding:.8rem .3rem .7rem;cursor:pointer;color:var(--muted);font-weight:700;border-bottom:3px solid transparent;display:flex;flex-direction:column;align-items:center;gap:.1rem;font-size:.92rem}
+.abas button b{font-family:var(--f-titulo);font-size:1.1rem}
+.abas button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.aba{padding:1.2rem;display:none}
+.aba.ativa{display:block}
+
+.btn,.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;border-radius:10px;padding:.55rem 1rem;cursor:pointer;font-weight:700;border:1px solid transparent;line-height:1.2;text-align:center}
+.btn{background:var(--accent);color:var(--accent-ink)}
+.btn:hover{filter:brightness(1.08)}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{background:var(--surface2)}
+.btn-ghost.perigo{color:var(--bad)}
+.btn.grande{width:100%;padding:.9rem;font-size:1.1rem;margin-top:.6rem}
+.btn.parar{background:var(--bad);color:#fff}
+button:disabled{opacity:.45;cursor:not-allowed}
+.small{padding:.3rem .7rem;font-size:.88rem}
+
+.opcoes{display:flex;flex-direction:column;gap:.5rem}
+.opcao{display:flex;gap:.7rem;align-items:flex-start;padding:.7rem .8rem;border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.opcao:has(input:checked){border-color:var(--accent);background:var(--surface2);box-shadow:inset 3px 0 0 var(--accent)}
+.opcao input{margin-top:.3rem;accent-color:var(--accent)}
+.opcao span{display:flex;flex-direction:column}
+.opcao small{color:var(--muted);font-size:.88rem}
+.bloco{margin-top:1rem;padding-top:1rem;border-top:1px dashed var(--line)}
+.bloco[hidden]{display:none}
+.linha{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.4rem 0}
+.campo{display:flex;flex-direction:column;gap:.3rem;margin:.7rem 0;font-weight:700;font-size:.95rem}
+.campo input[type=text],.campo input:not([type]),.campo input[type=number],.campo select,select{padding:.5rem .6rem;border:1px solid var(--line);border-radius:9px;background:var(--surface2);font-weight:400}
+.campo.inline{flex-direction:row;align-items:center;margin:0}
+.campo.inline input{width:6rem}
+input[type=range]{accent-color:var(--accent);width:100%}
+.check{display:flex;gap:.5rem;align-items:center;margin:.45rem 0}
+.check input{accent-color:var(--accent);width:18px;height:18px}
+.dica{color:var(--muted);font-size:.9rem}
+.nota-status{font-size:.92rem;margin-top:.5rem}
+.nota-status.erro{color:var(--bad)}
+.nota-status.ok{color:var(--good)}
+
+.grade-calib{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:.45rem;margin:.6rem 0}
+.sino{border:1px solid var(--line);border-radius:12px;padding:.5rem .3rem;background:var(--surface2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.25rem;font-weight:700;font-size:.9rem}
+.sino i{width:26px;height:26px;border-radius:50%;display:block}
+.sino small{font-weight:400;color:var(--muted);font-size:.78rem}
+.sino.feito small{color:var(--good)}
+.sino.ouvindo{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.sino-wrap{display:flex;flex-direction:column;align-items:stretch}
+.sino-acoes{display:flex;justify-content:center;gap:.1rem;margin-top:.1rem}
+.sino-acoes .ic{border:0;background:none;cursor:pointer;padding:.35rem .7rem;border-radius:8px;color:var(--muted);font-size:1rem;min-height:36px}
+.sino-acoes .ic:hover{background:var(--surface2);color:var(--ink)}
+.sino.irreg small{color:var(--warn)}
+.medidor #pico{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.55}
+.medidor-txt{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:.15rem}
+.ajuste-db{display:flex;align-items:center;gap:.4rem}
+.ajuste-db .btn-ghost{min-width:44px;min-height:44px;font-size:1.2rem;padding:0}
+details.avancado{margin:.8rem 0;border:1px solid var(--line);border-radius:12px;padding:.2rem .9rem}
+details.avancado summary{cursor:pointer;font-weight:700;padding:.5rem 0}
+.mapa-teclas{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem}
+.mapa-teclas span{display:flex;flex-direction:column;align-items:center;padding:.35rem .5rem;border-radius:8px;color:#fff;font-weight:700;min-width:48px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.mapa-teclas kbd{font-family:var(--f-corpo);background:rgba(255,255,255,.25);border-radius:4px;padding:0 .35rem}
+
+.teclado-tela{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:.5rem;display:flex;gap:.35rem;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.teclado-tela[hidden]{display:none}
+.tecla{flex:1;min-width:0;height:84px;border:0;border-radius:10px;color:#fff;font-weight:800;font-size:1rem;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:0 0 .5rem;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 -5px 0 rgba(0,0,0,.18);transition:transform .05s,filter .05s}
+.tecla.sust{height:62px;font-size:.78rem;flex:.7;align-self:flex-start;box-shadow:inset 0 -4px 0 rgba(0,0,0,.35);filter:saturate(.8) brightness(.85)}
+.tecla.press{transform:translateY(3px) scale(.97);filter:brightness(1.25)}
+.tecla.ritmo{flex:1.1;background:#6B7774}
+@media (max-width:900px){
+  body.com-teclado{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+  .teclado-tela{position:fixed;left:0;right:0;bottom:0;z-index:20;border-radius:14px 14px 0 0;border-width:1px 0 0;padding:.5rem .5rem calc(.5rem + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 18px rgba(0,0,0,.18)}
+  .toast{bottom:calc(8rem + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:600px){.marca p{display:none}.marca h1{font-size:1.4rem}.topo{padding:.6rem 1rem}.tecla{font-size:.82rem;height:76px}}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-caixa{background:var(--surface);color:var(--ink);border-radius:14px;padding:1.2rem;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.modal-caixa p{margin:0 0 .8rem;font-weight:700}
+.modal-caixa input{width:100%;padding:.6rem;border:1px solid var(--line);border-radius:9px;background:var(--surface2);margin-bottom:.8rem}
+.modal-caixa .linha{justify-content:flex-end}
+.btn.perigo{background:var(--bad);color:#fff}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+@media (max-width:480px){.dois{grid-template-columns:1fr}}
+.cartao-acao{border:1px solid var(--line);border-radius:12px;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
+.cartao-acao p{color:var(--muted);font-size:.9rem;flex:1}
+.passos{padding-left:1.2rem;margin:0}
+.passos li{margin-bottom:1rem}
+.cor-item{display:flex;align-items:center;gap:.5rem;margin:.3rem 0}
+.cor-item i{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);flex:none}
+.lista-gab{max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.lista-gab table{width:100%;border-collapse:collapse;font-size:.92rem}
+.lista-gab td{padding:.3rem .45rem;border-bottom:1px solid var(--line)}
+.lista-gab tr:last-child td{border-bottom:0}
+.lista-gab input{width:5.2rem;padding:.25rem .35rem;border:1px solid var(--line);border-radius:6px;background:var(--surface2)}
+.lista-gab select{padding:.25rem .35rem}
+.lista-gab .ic{border:0;background:none;cursor:pointer;padding:.2rem .45rem;border-radius:6px;color:var(--muted);font-size:1rem}
+.lista-gab .ic:hover{background:var(--surface2);color:var(--ink)}
+.pastilha{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:.3rem}
+.vazio-lista{padding:1rem;color:var(--muted);font-size:.92rem}
+
+.resultado{margin:0 clamp(1rem,3vw,2rem) 2rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.4rem}
+.res-topo{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;margin-bottom:1.2rem}
+.res-topo p{color:var(--muted)}
+.res-grade{display:grid;grid-template-columns:minmax(200px,.8fr) 1.2fr 1.2fr;gap:1.4rem}
+@media (max-width:980px){.res-grade{grid-template-columns:1fr 1fr}}
+@media (max-width:620px){.res-grade{grid-template-columns:1fr}}
+.num-grande{font-family:var(--f-titulo);font-weight:800;font-size:clamp(3.2rem,7vw,4.8rem);line-height:1}
+.res-principal small{display:block;color:var(--muted)}
+.barra-empilhada{display:flex;height:16px;border-radius:8px;overflow:hidden;margin:.8rem 0 .5rem;background:var(--lane)}
+.legenda{display:flex;flex-wrap:wrap;gap:.3rem .9rem;font-size:.86rem;color:var(--muted)}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:.3rem}
+.medidas{display:grid;grid-template-columns:1fr auto;gap:.35rem .8rem;margin:0}
+.medidas dt{color:var(--muted)}
+.medidas dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.tercos{display:flex;gap:.6rem;align-items:flex-end;height:110px;margin-top:.5rem}
+.tercos div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:.2rem;font-size:.85rem;color:var(--muted)}
+.tercos b{width:100%;background:var(--accent);border-radius:6px 6px 2px 2px;min-height:2px}
+.tercos strong{color:var(--ink);font-variant-numeric:tabular-nums}
+.tab-nota{width:100%;border-collapse:collapse;font-size:.92rem}
+.tab-nota th{text-align:left;color:var(--muted);font-weight:400;border-bottom:1px solid var(--line);padding:.3rem .3rem}
+.tab-nota td{padding:.3rem .3rem;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.linha-completa{overflow-x:auto;margin-top:1.4rem;border:1px solid var(--line);border-radius:10px;background:var(--surface2)}
+.linha-completa canvas{display:block;height:130px}
+.como-ler{margin-top:1rem}
+.como-ler summary{cursor:pointer;font-weight:700}
+.como-ler ul{color:var(--muted);padding-left:1.2rem}
+.como-ler li{margin:.25rem 0;max-width:80ch}
+.hist-lista table{width:100%;border-collapse:collapse;font-size:.9rem}
+.hist-lista td,.hist-lista th{padding:.4rem .3rem;border-bottom:1px solid var(--line);text-align:left}
+.hist-lista th{color:var(--muted);font-weight:400}
+.hist-lista tr.clic{cursor:pointer}
+.hist-lista tr.clic:hover td{background:var(--surface2)}
+.toast{position:fixed;left:50%;bottom:calc(1.2rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(150%);background:var(--ink);color:var(--bg);padding:.7rem 1.1rem;border-radius:10px;max-width:min(92vw,520px);transition:transform .25s,visibility .25s;visibility:hidden;z-index:10;font-size:.95rem}
+.toast.show{transform:translateX(-50%) translateY(0);visibility:visible}
+textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid var(--line);border-radius:10px;padding:.6rem;background:var(--surface2);font:inherit;font-size:.9rem}
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <div class="logo" aria-hidden="true"><i style="background:#E53935"></i><i style="background:#FB8C00"></i><i style="background:#FDD835"></i><i style="background:#7CB342"></i><i style="background:#00ACC1"></i><i style="background:#5E35B1"></i><i style="background:#D81B60"></i><i style="background:#E53935"></i></div>
+    <div><h1>Sincronia</h1><p>Ver, ouvir e tocar junto, com a contagem de acertos feita pelo app</p></div>
+  </div>
+  <div class="topo-dir">
+    <span id="chipEntrada" class="chip"><span class="pt"></span><span id="chipTxt">Nenhuma entrada ativa</span></span>
+    <button id="btnOffline" class="btn-ghost small">Baixar o app para usar offline</button>
+  </div>
+</header>
+
+<main class="grade">
+  <section class="palco">
+    <div id="caixaVideo" class="caixa-video vazio">
+      <video id="video" playsinline="" webkit-playsinline="" controls="" preload="auto"></video>
+      <div id="camada" class="camada"></div>
+      <button id="btnPlayGrande" class="play-grande" aria-label="Tocar o vídeo" hidden="">▶</button>
+      <div id="contagem" class="contagem" hidden=""></div>
+      <div id="videoMsg" class="video-msg" hidden="" role="status"></div>
+      <div class="vazio-video">
+        <p>Abra o arquivo do vídeo da atividade (MP4 ou WebM) que está no seu computador.</p>
+        <label class="btn">Abrir vídeo<input type="file" accept="video/*" id="arquivoVideo" hidden=""></label>
+        <small>ou arraste o arquivo para cá</small>
+      </div>
+    </div>
+    <div class="barra-video"><span id="nomeVideo">Nenhum vídeo aberto</span><label class="btn-ghost small">Trocar vídeo<input type="file" accept="video/*" id="arquivoVideo2" hidden=""></label></div>
+    <div id="tecladoTela" class="teclado-tela" hidden="" aria-label="Teclado na tela"></div>
+    <div class="faixa"><canvas id="faixa" aria-label="Faixa de notas: gabarito em cima, toques embaixo"></canvas></div>
+    <div class="aovivo">
+      <div id="bolha" class="bolha"><span id="bolhaNome">–</span></div>
+      <div class="aovivo-info">
+        <strong id="aovivoTitulo">Toque uma nota para testar a entrada</strong>
+        <span id="aovivoFonte">A nota reconhecida aparece aqui na hora.</span>
+        <div id="medidorWrap" hidden=""><div class="medidor"><div id="medidor"></div><div id="pico"></div><div id="limiar"></div></div><div id="medidorTxt" class="medidor-txt"></div></div>
+      </div>
+      <div id="statusGrav" class="status-grav" hidden=""></div>
+    </div>
+  </section>
+
+  <aside class="painel">
+    <nav class="abas" role="tablist">
+      <button role="tab" data-aba="entrada" aria-selected="true"><b>1</b>Entrada</button>
+      <button role="tab" data-aba="gabarito" aria-selected="false"><b>2</b>Gabarito</button>
+      <button role="tab" data-aba="sessao" aria-selected="false"><b>3</b>Sessão</button>
+      <button role="tab" data-aba="historico" aria-selected="false"><b>4</b>Histórico</button>
+    </nav>
+
+    <div class="aba ativa" id="aba-entrada">
+      <h2>Como o paciente vai tocar</h2>
+      <div class="opcoes">
+        <label class="opcao"><input type="radio" name="modo" value="teclado-tela"><span><b>Teclado na tela (toque)</b><small>Para celular e tablet: toque nas teclas coloridas. Não precisa de nenhum equipamento.</small></span></label>
+        <label class="opcao"><input type="radio" name="modo" value="midi"><span><b>Teclado com cabo USB (MIDI)</b><small>O mais preciso. Conecte o cabo antes de ativar.</small></span></label>
+        <label class="opcao"><input type="radio" name="modo" value="mic-altura"><span><b>Teclado sem cabo, pelo microfone</b><small>O app reconhece a nota pelo som. Uma nota de cada vez. Dá para ensinar amostras do seu teclado.</small></span></label>
+        <label class="opcao"><input type="radio" name="modo" value="mic-calib"><span><b>Sinos (ou outro instrumento), pelo microfone</b><small>Você ensina ao app o som de cada nota uma vez.</small></span></label>
+        <label class="opcao"><input type="radio" name="modo" value="teclado-pc"><span><b>Teclado do computador</b><small>Para testar o app ou gravar um gabarito rápido.</small></span></label>
+      </div>
+
+      <div id="cfg-midi" class="bloco" hidden="">
+        <button id="btnMidi" class="btn">Ativar teclado MIDI</button>
+        <p id="midiStatus" class="nota-status"></p>
+      </div>
+
+      <div id="cfg-mic" class="bloco" hidden="">
+        <button id="btnMic" class="btn">Ativar microfone</button>
+        <p id="micStatus" class="nota-status"></p>
+
+        <h3 style="margin-top:1rem">Sensibilidade do microfone</h3>
+        <div class="campo" style="margin-bottom:.2rem">
+          <label for="limDb">Volume mínimo para contar um toque: <span data-micval="limDb"></span></label>
+          <div class="ajuste-db"><button class="btn-ghost" id="limMenos" aria-label="Diminuir 1 dB" type="button">−</button><input type="range" id="limDb" data-mic="limDb" min="-70" max="-15" step="0.5"><button class="btn-ghost" id="limMais" aria-label="Aumentar 1 dB" type="button">+</button></div>
+        </div>
+        <p class="dica">A linha vermelha no medidor é esse limite: só sons que passam dela contam. Mais para a esquerda (mais negativo) = mais sensível. O traço escuro no medidor mostra o pico recente do som.</p>
+        <div class="linha"><button id="btnRuido" class="btn-ghost small" type="button">Medir o ruído da sala (3 s)</button></div>
+        <p id="ruidoStatus" class="nota-status"></p>
+        <p class="dica">Deixe o som do vídeo no fone do paciente ou bem baixo, para o microfone não confundir a música do vídeo com o que ele toca.</p>
+
+        <details class="avancado"><summary>Ajustes avançados</summary>
+          <label class="campo">Ganho do microfone: <span data-micval="ganho"></span><input type="range" data-mic="ganho" min="0.5" max="8" step="0.1"></label>
+          <p class="dica">Aumente se o microfone do aparelho for fraco. Muito alto pode distorcer.</p>
+          <label class="campo">Intervalo mínimo entre toques: <span data-micval="intervalo"></span><input type="range" data-mic="intervalo" min="50" max="600" step="10"></label>
+          <p class="dica">Evita contar o mesmo toque duas vezes (eco do sino). Diminua para músicas muito rápidas.</p>
+          <label class="campo">Força do ataque: <span data-micval="ataque"></span><input type="range" data-mic="ataque" min="1.1" max="4" step="0.1"></label>
+          <p class="dica">Quanto o som precisa “subir de repente” para ser um toque. Maior = ignora sons que crescem devagar.</p>
+          <label class="campo">Tempo de escuta da nota: <span data-micval="escuta"></span><input type="range" data-mic="escuta" min="30" max="250" step="5"></label>
+          <p class="dica">Espera um instante depois do toque para identificar a nota. Teclados: 60–90 ms. Sinos: 90–150 ms.</p>
+          <div class="dois">
+            <label class="campo">Nota mais grave aceita<select data-mic="grave" id="micGrave"></select></label>
+            <label class="campo">Nota mais aguda aceita<select data-mic="aguda" id="micAguda"></select></label>
+          </div>
+          <label class="campo">Tolerância na identificação da altura: <span data-micval="rigor"></span><input type="range" data-mic="rigor" min="5" max="40" step="1"></label>
+          <p class="dica">Menor = mais exigente (ignora sons incertos). Maior = aceita mais sons, com mais risco de errar a nota.</p>
+          <button id="btnMicPadrao" class="btn-ghost small" type="button">Restaurar ajustes padrão</button>
+        </details>
+
+        <div id="cfg-calib" hidden="">
+          <h3 id="tituloCalib">Amostras de som por nota</h3>
+          <div class="linha"><select id="perfilSel" aria-label="Conjunto de sons"></select><button id="btnNovoPerfil" class="btn-ghost small">Novo conjunto</button><button id="btnExcluirPerfil" class="btn-ghost small perigo">Excluir</button></div>
+          <p class="dica" id="dicaCalib">Cada conjunto é um instrumento (por exemplo: “Teclado da sala 2”, “Sinos coloridos”). Clique numa nota e toque-a 3 vezes, com uma pequena pausa entre os toques, no mesmo lugar onde a sessão vai acontecer. O app guarda o “jeito” do som e um áudio curto que você pode ouvir depois (▶). Se nada acontecer ao tocar, diminua o volume mínimo acima.</p>
+          <label class="check"><input type="checkbox" id="mostrarSust"> Mostrar sustenidos</label>
+          <div id="gradeCalib" class="grade-calib"></div>
+          <label class="campo">Semelhança mínima para aceitar um som: <span id="simVal">60%</span><input type="range" id="simMin" min="30" max="95" value="60"></label>
+          <p class="dica">Sons muito diferentes de todas as amostras são ignorados (modo sinos) ou deixam o app usar só a altura (modo teclado). Se o app estiver deixando passar toques reais, diminua.</p>
+        </div>
+      </div>
+
+      <div id="cfg-tela" class="bloco" hidden="">
+        <p class="dica">As teclas ficam logo abaixo do vídeo (no celular, fixas no pé da tela). Toque nelas no ritmo da música; vários dedos ao mesmo tempo funcionam.</p>
+        <label class="check"><input type="checkbox" id="telaSom" checked=""> Tocar um som ao apertar a tecla</label>
+        <label class="check"><input type="checkbox" id="telaSust"> Mostrar sustenidos (teclas pretas)</label>
+        <label class="check"><input type="checkbox" id="telaVibra" checked=""> Vibrar ao tocar (se o aparelho permitir)</label>
+      </div>
+
+      <div id="cfg-teclas" class="bloco" hidden="">
+        <p class="dica">Clique fora dos campos de texto e use estas teclas. A barra de espaço registra um toque sem nota (só ritmo).</p>
+        <div id="mapaTeclas" class="mapa-teclas"></div>
+      </div>
+
+      <label class="campo">Compensação de atraso da entrada (ms)<input type="number" id="latencia" value="0" step="5"></label>
+      <p class="dica">Se o gabarito for gravado com a mesma entrada que o paciente vai usar, deixe em 0: o atraso é igual nos dois e se anula.</p>
+    </div>
+
+    <div class="aba" id="aba-gabarito">
+      <h2>Gabarito do vídeo</h2>
+      <p class="dica" id="gabSemVideo">Abra um vídeo para criar ou escolher o gabarito dele.</p>
+      <div id="gabConteudo" hidden="">
+        <div class="linha"><select id="gabSel" aria-label="Gabarito"></select><button id="gabRenomear" class="btn-ghost small">Renomear</button><button id="gabExcluir" class="btn-ghost small perigo">Excluir</button></div>
+        <h3>Criar um gabarito novo</h3>
+        <div class="dois">
+          <div class="cartao-acao"><b>Tocar junto com o vídeo</b><p>Você toca a música certa uma vez, com a entrada escolhida na aba 1. O app anota cada nota e o momento dela.</p><button id="btnGravarGab" class="btn">Gravar gabarito</button></div>
+          <div class="cartao-acao"><b>Ler as cores do vídeo</b><p>O app assiste ao vídeo e anota cada vez que uma cor acende.</p><button id="btnAbrirVisual" class="btn-ghost">Configurar leitura</button></div>
+        </div>
+        <div id="visual" class="bloco" hidden="">
+          <ol class="passos">
+            <li><b>Onde olhar.</b> Clique em “Marcar pontos” e depois no vídeo, no lugar onde as cores acendem. Se cada nota acende num lugar diferente, marque um ponto em cada lugar.
+              <div class="linha"><button id="btnPontos" class="btn-ghost small">Marcar pontos</button><button id="btnLimparPontos" class="btn-ghost small">Limpar pontos</button><span id="nPontos" class="dica"></span></div></li>
+            <li><b>Quais cores.</b> Pause o vídeo num momento em que uma cor está acesa, clique em “Pegar cor” e clique em cima dela. Confira a nota sugerida. Repita para cada cor.
+              <div class="linha"><button id="btnPegarCor" class="btn-ghost small">Pegar cor</button></div><div id="listaCores"></div></li>
+            <li><b>Ler.</b> O vídeo toca do início ao fim, sem som.
+              <label class="campo">Tolerância de cor<input type="range" id="tolCor" min="10" max="140" value="60"></label>
+              <button id="btnDetectar" class="btn">Ler cores e criar gabarito</button>
+              <p id="detStatus" class="nota-status"></p>
+              <p class="dica">Se a mesma nota se repete sem a cor apagar entre um toque e outro, o app vê um toque só. Confira a lista abaixo e acrescente o que faltar.</p></li>
+          </ol>
+        </div>
+        <h3>Notas do gabarito <span id="gabContagem" class="dica"></span></h3>
+        <div class="linha"><select id="notaAdd" aria-label="Nota para adicionar"></select><button id="btnAddNota" class="btn-ghost small">Adicionar no ponto atual do vídeo</button></div>
+        <div class="linha"><label class="campo inline">Mover todas (ms)&nbsp;<input type="number" id="deslocar" value="0" step="10"></label><button id="btnDeslocar" class="btn-ghost small">Aplicar</button></div>
+        <div id="listaGab" class="lista-gab"></div>
+      </div>
+    </div>
+
+    <div class="aba" id="aba-sessao">
+      <h2>Sessão com o paciente</h2>
+      <label class="campo">Paciente<input id="paciente" list="listaPac" placeholder="Nome ou código" autocomplete="off"><datalist id="listaPac"></datalist></label>
+      <label class="campo">Gabarito<select id="sessGab"></select></label>
+      <label class="campo">Janela de acerto: ± <span id="janelaVal">300</span> ms<input type="range" id="janela" min="100" max="800" step="25" value="300"></label>
+      <label class="check"><input type="checkbox" id="ignOit" checked=""> Aceitar a nota certa em qualquer oitava</label>
+      <label class="check"><input type="checkbox" id="soRitmo"> Avaliar só o ritmo (qualquer nota vale)</label>
+      <button id="btnSessao" class="btn grande">Iniciar sessão</button>
+      <p class="dica">O vídeo volta ao início, conta 3 segundos e começa. A sessão termina sozinha no fim do vídeo, e o resultado aparece abaixo e fica salvo no histórico.</p>
+    </div>
+
+    <div class="aba" id="aba-historico">
+      <h2>Histórico</h2>
+      <label class="campo">Paciente<select id="histPac"></select></label>
+      <div id="histGrafico"></div>
+      <div id="histLista" class="hist-lista"></div>
+      <h3>Cópia de segurança</h3>
+      <p class="dica">Os dados ficam guardados só neste navegador. Baixe uma cópia de vez em quando.</p>
+      <div class="linha"><button id="btnBackup" class="btn-ghost small">Baixar cópia</button><label class="btn-ghost small">Restaurar cópia<input type="file" id="arqBackup" accept=".json,application/json" hidden=""></label></div>
+    </div>
+  </aside>
+</main>
+
+<section id="resultado" class="resultado" hidden=""></section>
+<div id="modal" class="modal" hidden="" role="dialog" aria-modal="true" aria-labelledby="modalTxt"><div class="modal-caixa"><p id="modalTxt"></p><input id="modalInp" type="text" hidden="" aria-label="Resposta"><div class="linha"><button id="modalNao" class="btn-ghost" type="button">Cancelar</button><button id="modalOk" class="btn" type="button">OK</button></div></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+const HTML_ORIGINAL = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const video = $('#video');
+
+/* ---------- notas e cores ---------- */
+const NOMES = ['Dó','Dó#','Ré','Ré#','Mi','Fá','Fá#','Sol','Sol#','Lá','Lá#','Si'];
+const CORES = ['#E53935','#F4511E','#FB8C00','#FFB300','#FDD835','#7CB342','#26A69A','#00ACC1','#1E88E5','#5E35B1','#8E24AA','#D81B60'];
+const NATURAIS = [60,62,64,65,67,69,71,72];
+const SUSTENIDOS = [61,63,66,68,70];
+const nomeNota = n => (n == null || n < 0) ? '?' : (n === 72 ? 'Dó agudo' : NOMES[n % 12]);
+const nomeCurto = n => (n == null || n < 0) ? '?' : NOMES[n % 12];
+const corNota = n => (n == null || n < 0) ? '#8E9A96' : CORES[n % 12];
+const hexRgb = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+function opcoesNotas(sel){
+  const lista = [...NATURAIS, ...SUSTENIDOS].sort((a,b)=>a-b);
+  if (sel != null && sel >= 0 && !lista.includes(sel)) lista.push(sel);
+  return lista.map(n => {
+    const nome = (n >= 60 && n <= 72) ? nomeNota(n) : NOMES[n%12] + (Math.floor(n/12)-1);
+    return `<option value="${n}" ${n===sel?'selected':''}>${nome}</option>`;
+  }).join('') + `<option value="-1" ${sel===-1?'selected':''}>Toque sem nota</option>`;
+}
+const fmt = (v, d=0) => Number(v).toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
+const pct = (a, b) => b ? Math.round(100*a/b) : 0;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const dataHora = iso => { const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); };
+
+/* ---------- armazenamento ---------- */
+const CHAVE = 'sincronia_v1';
+let db = carregar();
+function carregar(){
+  try { const s = localStorage.getItem(CHAVE); if (s) { const o = JSON.parse(s); return Object.assign({gabaritos:[],perfis:[],sessoes:[],visCfg:{},prefs:{}}, o); } } catch(e) {}
+  return {gabaritos:[],perfis:[],sessoes:[],visCfg:{},prefs:{}};
+}
+function salvar(){
+  try { localStorage.setItem(CHAVE, JSON.stringify(db)); }
+  catch(e) { toast('Não foi possível salvar neste navegador. Baixe uma cópia no Histórico.'); }
+}
+
+/* ---------- perguntas dentro da página (prompt/confirm não funcionam em todo lugar) ---------- */
+function perguntar(txt, o = {}){
+  return new Promise(res => {
+    const m = $('#modal'), inp = $('#modalInp'), ok = $('#modalOk'), nao = $('#modalNao'), antes = document.activeElement;
+    $('#modalTxt').textContent = txt; inp.hidden = !o.campo; inp.value = o.valor || '';
+    ok.textContent = o.ok || 'OK'; ok.classList.toggle('perigo', !!o.perigo); m.hidden = false;
+    (o.campo ? inp : ok).focus();
+    const fim = v => { m.hidden = true; ok.onclick = nao.onclick = m.onkeydown = null; if (antes && antes.focus) antes.focus(); res(v); };
+    ok.onclick = () => fim(o.campo ? inp.value.trim() : true);
+    nao.onclick = () => fim(o.campo ? null : false);
+    m.onkeydown = e => { if (e.key === 'Escape') nao.onclick(); if (e.key === 'Enter' && o.campo) { e.preventDefault(); ok.onclick(); } };
+  });
+}
+
+/* ---------- avisos e downloads ---------- */
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 4200); }
+let dlCap = null;
+(async () => { try { if (window.claude && window.claude.use) dlCap = await window.claude.use('downloads'); } catch(e) {} })();
+async function baixar(nome, dados){
+  if (dlCap) {
+    try { await dlCap.save({filename:nome, data:dados}); return; }
+    catch(e) { if (e && e.code === 'declined') return; if (e && e.code === 'rate_limited') { toast('Aguarde um instante e tente de novo.'); return; } }
+  }
+  try {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([dados])); a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch(e) { toast('Este navegador não permitiu baixar o arquivo.'); }
+}
+
+/* ---------- estado ---------- */
+if (!db.prefs.v2) { db.prefs.v2 = 1; if (matchMedia('(pointer:coarse)').matches && db.prefs.modo === 'teclado-pc') db.prefs.modo = 'teclado-tela'; }
+const S = {
+  modo: db.prefs.modo || (matchMedia('(pointer:coarse)').matches ? 'teclado-tela' : 'teclado-pc'),
+  latencia: 0,
+  videoKey: null, videoNome: null,
+  gravando: null,       // 'gabarito' | 'sessao'
+  buf: [],
+  gabSel: null,
+  sess: null,
+  detectando: false,
+  pick: null,           // 'ponto' | 'cor'
+  calib: null,          // {nota, amostras:[]}
+  perfilId: db.prefs.perfilId || null,
+  midiOk: false, micOk: false,
+};
+
+/* ---------- abas ---------- */
+$$('.abas button').forEach(b => b.addEventListener('click', () => abrirAba(b.dataset.aba)));
+function abrirAba(nome){
+  $$('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === nome));
+  $$('.aba').forEach(a => a.classList.toggle('ativa', a.id === 'aba-' + nome));
+  if (nome === 'historico') renderHist();
+}
+
+/* ---------- vídeo ---------- */
+let vidTok = 0, vidArq = null, vidB = false;
+const MSG_FORMATO = 'Converta o vídeo para MP4 (H.264 com áudio AAC) e abra de novo. Vídeos .MOV, HEVC/H.265 ou gravados direto de alguns celulares costumam não abrir.';
+function msgVideo(html, leve){
+  const m = $('#videoMsg'); m.className = 'video-msg' + (leve ? ' leve' : '');
+  m.innerHTML = html; m.hidden = !html;
+}
+function erroVideo(texto){
+  msgVideo('<p><b>O vídeo não abriu.</b></p><p>' + texto + '</p><div class="linha" style="justify-content:center"><button class="btn-ghost small" data-vm="again">Tentar de novo</button><button class="btn-ghost small" data-vm="offline">Baixar o app para usar offline</button></div>');
+  $('#nomeVideo').textContent = (vidArq ? vidArq.name + ': ' : '') + 'não abriu';
+}
+$('#videoMsg').addEventListener('click', e => {
+  const b = e.target.closest('[data-vm]'); if (!b) return;
+  if (b.dataset.vm === 'again' && vidArq) abrirArquivoVideo(vidArq, true);
+  if (b.dataset.vm === 'offline') baixar('sincronia.html', HTML_ORIGINAL);
+});
+function videoPronto(f, tok){
+  if (tok !== vidTok || S.videoKey) return;
+  const dur = video.duration;
+  S.videoKey = f.name + '|' + (isFinite(dur) ? Math.round(dur || 0) : f.size);
+  S.videoNome = f.name;
+  $('#nomeVideo').textContent = f.name + ' (' + (isFinite(dur) ? fmtTempo(dur) : 'duração desconhecida') + ')';
+  if (!video.videoWidth) msgVideo('<p><b>Só o som deste vídeo abriu.</b></p><p>O navegador não entende a imagem. ' + MSG_FORMATO + '</p>');
+  else msgVideo('');
+  try { if (video.currentTime === 0) video.currentTime = 0.001; } catch(e) {}
+  const gs = gabsDoVideo();
+  S.gabSel = gs.length ? gs[gs.length-1].id : null;
+  carregarVisCfg(); renderGabs(); renderCamada(); atualizarPlayGrande();
+}
+function tentarPlanoB(f, tok){
+  if (vidB || tok !== vidTok) return false;
+  vidB = true;
+  if (f.size > 120e6) return false;
+  msgVideo('Ainda carregando o vídeo de outro jeito…', true);
+  const fr = new FileReader();
+  fr.onload = () => { if (tok === vidTok && !S.videoKey) { video.src = fr.result; video.load(); setTimeout(() => { if (tok === vidTok && !S.videoKey) erroVideo('O navegador (ou a janela do Claude) bloqueou a leitura. Use o botão abaixo para baixar o app e abrir o arquivo direto no Chrome ou Safari.'); }, 6000); } };
+  fr.onerror = () => { if (tok === vidTok && !S.videoKey) erroVideo('Não consegui ler o arquivo.'); };
+  fr.readAsDataURL(f);
+  return true;
+}
+function abrirArquivoVideo(f, repetir){
+  if (!f) return;
+  if (S.gravando || S.detectando) { toast('Termine a gravação atual antes de trocar o vídeo.'); return; }
+  const tok = ++vidTok; vidArq = f; vidB = false; S.videoKey = null;
+  if (video.src && video.src.startsWith('blob:')) URL.revokeObjectURL(video.src);
+  $('#caixaVideo').classList.remove('vazio');
+  $('#nomeVideo').textContent = f.name + ': carregando…';
+  msgVideo('Carregando o vídeo…', true);
+  renderGabs();
+  video.onloadedmetadata = video.onloadeddata = video.oncanplay = () => videoPronto(f, tok);
+  video.onerror = () => {
+    if (tok !== vidTok) return;
+    const c = video.error ? video.error.code : 0;
+    if (c === 4 && tentarPlanoB(f, tok)) return;
+    erroVideo(c === 3 ? 'O navegador não conseguiu decodificar a imagem. ' + MSG_FORMATO
+      : c === 4 ? 'Formato não aceito ou bloqueado neste navegador. ' + MSG_FORMATO + ' Se você está usando dentro do Claude, baixe o app e abra o arquivo no Chrome ou Safari.'
+      : 'Houve um erro ao ler o arquivo. Tente de novo.');
+  };
+  video.src = URL.createObjectURL(f);
+  video.load();
+  setTimeout(() => { if (tok === vidTok && !S.videoKey && !video.error && video.readyState === 0 && !tentarPlanoB(f, tok)) erroVideo('O vídeo demorou demais para abrir. ' + MSG_FORMATO + ' Se continuar, baixe o app para usar offline.'); }, 6000);
+}
+function atualizarPlayGrande(){
+  const mostrar = !!S.videoKey && video.paused && !video.ended && !S.gravando && !S.detectando && $('#contagem').hidden && $('#videoMsg').hidden;
+  $('#btnPlayGrande').hidden = !mostrar;
+}
+['play','pause','ended','emptied'].forEach(ev => video.addEventListener(ev, atualizarPlayGrande));
+$('#btnPlayGrande').addEventListener('click', () => iniciarVideo());
+function iniciarVideo(){
+  return video.play().catch(err => {
+    atualizarPlayGrande();
+    toast(err && err.name === 'NotAllowedError' ? 'Toque no ▶ do vídeo para começar.' : 'O vídeo não começou a tocar. ' + (err && err.message || ''));
+  });
+}
+/* no iPhone/Android o play por código só funciona depois de um toque do usuário: este toque "destrava" o vídeo */
+function destravarVideo(){
+  if (!S.videoKey || !video.paused) return;
+  const t = video.currentTime;
+  video.play().then(() => { video.pause(); video.currentTime = t; }).catch(() => {});
+}
+$('#arquivoVideo').addEventListener('change', e => { abrirArquivoVideo(e.target.files[0]); e.target.value = ''; });
+$('#arquivoVideo2').addEventListener('change', e => { abrirArquivoVideo(e.target.files[0]); e.target.value = ''; });
+const cx = $('#caixaVideo');
+cx.addEventListener('dragover', e => { e.preventDefault(); cx.classList.add('arrastando'); });
+cx.addEventListener('dragleave', () => cx.classList.remove('arrastando'));
+cx.addEventListener('drop', e => { e.preventDefault(); cx.classList.remove('arrastando'); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('video')) abrirArquivoVideo(f); });
+const fmtTempo = s => { s = Math.max(0, s || 0); const m = Math.floor(s/60), r = Math.floor(s%60); return m + ':' + String(r).padStart(2,'0'); };
+const temVideo = () => !!S.videoKey;
+video.addEventListener('ended', () => {
+  if (S.detectando) finalizarDeteccao();
+  else if (S.gravando) pararGravacao();
+});
+
+/* ---------- registro de notas (todas as entradas passam por aqui) ---------- */
+function registrarNota(n, tVideo, fonte){
+  mostrarAoVivo(n, fonte);
+  if (!S.gravando || video.paused) return;
+  const t = (tVideo ?? video.currentTime) - S.latencia/1000;
+  S.buf.push({t: Math.round(t*1000)/1000, n});
+  atualizarStatusGrav();
+}
+function mostrarAoVivo(n, fonte){
+  const b = $('#bolha');
+  b.style.background = corNota(n);
+  $('#bolhaNome').textContent = nomeCurto(n);
+  b.classList.remove('pulso'); void b.offsetWidth; b.classList.add('pulso');
+  $('#aovivoTitulo').textContent = n < 0 ? 'Toque registrado' : 'Nota: ' + nomeNota(n);
+  $('#aovivoFonte').textContent = fonte || '';
+}
+
+/* ---------- entrada: escolha do modo ---------- */
+function aplicarModo(){
+  $$('input[name=modo]').forEach(r => r.checked = r.value === S.modo);
+  $('#cfg-tela').hidden = S.modo !== 'teclado-tela';
+  $('#tecladoTela').hidden = S.modo !== 'teclado-tela';
+  document.body.classList.toggle('com-teclado', S.modo === 'teclado-tela');
+  $('#cfg-midi').hidden = S.modo !== 'midi';
+  $('#cfg-mic').hidden = !S.modo.startsWith('mic');
+  $('#cfg-calib').hidden = !S.modo.startsWith('mic');
+  $('#cfg-teclas').hidden = S.modo !== 'teclado-pc';
+  $('#medidorWrap').hidden = !(S.modo.startsWith('mic') && S.micOk);
+  db.prefs.modo = S.modo; salvar();
+  atualizarChip();
+  if (S.modo.startsWith('mic')) renderCalib();
+}
+$$('input[name=modo]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.modo = r.value; S.calib = null; aplicarModo(); } }));
+function entradaPronta(){
+  if (S.modo === 'midi') return S.midiOk;
+  if (S.modo === 'mic-altura') return S.micOk;
+  if (S.modo === 'mic-calib') return S.micOk && !!perfilAtual() && Object.keys(perfilAtual().modelos).length > 0;
+  return true;
+}
+function atualizarChip(){
+  const nomes = {'teclado-tela':'Teclado na tela','midi':'Teclado MIDI','mic-altura':'Teclado pelo microfone','mic-calib':'Sinos pelo microfone','teclado-pc':'Teclado do computador'};
+  const ok = entradaPronta();
+  $('#chipEntrada').classList.toggle('ok', ok);
+  $('#chipTxt').textContent = nomes[S.modo] + (ok ? ': pronto' : ': falta ativar');
+}
+$('#latencia').addEventListener('input', e => { S.latencia = +e.target.value || 0; });
+
+/* ---------- entrada: teclado do computador ---------- */
+const MAPA = {a:60,w:61,s:62,e:63,d:64,f:65,t:66,g:67,y:68,h:69,u:70,j:71,k:72};
+$('#mapaTeclas').innerHTML = Object.entries(MAPA).filter(([k,n]) => !SUSTENIDOS.includes(n))
+  .map(([k,n]) => `<span style="background:${corNota(n)}"><kbd>${k.toUpperCase()}</kbd>${nomeNota(n)}</span>`).join('')
+  + '<span style="background:#6B7774"><kbd>W E T Y U</kbd>sustenidos</span>';
+document.addEventListener('keydown', e => {
+  if (!['teclado-pc','teclado-tela'].includes(S.modo) || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (['input','select','textarea'].includes(tag)) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); registrarNota(-1, null, 'Teclado do computador'); return; }
+  if (k in MAPA) { e.preventDefault(); registrarNota(MAPA[k], null, 'Teclado do computador'); }
+});
+
+/* ---------- entrada: teclado na tela (toque) ---------- */
+let somCtx = null;
+function tocarSom(n){
+  if (!$('#telaSom').checked || n < 0) return;
+  try {
+    somCtx = somCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (somCtx.state === 'suspended') somCtx.resume();
+    const o = somCtx.createOscillator(), g = somCtx.createGain(), t = somCtx.currentTime;
+    o.type = 'triangle'; o.frequency.value = 440 * Math.pow(2, (n - 69) / 12);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+    o.connect(g); g.connect(somCtx.destination); o.start(t); o.stop(t + 0.5);
+  } catch(e) {}
+}
+function montarTeclado(){
+  const ns = ($('#telaSust').checked ? [...NATURAIS, ...SUSTENIDOS] : NATURAIS).slice().sort((a,b) => a - b);
+  $('#tecladoTela').innerHTML = ns.map(n => `<button class="tecla ${SUSTENIDOS.includes(n) ? 'sust' : ''}" data-n="${n}" style="background:${corNota(n)}" aria-label="${nomeNota(n)}">${n === 72 ? 'Dó ↑' : nomeCurto(n)}</button>`).join('')
+    + '<button class="tecla ritmo" data-n="-1" aria-label="Toque sem nota">Ritmo</button>';
+}
+$('#tecladoTela').addEventListener('pointerdown', e => {
+  const b = e.target.closest('.tecla'); if (!b) return;
+  e.preventDefault();
+  const n = +b.dataset.n;
+  b.classList.add('press');
+  registrarNota(n, null, 'Teclado na tela');
+  tocarSom(n);
+  if ($('#telaVibra').checked && navigator.vibrate) navigator.vibrate(12);
+});
+['pointerup','pointercancel','pointerout'].forEach(ev => $('#tecladoTela').addEventListener(ev, e => { const b = e.target.closest && e.target.closest('.tecla'); if (b) b.classList.remove('press'); }));
+$('#tecladoTela').addEventListener('contextmenu', e => e.preventDefault());
+$('#telaSust').addEventListener('change', montarTeclado);
+montarTeclado();
+
+/* ---------- entrada: MIDI ---------- */
+$('#btnMidi').addEventListener('click', async () => {
+  const st = $('#midiStatus');
+  if (!navigator.requestMIDIAccess) { st.className = 'nota-status erro'; st.textContent = 'Este navegador não lê teclados MIDI. Use o Google Chrome ou o Edge no computador.'; return; }
+  try {
+    const acc = await navigator.requestMIDIAccess();
+    const ligar = () => {
+      const ins = Array.from(acc.inputs.values());
+      ins.forEach(i => i.onmidimessage = m => {
+        const [s, d1, d2] = m.data;
+        if ((s & 0xf0) === 0x90 && d2 > 0) registrarNota(d1, null, 'Teclado MIDI: ' + (i.name || ''));
+      });
+      S.midiOk = ins.length > 0;
+      st.className = 'nota-status ' + (ins.length ? 'ok' : 'erro');
+      st.textContent = ins.length ? 'Conectado: ' + ins.map(i => i.name).join(', ') + '. Toque uma tecla para testar.' : 'Nenhum teclado encontrado. Confira o cabo USB; o app conecta sozinho quando o teclado aparecer.';
+      atualizarChip();
+    };
+    acc.onstatechange = ligar; ligar();
+  } catch(e) {
+    st.className = 'nota-status erro';
+    st.textContent = 'O navegador bloqueou o acesso ao MIDI nesta página. Use o botão “Baixar o app para usar offline”, abra o arquivo no Chrome e permita o acesso.';
+  }
+});
+
+/* ---------- entrada: microfone ---------- */
+const MIC_PAD = {limDb:-34, ganho:1, intervalo:140, ataque:1.6, escuta:90, grave:48, aguda:96, rigor:15};
+let micCfg = Object.assign({}, MIC_PAD, db.prefs.mic || {});
+const Mic = {ctx:null, an:null, gain:null, sp:null, buf:null, freq:null, prev:0, ultimo:0, rms:0, thr:0.02, sr:48000, ring:null, rp:0, pico:0, medindo:null};
+const dbDe = r => 20 * Math.log10(Math.max(r, 1e-5));
+const nivelPct = r => Math.max(0, Math.min(100, (dbDe(r) + 80) / 70 * 100));   /* -80 dB a -10 dB */
+const nomeOitava = n => NOMES[n % 12] + (Math.floor(n / 12) - 1);
+const MIC_ROT = {limDb: v => fmt(v, 1) + ' dB', ganho: v => fmt(v, 1) + '×', intervalo: v => v + ' ms', ataque: v => fmt(v, 1) + '×', escuta: v => v + ' ms', rigor: v => v + '%'};
+['#micGrave', '#micAguda'].forEach(id => { let h = ''; for (let n = 36; n <= 96; n++) h += `<option value="${n}">${nomeOitava(n)}</option>`; $(id).innerHTML = h; });
+function aplicarMicCfg(gravar){
+  Mic.thr = Math.pow(10, micCfg.limDb / 20);
+  if (Mic.gain) Mic.gain.gain.value = micCfg.ganho;
+  $$('[data-mic]').forEach(el => { if (document.activeElement !== el || el.tagName === 'SELECT') el.value = micCfg[el.dataset.mic]; });
+  $$('[data-micval]').forEach(el => el.textContent = MIC_ROT[el.dataset.micval](micCfg[el.dataset.micval]));
+  $('#limiar').style.left = nivelPct(Mic.thr) + '%';
+  if (gravar) { db.prefs.mic = Object.assign({}, micCfg); salvar(); }
+}
+const atualizarLimiar = () => aplicarMicCfg(false);
+$$('[data-mic]').forEach(el => el.addEventListener('input', () => { micCfg[el.dataset.mic] = +el.value; aplicarMicCfg(true); }));
+const ajustarLim = d => { micCfg.limDb = Math.max(-70, Math.min(-15, Math.round((micCfg.limDb + d) * 2) / 2)); aplicarMicCfg(true); };
+$('#limMenos').addEventListener('click', () => ajustarLim(-1));
+$('#limMais').addEventListener('click', () => ajustarLim(1));
+$('#btnMicPadrao').addEventListener('click', () => { micCfg = Object.assign({}, MIC_PAD); aplicarMicCfg(true); toast('Ajustes do microfone restaurados.'); });
+$('#btnRuido').addEventListener('click', () => {
+  const st = $('#ruidoStatus');
+  if (!Mic.ctx) { st.className = 'nota-status erro'; st.textContent = 'Ative o microfone primeiro.'; return; }
+  if (Mic.medindo) return;
+  Mic.medindo = [];
+  st.className = 'nota-status'; st.textContent = 'Medindo… fique em silêncio e deixe o vídeo parado.';
+  setTimeout(() => {
+    const v = Mic.medindo || []; Mic.medindo = null;
+    if (v.length < 20) { st.className = 'nota-status erro'; st.textContent = 'Não deu para medir. Tente de novo.'; return; }
+    v.sort((a, b) => a - b);
+    const ruido = dbDe(v[Math.floor(v.length * 0.95)]);
+    micCfg.limDb = Math.max(-70, Math.min(-15, Math.round(ruido + 10)));
+    aplicarMicCfg(true);
+    st.className = ruido > -30 ? 'nota-status erro' : 'nota-status ok';
+    st.textContent = (ruido > -30 ? 'Havia som alto durante a medição: tente de novo em silêncio. ' : '') + 'Ruído da sala: ' + fmt(ruido, 0) + ' dB. Volume mínimo ajustado para ' + fmt(micCfg.limDb, 0) + ' dB. Toque uma nota para conferir e use − / + se precisar.';
+  }, 3000);
+});
+$('#btnMic').addEventListener('click', async () => {
+  const st = $('#micStatus');
+  if (Mic.ctx) { st.className='nota-status ok'; st.textContent = 'Microfone já está ativo.'; return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
+    Mic.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (Mic.ctx.state === 'suspended') Mic.ctx.resume();
+    Mic.sr = Mic.ctx.sampleRate;
+    const src = Mic.ctx.createMediaStreamSource(stream);
+    Mic.gain = Mic.ctx.createGain(); Mic.gain.gain.value = micCfg.ganho;
+    Mic.an = Mic.ctx.createAnalyser(); Mic.an.fftSize = 4096; Mic.an.smoothingTimeConstant = 0;
+    src.connect(Mic.gain); Mic.gain.connect(Mic.an);
+    Mic.buf = new Float32Array(4096); Mic.freq = new Float32Array(2048);
+    /* gravador circular de 2 s, usado para guardar o áudio das amostras */
+    try {
+      Mic.ring = new Float32Array(Math.ceil(Mic.sr * 2)); Mic.rp = 0;
+      Mic.sp = Mic.ctx.createScriptProcessor(2048, 1, 1);
+      Mic.sp.onaudioprocess = e => { const d = e.inputBuffer.getChannelData(0), n = Mic.ring.length; for (let i = 0; i < d.length; i++) { Mic.ring[Mic.rp] = d[i]; Mic.rp = (Mic.rp + 1) % n; } };
+      const mudo = Mic.ctx.createGain(); mudo.gain.value = 0;
+      Mic.gain.connect(Mic.sp); Mic.sp.connect(mudo); mudo.connect(Mic.ctx.destination);
+    } catch(e) { Mic.ring = null; }
+    setInterval(micTick, 8);
+    S.micOk = true; aplicarMicCfg(false);
+    st.className = 'nota-status ok'; st.textContent = 'Microfone ativo. Toque uma nota para testar.';
+    $('#medidorWrap').hidden = false; atualizarChip();
+    requestAnimationFrame(function m(){
+      const r = Mic.rms; Mic.pico = r > Mic.pico ? r : Mic.pico * 0.985;
+      $('#medidor').style.width = nivelPct(r) + '%'; $('#pico').style.left = nivelPct(Mic.pico) + '%';
+      $('#medidorTxt').textContent = fmt(dbDe(r), 0) + ' dB (limite ' + fmt(micCfg.limDb, 0) + ' dB)';
+      requestAnimationFrame(m);
+    });
+  } catch(e) {
+    st.className = 'nota-status erro';
+    st.textContent = 'Não consegui usar o microfone. Permita o acesso no navegador. Se continuar bloqueado, use o botão “Baixar o app para usar offline” e abra o arquivo no Chrome.';
+  }
+});
+/* iPhone/Android deixam o áudio "suspenso" até um toque do usuário */
+document.addEventListener('pointerdown', () => { if (Mic.ctx && Mic.ctx.state === 'suspended') Mic.ctx.resume(); }, {passive: true});
+function micTick(){
+  if (!Mic.an || !(S.modo.startsWith('mic') || Mic.medindo)) return;
+  Mic.an.getFloatTimeDomainData(Mic.buf);
+  let s = 0; for (let i = 4096 - 512; i < 4096; i++) s += Mic.buf[i] * Mic.buf[i];
+  const rms = Math.sqrt(s / 512); Mic.rms = rms;
+  if (Mic.medindo) Mic.medindo.push(rms);
+  const agora = performance.now();
+  if (S.modo.startsWith('mic') && rms > Mic.thr && rms > Mic.prev * micCfg.ataque + 0.002 && agora - Mic.ultimo > micCfg.intervalo) {
+    Mic.ultimo = agora;
+    const tv = video.currentTime;
+    setTimeout(() => analisarAtaque(tv), micCfg.escuta);
+  }
+  Mic.prev = Mic.prev * 0.6 + rms * 0.4;
+}
+const ranquear = (v, p) => p ? Object.entries(p.modelos).map(([n, m]) => ({n: +n, sim: cosseno(v, m)})).sort((a, b) => b.sim - a.sim) : [];
+function analisarAtaque(tv){
+  if (!Mic.an) return;
+  const b = new Float32Array(4096); Mic.an.getFloatTimeDomainData(b);
+  Mic.an.getFloatFrequencyData(Mic.freq);
+  const v = espectro(Mic.freq, Mic.sr);
+  if (S.calib) { receberAmostra(v); return; }
+  const p = perfilAtual(), simMin = +$('#simMin').value / 100, rk = ranquear(v, p);
+  if (S.modo === 'mic-altura') {
+    const f = yin(b, Mic.sr, micCfg.rigor / 100);
+    const midi = f ? Math.round(69 + 12 * Math.log2(f / 440)) : 0;
+    if (midi && midi >= micCfg.grave && midi <= micCfg.aguda) {
+      const prox = rk.find(c => Math.abs(c.n - midi) <= 2 && c.sim >= simMin);
+      if (prox) registrarNota(prox.n, tv, 'Microfone + amostra (' + Math.round(prox.sim * 100) + '% parecido)');
+      else registrarNota(midi, tv, 'Microfone (' + Math.round(f) + ' Hz)');
+    } else if (rk[0] && rk[0].sim >= simMin) {
+      registrarNota(rk[0].n, tv, 'Amostra (' + Math.round(rk[0].sim * 100) + '% parecido)');
+    } else if (f) {
+      $('#aovivoFonte').textContent = 'Som fora da faixa de notas aceitas (' + Math.round(f) + ' Hz)';
+    }
+  } else if (S.modo === 'mic-calib') {
+    if (!rk.length) return;
+    const melhor = rk[0].n, ms = rk[0].sim;
+    if (ms < simMin) { $('#aovivoFonte').textContent = 'Som ignorado (' + Math.round(ms*100) + '% parecido com ' + nomeNota(melhor) + ')'; return; }
+    registrarNota(melhor, tv, 'Amostra (' + Math.round(ms*100) + '% parecido)');
+  }
+}
+function yin(b, sr, limite = 0.15){
+  const W = 2048, maxT = Math.min(Math.floor(sr/55), 1000), minT = Math.floor(sr/2200);
+  const off = b.length - (W + maxT);
+  const d = new Float32Array(maxT + 1), c = new Float32Array(maxT + 1);
+  for (let t = 1; t <= maxT; t++) { let s = 0; for (let i = 0; i < W; i++) { const x = b[off+i] - b[off+i+t]; s += x*x; } d[t] = s; }
+  c[0] = 1; let run = 0;
+  for (let t = 1; t <= maxT; t++) { run += d[t]; c[t] = run ? d[t] * t / run : 1; }
+  let tau = -1;
+  for (let t = Math.max(2, minT); t < maxT; t++) { if (c[t] < limite) { while (t + 1 < maxT && c[t+1] < c[t]) t++; tau = t; break; } }
+  if (tau < 0) return 0;
+  const x0 = c[tau-1], x1 = c[tau], x2 = c[tau+1], den = x0 + x2 - 2*x1;
+  const t2 = den ? tau + (x0 - x2) / (2*den) : tau;
+  return sr / t2;
+}
+function espectro(fdb, sr){
+  const bin = sr / 4096, out = [];
+  for (let k = 0; k < 256; k++) {
+    const f = 150 * Math.pow(2, k/48);
+    const pos = f / bin, i = Math.floor(pos), fr = pos - i;
+    const a = Math.pow(10, (fdb[i] || -200) / 40), b = Math.pow(10, (fdb[i+1] || -200) / 40);
+    out.push(a * (1 - fr) + b * fr);
+  }
+  const nrm = Math.sqrt(out.reduce((s,x) => s + x*x, 0)) || 1;
+  return out.map(x => x / nrm);
+}
+function cosseno(a, b){ let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }
+
+/* ---------- amostras de som por nota (instrumentos) ---------- */
+/* o "jeito" do som (impressão espectral) fica no conjunto; o áudio curto fica no IndexedDB */
+const IDB = {
+  abrir(){ return this.p || (this.p = new Promise((ok, no) => { try { const r = indexedDB.open('sincronia', 1); r.onupgradeneeded = () => r.result.createObjectStore('clips'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); } catch(e) { no(e); } })); },
+  async tx(modo, fn){ const d = await this.abrir(); return new Promise((ok, no) => { const t = d.transaction('clips', modo); const rq = fn(t.objectStore('clips')); t.oncomplete = () => ok(rq && rq.result); t.onerror = t.onabort = () => no(t.error); }); },
+  put(k, v){ return this.tx('readwrite', s => s.put(v, k)); },
+  get(k){ return this.tx('readonly', s => s.get(k)); },
+  del(k){ return this.tx('readwrite', s => s.delete(k)); },
+  async todos(){ const d = await this.abrir(); return new Promise((ok, no) => { const out = {}; const rq = d.transaction('clips').objectStore('clips').openCursor(); rq.onsuccess = () => { const c = rq.result; if (c) { out[c.key] = c.value; c.continue(); } else ok(out); }; rq.onerror = () => no(rq.error); }); }
+};
+const b64 = buf => { const u = new Uint8Array(buf); let r = ''; for (let i = 0; i < u.length; i += 0x8000) r += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(r); };
+const unb64 = t => { const r = atob(t), u = new Uint8Array(r.length); for (let i = 0; i < r.length; i++) u[i] = r.charCodeAt(i); return u.buffer; };
+function pegarClipe(seg){
+  if (!Mic.ring) return null;
+  const n = Math.min(Mic.ring.length, Math.round(seg * Mic.sr)), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) out[i] = Mic.ring[(Mic.rp - n + i + Mic.ring.length * 2) % Mic.ring.length];
+  return out;
+}
+const energia = (a, i, j) => { let s = 0; for (let k = i; k < j; k++) s += a[k] * a[k]; return s / Math.max(1, j - i); };
+function clipeParaArmazenar(c){
+  let pico = 0; for (const x of c) pico = Math.max(pico, Math.abs(x));
+  const g = pico > 0 ? 0.9 / pico : 1, pcm = new Int16Array(c.length);
+  for (let i = 0; i < c.length; i++) pcm[i] = Math.max(-1, Math.min(1, c[i] * g)) * 32767;
+  return {sr: Mic.sr, pcm: pcm.buffer};
+}
+async function ouvirClipe(nota){
+  try {
+    const r = await IDB.get(S.perfilId + '|' + nota);
+    if (!r) { toast('Esta nota não tem áudio guardado. Ensine de novo.'); return; }
+    somCtx = somCtx || Mic.ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = Mic.ctx || somCtx;
+    if (ctx.state === 'suspended') await ctx.resume();
+    const pcm = new Int16Array(r.pcm), buf = ctx.createBuffer(1, pcm.length, r.sr), ch = buf.getChannelData(0);
+    for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i] / 32767;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination); src.start();
+  } catch(e) { toast('Não consegui tocar a amostra neste navegador.'); }
+}
+function perfilAtual(){ return db.perfis.find(p => p.id === S.perfilId) || null; }
+function garantirPerfil(){
+  if (!db.perfis.length) { db.perfis.push({id: uid(), nome: 'Meu instrumento', modelos: {}}); salvar(); }
+  if (!perfilAtual()) S.perfilId = db.perfis[0].id;
+}
+function renderCalib(){
+  garantirPerfil();
+  $('#tituloCalib').textContent = S.modo === 'mic-calib' ? 'Sons do instrumento' : 'Amostras de som (opcional: deixa o reconhecimento mais firme)';
+  $('#perfilSel').innerHTML = db.perfis.map(p => `<option value="${p.id}" ${p.id===S.perfilId?'selected':''}>${esc(p.nome)}</option>`).join('');
+  const p = perfilAtual();
+  const notas = $('#mostrarSust').checked ? [...NATURAIS, ...SUSTENIDOS].sort((a,b)=>a-b) : NATURAIS;
+  $('#gradeCalib').innerHTML = notas.map(n => {
+    const feito = !!p.modelos[n], ouv = S.calib && S.calib.nota === n, q = p.qual ? p.qual[n] : null, irreg = feito && q != null && q < 80;
+    const sub = ouv ? `toque ${3 - S.calib.amostras.length}x` : (feito ? (irreg ? 'refazer? ' + q + '%' : 'pronto ✓' + (q != null ? ' ' + q + '%' : '')) : 'ensinar');
+    const acoes = feito && !ouv ? `<div class="sino-acoes">${p.clips && p.clips[n] ? `<button class="ic" data-ouvir="${n}" title="Ouvir a amostra" aria-label="Ouvir a amostra de ${nomeNota(n)}">▶</button>` : ''}<button class="ic" data-apagar="${n}" title="Apagar esta amostra" aria-label="Apagar a amostra de ${nomeNota(n)}">✕</button></div>` : '';
+    return `<div class="sino-wrap"><button class="sino ${feito?'feito':''} ${irreg?'irreg':''} ${ouv?'ouvindo':''}" data-n="${n}"><i style="background:${corNota(n)}"></i>${nomeNota(n)}<small>${sub}</small></button>${acoes}</div>`;
+  }).join('');
+  atualizarChip();
+}
+$('#gradeCalib').addEventListener('click', e => {
+  const o = e.target.closest('[data-ouvir]'); if (o) { ouvirClipe(+o.dataset.ouvir); return; }
+  const a = e.target.closest('[data-apagar]'); if (a) { apagarAmostra(+a.dataset.apagar); return; }
+  const b = e.target.closest('.sino'); if (!b) return;
+  if (!S.micOk) { toast('Ative o microfone primeiro.'); return; }
+  const n = +b.dataset.n;
+  S.calib = (S.calib && S.calib.nota === n) ? null : {nota: n, amostras: [], clips: []};
+  renderCalib();
+});
+function apagarAmostra(n){
+  const p = perfilAtual(); if (!p) return;
+  delete p.modelos[n]; if (p.qual) delete p.qual[n]; if (p.clips) delete p.clips[n];
+  IDB.del(p.id + '|' + n).catch(() => {});
+  salvar(); renderCalib();
+}
+function receberAmostra(v){
+  const C = S.calib, idx = C.amostras.length, p = perfilAtual();
+  C.amostras.push(v);
+  mostrarAoVivo(C.nota, 'Ensinando: toque ' + C.amostras.length + ' de 3');
+  /* o áudio é recortado um pouco depois, para pegar o toque inteiro */
+  const espera = Math.max(300, 640 - micCfg.escuta);
+  const clipe = new Promise(ok => setTimeout(() => ok(pegarClipe(0.7)), espera));
+  if (C.amostras.length >= 3) {
+    const m = v.map((_, i) => C.amostras.reduce((s, a) => s + a[i], 0) / 3);
+    const nrm = Math.sqrt(m.reduce((s,x) => s + x*x, 0)) || 1;
+    const modelo = m.map(x => Math.round(x / nrm * 1e4) / 1e4);
+    let qual = 1; for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) qual = Math.min(qual, cosseno(C.amostras[i], C.amostras[j]));
+    const parecido = Object.entries(p.modelos).filter(([k]) => +k !== C.nota).map(([k, o]) => ({n: +k, sim: cosseno(modelo, o)})).sort((a, b) => b.sim - a.sim)[0];
+    p.modelos[C.nota] = modelo; p.qual = p.qual || {}; p.qual[C.nota] = Math.round(Math.max(0, qual) * 100);
+    salvar();
+    toast(nomeNota(C.nota) + ' aprendido.' + (p.qual[C.nota] < 80 ? ' Os 3 toques saíram diferentes entre si: vale refazer.' : '') + (parecido && parecido.sim > 0.92 ? ' Atenção: o som ficou muito parecido com ' + nomeNota(parecido.n) + ' (' + Math.round(parecido.sim * 100) + '%).' : ''));
+    const nota = C.nota, pid = p.id; S.calib = null;
+    Promise.all(C.clips.concat([clipe])).then(async cs => {
+      const bons = cs.filter(Boolean); if (!bons.length) return;
+      /* escolhe o recorte mais limpo: forte no começo e quieto no fim (sem um segundo toque) */
+      const nota_ = c => energia(c, 0, Math.floor(c.length * .4)) / (energia(c, Math.floor(c.length * .7), c.length) + 1e-9);
+      const melhor = bons.sort((a, b) => nota_(b) - nota_(a))[0];
+      try { await IDB.put(pid + '|' + nota, clipeParaArmazenar(melhor)); const pp = db.perfis.find(x => x.id === pid); if (pp && pp.modelos[nota]) { pp.clips = pp.clips || {}; pp.clips[nota] = true; salvar(); renderCalib(); } } catch(e) {}
+    });
+  } else clipe.then(c => C.clips.push(c));
+  renderCalib();
+}
+$('#perfilSel').addEventListener('change', e => { S.perfilId = e.target.value; db.prefs.perfilId = S.perfilId; salvar(); renderCalib(); });
+$('#mostrarSust').addEventListener('change', renderCalib);
+$('#simMin').addEventListener('input', e => $('#simVal').textContent = e.target.value + '%');
+$('#btnNovoPerfil').addEventListener('click', async () => {
+  const nome = await perguntar('Nome do conjunto (por exemplo: Teclado da sala 2, ou Sinos coloridos)', {campo: true, ok: 'Criar'});
+  if (!nome) return;
+  const p = {id: uid(), nome, modelos: {}}; db.perfis.push(p); S.perfilId = p.id; db.prefs.perfilId = p.id; salvar(); renderCalib();
+});
+$('#btnExcluirPerfil').addEventListener('click', async () => {
+  const p = perfilAtual(); if (!p) return;
+  if (!await perguntar('Excluir o conjunto “' + p.nome + '” e as amostras de som dele?', {ok: 'Excluir', perigo: true})) return;
+  Object.keys(p.clips || {}).forEach(n => IDB.del(p.id + '|' + n).catch(() => {}));
+  db.perfis = db.perfis.filter(x => x.id !== p.id); S.perfilId = null; salvar(); renderCalib();
+});
+
+/* ---------- gabaritos ---------- */
+const gabsDoVideo = () => db.gabaritos.filter(g => g.videoKey === S.videoKey);
+const gabAtual = () => db.gabaritos.find(g => g.id === S.gabSel) || null;
+function criarGabarito(eventos, nome, fonte){
+  const g = {id: uid(), nome, videoKey: S.videoKey, videoNome: S.videoNome, criado: new Date().toISOString(), fonte, eventos: eventos.slice().sort((a,b) => a.t - b.t)};
+  db.gabaritos.push(g); S.gabSel = g.id; salvar(); renderGabs();
+  toast('Gabarito criado com ' + g.eventos.length + ' notas. Confira a lista.');
+}
+function renderGabs(){
+  $('#gabSemVideo').hidden = temVideo();
+  $('#gabConteudo').hidden = !temVideo();
+  const gs = gabsDoVideo();
+  const opts = gs.length ? gs.map(g => `<option value="${g.id}" ${g.id===S.gabSel?'selected':''}>${esc(g.nome)} (${g.eventos.length} notas)</option>`).join('') : '<option value="">Nenhum gabarito ainda</option>';
+  $('#gabSel').innerHTML = opts; $('#sessGab').innerHTML = opts;
+  $('#gabRenomear').disabled = $('#gabExcluir').disabled = !gs.length;
+  $('#notaAdd').innerHTML = opcoesNotas(60);
+  renderListaGab(); renderPacientes();
+}
+function renderListaGab(){
+  const g = gabAtual();
+  $('#gabContagem').textContent = g ? '(' + g.eventos.length + ')' : '';
+  if (!g) { $('#listaGab').innerHTML = '<div class="vazio-lista">Grave ou leia um gabarito para ver as notas aqui.</div>'; return; }
+  if (!g.eventos.length) { $('#listaGab').innerHTML = '<div class="vazio-lista">Este gabarito está vazio.</div>'; return; }
+  $('#listaGab').innerHTML = '<table>' + g.eventos.map((e, i) => `<tr>
+    <td class="dica">${i+1}</td>
+    <td><input type="number" step="0.01" min="0" value="${e.t.toFixed(2)}" data-i="${i}" data-c="t" aria-label="Tempo em segundos"> s</td>
+    <td><span class="pastilha" style="background:${corNota(e.n)}"></span><select data-i="${i}" data-c="n" aria-label="Nota">${opcoesNotas(e.n)}</select></td>
+    <td><button class="ic" data-i="${i}" data-a="ir" title="Ouvir este trecho">▶</button><button class="ic" data-i="${i}" data-a="del" title="Apagar nota">✕</button></td></tr>`).join('') + '</table>';
+}
+$('#listaGab').addEventListener('change', e => {
+  const g = gabAtual(); const el = e.target; if (!g || el.dataset.i == null) return;
+  const ev = g.eventos[+el.dataset.i];
+  if (el.dataset.c === 't') ev.t = Math.max(0, +el.value || 0);
+  if (el.dataset.c === 'n') ev.n = +el.value;
+  g.eventos.sort((a,b) => a.t - b.t); salvar(); renderGabs();
+});
+$('#listaGab').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const g = gabAtual(); const i = +b.dataset.i;
+  if (b.dataset.a === 'del') { g.eventos.splice(i, 1); salvar(); renderGabs(); }
+  if (b.dataset.a === 'ir') { video.currentTime = Math.max(0, g.eventos[i].t - 1.5); iniciarVideo(); }
+});
+$('#gabSel').addEventListener('change', e => { S.gabSel = e.target.value; renderGabs(); });
+$('#sessGab').addEventListener('change', e => { S.gabSel = e.target.value; renderGabs(); });
+$('#gabRenomear').addEventListener('click', async () => { const g = gabAtual(); if (!g) return; const n = await perguntar('Novo nome do gabarito', {campo: true, valor: g.nome, ok: 'Salvar'}); if (n) { g.nome = n; salvar(); renderGabs(); } });
+$('#gabExcluir').addEventListener('click', async () => { const g = gabAtual(); if (!g || !await perguntar('Excluir o gabarito “' + g.nome + '”? As sessões já salvas continuam no histórico.', {ok: 'Excluir', perigo: true})) return; db.gabaritos = db.gabaritos.filter(x => x.id !== g.id); const gs = gabsDoVideo(); S.gabSel = gs.length ? gs[0].id : null; salvar(); renderGabs(); });
+$('#btnAddNota').addEventListener('click', () => {
+  let g = gabAtual();
+  if (!g) { criarGabarito([], 'Gabarito manual', 'manual'); g = gabAtual(); }
+  g.eventos.push({t: Math.round(video.currentTime*1000)/1000, n: +$('#notaAdd').value}); g.eventos.sort((a,b) => a.t - b.t); salvar(); renderGabs();
+});
+$('#btnDeslocar').addEventListener('click', () => {
+  const g = gabAtual(); const ms = +$('#deslocar').value || 0; if (!g || !ms) return;
+  g.eventos.forEach(e => e.t = Math.max(0, Math.round((e.t + ms/1000)*1000)/1000)); salvar(); renderGabs(); toast('Todas as notas foram movidas ' + ms + ' ms.');
+});
+
+/* no celular, leva a tela ao vídeo para ele ficar visível acima do teclado */
+function irParaVideo(){ if (matchMedia('(max-width:900px)').matches) window.scrollTo({top: 0}); }
+
+/* gravar gabarito tocando */
+$('#btnGravarGab').addEventListener('click', () => {
+  if (S.gravando === 'gabarito') { pararGravacao(); return; }
+  if (S.gravando || S.detectando) return;
+  if (!entradaPronta()) { toast('Ative a entrada na aba 1 antes de gravar.'); abrirAba('entrada'); return; }
+  S.buf = []; S.gravando = 'gabarito'; destravarVideo(); irParaVideo();
+  $('#btnGravarGab').textContent = 'Parar e salvar'; $('#btnGravarGab').classList.add('parar');
+  contagem(() => { video.currentTime = 0; iniciarVideo(); });
+  atualizarStatusGrav();
+});
+function pararGravacao(){
+  const modo = S.gravando; S.gravando = null; video.pause(); atualizarStatusGrav();
+  $('#btnGravarGab').textContent = 'Gravar gabarito'; $('#btnGravarGab').classList.remove('parar');
+  $('#btnSessao').textContent = 'Iniciar sessão'; $('#btnSessao').classList.remove('parar');
+  if (modo === 'gabarito') {
+    if (!S.buf.length) { toast('Nenhuma nota foi registrada. Confira a entrada na aba 1.'); return; }
+    criarGabarito(S.buf, 'Tocado em ' + new Date().toLocaleDateString('pt-BR'), 'tocado');
+  } else if (modo === 'sessao') finalizarSessao();
+}
+function atualizarStatusGrav(){
+  const el = $('#statusGrav');
+  if (S.gravando === 'gabarito') { el.hidden = false; el.textContent = 'Gravando gabarito: ' + S.buf.length + ' notas'; }
+  else if (S.gravando === 'sessao') { el.hidden = false; el.textContent = 'Sessão em andamento: ' + S.buf.length + ' toques'; }
+  else if (S.detectando) { el.hidden = false; el.textContent = 'Lendo as cores: ' + S.buf.length + ' notas'; }
+  else el.hidden = true;
+}
+function contagem(fim){
+  const el = $('#contagem'); let n = 3; el.hidden = false; el.textContent = n; atualizarPlayGrande();
+  const iv = setInterval(() => { n--; if (n > 0) el.textContent = n; else { clearInterval(iv); el.hidden = true; atualizarPlayGrande(); fim(); } }, 1000);
+}
+
+/* ---------- leitura das cores do vídeo ---------- */
+let VIS = {pontos: [], cores: [], tol: 60};
+function carregarVisCfg(){
+  const c = db.visCfg[S.videoKey];
+  VIS = c ? JSON.parse(JSON.stringify(c)) : {pontos: [], cores: [], tol: 60};
+  $('#tolCor').value = VIS.tol; renderVisual();
+}
+function salvarVis(){ VIS.tol = +$('#tolCor').value; db.visCfg[S.videoKey] = JSON.parse(JSON.stringify(VIS)); salvar(); }
+$('#btnAbrirVisual').addEventListener('click', () => { $('#visual').hidden = !$('#visual').hidden; });
+$('#btnPontos').addEventListener('click', () => { S.pick = S.pick === 'ponto' ? null : 'ponto'; if (S.pick) video.pause(); renderVisual(); renderCamada(); });
+$('#btnLimparPontos').addEventListener('click', () => { VIS.pontos = []; salvarVis(); renderVisual(); renderCamada(); });
+$('#btnPegarCor').addEventListener('click', () => { S.pick = S.pick === 'cor' ? null : 'cor'; if (S.pick) video.pause(); renderVisual(); renderCamada(); });
+$('#tolCor').addEventListener('change', salvarVis);
+function renderVisual(){
+  $('#nPontos').textContent = VIS.pontos.length ? VIS.pontos.length + ' ponto(s) marcado(s)' : 'nenhum ponto';
+  $('#btnPontos').textContent = S.pick === 'ponto' ? 'Concluir pontos' : 'Marcar pontos';
+  $('#btnPegarCor').textContent = S.pick === 'cor' ? 'Cancelar' : 'Pegar cor';
+  $('#listaCores').innerHTML = VIS.cores.map((c, i) => `<div class="cor-item"><i style="background:rgb(${c.r},${c.g},${c.b})"></i><select data-i="${i}" aria-label="Nota desta cor">${opcoesNotas(c.n)}</select><button class="btn-ghost small" data-del="${i}">Remover</button></div>`).join('');
+  $('#btnDetectar').textContent = S.detectando ? 'Parar leitura' : 'Ler cores e criar gabarito';
+}
+$('#listaCores').addEventListener('change', e => { const i = e.target.dataset.i; if (i != null) { VIS.cores[+i].n = +e.target.value; salvarVis(); } });
+$('#listaCores').addEventListener('click', e => { const i = e.target.dataset.del; if (i != null) { VIS.cores.splice(+i, 1); salvarVis(); renderVisual(); } });
+function areaVideo(){
+  const bw = cx.clientWidth, bh = cx.clientHeight, vw = video.videoWidth || 16, vh = video.videoHeight || 9;
+  const e = Math.min(bw / vw, bh / vh), w = vw * e, h = vh * e;
+  return {x: (bw - w) / 2, y: (bh - h) / 2, w, h};
+}
+function renderCamada(){
+  const cam = $('#camada'); const a = areaVideo();
+  cam.classList.toggle('ativa', !!S.pick);
+  cam.innerHTML = VIS.pontos.map(p => `<div class="ponto" style="left:${a.x + p.x*a.w}px;top:${a.y + p.y*a.h}px"></div>`).join('')
+    + (S.pick === 'ponto' ? '<div class="dica-camada">Clique onde as cores acendem</div>' : '')
+    + (S.pick === 'cor' ? '<div class="dica-camada">Clique sobre uma cor acesa</div>' : '');
+}
+window.addEventListener('resize', renderCamada);
+$('#camada').addEventListener('click', e => {
+  if (!S.pick) return;
+  const r = cx.getBoundingClientRect(), a = areaVideo();
+  const nx = (e.clientX - r.left - a.x) / a.w, ny = (e.clientY - r.top - a.y) / a.h;
+  if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;
+  if (S.pick === 'ponto') { VIS.pontos.push({x: nx, y: ny}); }
+  else {
+    const c = amostrarCor(nx, ny, 3);
+    VIS.cores.push({r: c[0], g: c[1], b: c[2], n: palpiteNota(c)});
+    S.pick = null;
+  }
+  salvarVis(); renderVisual(); renderCamada();
+});
+const cvA = document.createElement('canvas'); cvA.width = cvA.height = 16;
+const ctxA = cvA.getContext('2d', {willReadFrequently: true});
+function amostrarCor(nx, ny, r){
+  const vw = video.videoWidth, vh = video.videoHeight, sz = r*2 + 1;
+  const sx = Math.max(0, Math.min(vw - sz, Math.round(nx*vw) - r)), sy = Math.max(0, Math.min(vh - sz, Math.round(ny*vh) - r));
+  ctxA.drawImage(video, sx, sy, sz, sz, 0, 0, sz, sz);
+  const d = ctxA.getImageData(0, 0, sz, sz).data; let R = 0, G = 0, B = 0, k = 0;
+  for (let i = 0; i < d.length; i += 4) { R += d[i]; G += d[i+1]; B += d[i+2]; k++; }
+  return [Math.round(R/k), Math.round(G/k), Math.round(B/k)];
+}
+const distCor = (a, c) => Math.hypot(a[0] - c.r, a[1] - c.g, a[2] - c.b);
+function palpiteNota(c){
+  let melhor = 60, md = 1e9;
+  for (const n of NATURAIS.slice(0, 7)) { const h = hexRgb(corNota(n)); const d = Math.hypot(c[0]-h[0], c[1]-h[1], c[2]-h[2]); if (d < md) { md = d; melhor = n; } }
+  return melhor;
+}
+$('#btnDetectar').addEventListener('click', () => {
+  if (S.detectando) { finalizarDeteccao(); return; }
+  if (S.gravando) return;
+  if (!VIS.pontos.length) { toast('Marque pelo menos um ponto no vídeo (passo 1).'); return; }
+  if (!VIS.cores.length) { toast('Pegue pelo menos uma cor no vídeo (passo 2).'); return; }
+  S.pick = null; renderCamada(); salvarVis();
+  S.buf = []; S.detectando = true; renderVisual();
+  const tol = +$('#tolCor').value;
+  const est = VIS.pontos.map(() => ({atual: -2, cand: -2, candT: 0, cont: 0}));
+  const emitir = (n, t) => { const u = S.buf[S.buf.length - 1]; if (u && u.n === n && t - u.t < 0.12) return; S.buf.push({t: Math.round(t*1000)/1000, n}); atualizarStatusGrav(); $('#detStatus').textContent = S.buf.length + ' notas encontradas até ' + fmtTempo(t) + '.'; };
+  const processar = mt => {
+    VIS.pontos.forEach((p, k) => {
+      const c = amostrarCor(p.x, p.y, 2);
+      let n = -2, md = 1e9; VIS.cores.forEach(cr => { const d = distCor(c, cr); if (d < md) { md = d; n = cr.n; } });
+      if (md > tol) n = -2;
+      const e = est[k];
+      if (n === e.cand) e.cont++; else { e.cand = n; e.cont = 1; e.candT = mt; }
+      if (e.cont >= 2 && e.cand !== e.atual) { e.atual = e.cand; if (e.atual !== -2) emitir(e.atual, e.candT); }
+    });
+  };
+  const usaRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+  const passo = (agora, meta) => { if (!S.detectando) return; processar(meta ? meta.mediaTime : video.currentTime); if (!video.ended) agendar(); };
+  const agendar = usaRVFC ? () => video.requestVideoFrameCallback(passo) : () => requestAnimationFrame(() => passo(0, null));
+  video.muted = true; video.currentTime = 0;
+  video.play().then(agendar).catch(() => { S.detectando = false; renderVisual(); toast('O vídeo não começou a tocar. Clique no play uma vez e tente de novo.'); });
+  atualizarStatusGrav();
+});
+function finalizarDeteccao(){
+  S.detectando = false; video.pause(); video.muted = false; renderVisual(); atualizarStatusGrav();
+  if (!S.buf.length) { $('#detStatus').textContent = 'Nenhuma nota encontrada. Aumente a tolerância ou confira os pontos e as cores.'; return; }
+  criarGabarito(S.buf, 'Lido do vídeo em ' + new Date().toLocaleDateString('pt-BR'), 'video');
+  $('#detStatus').textContent = 'Pronto: ' + S.buf.length + ' notas.';
+}
+
+/* ---------- sessão ---------- */
+$('#janela').addEventListener('input', e => $('#janelaVal').textContent = e.target.value);
+$('#btnSessao').addEventListener('click', () => {
+  if (S.gravando === 'sessao') { pararGravacao(); return; }
+  if (S.gravando || S.detectando) return;
+  if (!temVideo()) { toast('Abra o vídeo da atividade primeiro.'); return; }
+  const g = gabAtual();
+  if (!g || !g.eventos.length) { toast('Este vídeo ainda não tem gabarito. Crie um na aba 2.'); abrirAba('gabarito'); return; }
+  if (!entradaPronta()) { toast('Ative a entrada na aba 1 antes de começar.'); abrirAba('entrada'); return; }
+  S.sess = {paciente: $('#paciente').value.trim() || 'Sem nome', gabId: g.id,
+    cfg: {janela: +$('#janela').value, ignOit: $('#ignOit').checked, soRitmo: $('#soRitmo').checked, modo: S.modo, latencia: S.latencia}};
+  S.buf = []; S.gravando = 'sessao'; destravarVideo(); irParaVideo();
+  $('#btnSessao').textContent = 'Encerrar sessão agora'; $('#btnSessao').classList.add('parar');
+  atualizarStatusGrav();
+  contagem(() => { video.currentTime = 0; iniciarVideo(); });
+});
+function finalizarSessao(){
+  const g = db.gabaritos.find(x => x.id === S.sess.gabId);
+  const resp = S.buf.slice().sort((a,b) => a.t - b.t);
+  const ref = g.eventos.map(e => ({t: e.t, n: e.n}));
+  const fim = video.currentTime;
+  const encerradaAntes = !video.ended;
+  const refConsiderado = encerradaAntes ? ref.filter(e => e.t <= fim + S.sess.cfg.janela/1000) : ref;
+  const r = pontuar(refConsiderado, resp, S.sess.cfg);
+  const sess = {id: uid(), paciente: S.sess.paciente, data: new Date().toISOString(), videoNome: S.videoNome, gabId: g.id, gabNome: g.nome,
+    cfg: S.sess.cfg, ref: refConsiderado, resp, m: r.m, parcial: encerradaAntes};
+  db.sessoes.push(sess); salvar(); renderPacientes();
+  mostrarResultado(sess);
+  toast('Sessão salva no histórico.');
+}
+
+/* ---------- pontuação ---------- */
+function pontuar(ref, resp, cfg){
+  const W = cfg.janela / 1000;
+  const k = n => cfg.soRitmo ? 0 : (n < 0 ? -1 : (cfg.ignOit ? n % 12 : n));
+  const R = ref.map(e => ({...e, status: 'omissao', dt: null, j: -1}));
+  const P = resp.map(e => ({...e, status: 'comissao', i: -1}));
+  const pares = [];
+  for (let i = 0; i < R.length; i++) for (let j = 0; j < P.length; j++) {
+    const dt = P[j].t - R[i].t;
+    if (Math.abs(dt) <= W) {
+      const mesma = cfg.soRitmo || (k(P[j].n) !== -1 && k(R[i].n) === k(P[j].n));
+      pares.push({i, j, dt, c: Math.abs(dt) + (mesma ? 0 : W + 1), mesma});
+    }
+  }
+  pares.sort((a, b) => a.c - b.c);
+  for (const p of pares) {
+    if (R[p.i].j >= 0 || P[p.j].i >= 0) continue;
+    R[p.i].j = p.j; R[p.i].dt = p.dt; R[p.i].status = p.mesma ? 'acerto' : 'troca';
+    P[p.j].i = p.i; P[p.j].status = R[p.i].status;
+  }
+  P.forEach((p, j) => {
+    if (p.status !== 'comissao') return;
+    for (let q = j - 1; q >= 0 && p.t - P[q].t <= 0.25; q--) if (k(P[q].n) === k(p.n)) { p.status = 'duplicado'; break; }
+  });
+  const conta = (arr, s) => arr.filter(x => x.status === s).length;
+  const total = R.length, ac = conta(R, 'acerto'), tr = conta(R, 'troca'), om = conta(R, 'omissao');
+  const co = conta(P, 'comissao'), du = conta(P, 'duplicado');
+  const dts = R.filter(r => r.status !== 'omissao').map(r => r.dt * 1000);
+  const media = dts.length ? dts.reduce((a,b) => a + b, 0) / dts.length : 0;
+  const dp = dts.length > 1 ? Math.sqrt(dts.reduce((s, d) => s + (d - media) ** 2, 0) / (dts.length - 1)) : 0;
+  const absMed = dts.length ? dts.reduce((a,b) => a + Math.abs(b), 0) / dts.length : 0;
+  const antes = dts.filter(d => d < -60).length, depois = dts.filter(d => d > 60).length, junto = dts.length - antes - depois;
+  const tercos = [0,0,0].map(() => ({t: 0, a: 0}));
+  if (total) {
+    const t0 = R[0].t, span = (R[total-1].t - t0) || 1;
+    R.forEach(r => { const s = Math.min(2, Math.floor((r.t - t0) / (span / 3))); tercos[s].t++; if (r.status === 'acerto') tercos[s].a++; });
+  }
+  const porNota = {};
+  R.forEach(r => {
+    const key = r.n < 0 ? -1 : r.n % 12;
+    const o = porNota[key] || (porNota[key] = {n: r.n, total: 0, ac: 0, tr: 0, om: 0, por: {}});
+    o.total++;
+    if (r.status === 'acerto') o.ac++;
+    else if (r.status === 'omissao') o.om++;
+    else { o.tr++; const pn = nomeCurto(P[r.j].n); o.por[pn] = (o.por[pn] || 0) + 1; }
+  });
+  let seq = 0, maiorSeq = 0; R.forEach(r => { if (r.status === 'omissao') { seq++; maiorSeq = Math.max(maiorSeq, seq); } else seq = 0; });
+  const m = {total, acertos: ac, trocas: tr, omissoes: om, comissoes: co, duplicados: du, toques: P.length,
+    taxa: pct(ac, total), precisao: pct(ac, P.length), media: Math.round(media), dp: Math.round(dp), absMed: Math.round(absMed),
+    antes, junto, depois, tercos: tercos.map(x => x.t ? pct(x.a, x.t) : null), porNota, maiorSeqOmissoes: maiorSeq};
+  return {R, P, m};
+}
+
+/* ---------- resultado ---------- */
+let sessMostrada = null;
+function mostrarResultado(s){
+  sessMostrada = s;
+  const {R, P, m} = pontuar(s.ref, s.resp, s.cfg);
+  const el = $('#resultado'); el.hidden = false;
+  const seg = (v, cor, nome) => v ? `<span style="flex:${v};background:${cor}" title="${nome}: ${v}"></span>` : '';
+  const notas = Object.values(m.porNota).sort((a,b) => (a.n % 12) - (b.n % 12));
+  const tercoMax = 100;
+  el.innerHTML = `
+    <div class="res-topo">
+      <div><h2>Resultado: ${esc(s.paciente)}</h2>
+      <p>${dataHora(s.data)}, vídeo “${esc(s.videoNome)}”, janela ±${s.cfg.janela} ms${s.cfg.soRitmo ? ', só ritmo' : ''}${s.parcial ? '. Sessão encerrada antes do fim: só as notas até esse ponto foram contadas.' : ''}</p></div>
+      <div class="linha"><button class="btn-ghost small" id="resResumo">Ver resumo em texto</button><button class="btn-ghost small" id="resCsv">Baixar planilha (CSV)</button><button class="btn-ghost small" id="resFechar">Fechar</button></div>
+    </div>
+    <div class="res-grade">
+      <div class="res-principal">
+        <div class="num-grande">${m.taxa}%</div>
+        <p><b>de acertos</b></p>
+        <small>${m.acertos} de ${m.total} notas no tempo e na cor certa</small>
+        <div class="barra-empilhada">${seg(m.acertos,'var(--good)','Acertos')}${seg(m.trocas,'var(--warn)','Trocas')}${seg(m.omissoes,'var(--lane)','Omissões')}</div>
+        <div class="legenda"><span><i style="background:var(--good)"></i>acertos</span><span><i style="background:var(--warn)"></i>trocas</span><span><i style="background:var(--lane);border:1px solid var(--line)"></i>omissões</span></div>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Tipos de erro</h3>
+        <dl class="medidas">
+          <dt>Omissões (não tocou)</dt><dd>${m.omissoes} (${pct(m.omissoes, m.total)}%)</dd>
+          <dt>Trocas (tempo certo, nota errada)</dt><dd>${m.trocas} (${pct(m.trocas, m.total)}%)</dd>
+          <dt>Comissões (toques sem estímulo)</dt><dd>${m.comissoes}</dd>
+          <dt>Toques repetidos logo em seguida</dt><dd>${m.duplicados}</dd>
+          <dt>Maior sequência de omissões</dt><dd>${m.maiorSeqOmissoes}</dd>
+          <dt>Precisão (toques certos ÷ todos os toques)</dt><dd>${m.precisao}%</dd>
+        </dl>
+        <h3>Sincronia</h3>
+        <dl class="medidas">
+          <dt>Diferença média (− antes, + depois)</dt><dd>${m.media > 0 ? '+' : ''}${fmt(m.media)} ms</dd>
+          <dt>Diferença média sem sinal</dt><dd>${fmt(m.absMed)} ms</dd>
+          <dt>Variabilidade (desvio padrão)</dt><dd>${fmt(m.dp)} ms</dd>
+          <dt>Antecipou / junto / atrasou</dt><dd>${m.antes} / ${m.junto} / ${m.depois}</dd>
+        </dl>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Acertos ao longo da música</h3>
+        <div class="tercos">${m.tercos.map((v, i) => `<div><strong>${v == null ? '–' : v + '%'}</strong><b style="height:${v == null ? 0 : Math.max(2, v / tercoMax * 70)}px"></b>${['início','meio','fim'][i]}</div>`).join('')}</div>
+        <h3>Por nota</h3>
+        <table class="tab-nota"><thead><tr><th>Nota</th><th>Acertos</th><th>Omissões</th><th>Trocas</th></tr></thead><tbody>
+        ${notas.map(o => `<tr><td><span class="pastilha" style="background:${corNota(o.n)}"></span>${nomeCurto(o.n)}</td><td>${o.ac}/${o.total}</td><td>${o.om}</td><td>${o.tr}${o.tr ? ' <span class="dica">(tocou ' + Object.entries(o.por).map(([k,v]) => k + (v > 1 ? ' ×' + v : '')).join(', ') + ')</span>' : ''}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>
+    <div class="linha-completa"><canvas id="linhaCompleta"></canvas></div>
+    <div class="legenda" style="margin-top:.5rem"><span>Faixa de cima: gabarito (cheio = respondeu, vazado = omissão).</span><span>Faixa de baixo: toques do paciente (contorno verde = acerto, laranja = troca, vermelho = comissão).</span></div>
+    <details class="como-ler"><summary>Como ler estes números</summary><ul>
+      <li>Omissões costumam ser lidas como sinal de desatenção; uma sequência longa de omissões indica um lapso de atenção naquele trecho.</li>
+      <li>Comissões e toques repetidos costumam ser lidos como sinal de impulsividade ou de dificuldade de controle inibitório.</li>
+      <li>Trocas mostram que o paciente acompanhou o tempo, mas errou a associação cor–nota: vale olhar quais notas se confundem na tabela.</li>
+      <li>Variabilidade alta na sincronia sugere oscilação da atenção sustentada; diferença média negativa indica tendência a antecipar.</li>
+      <li>Queda de acertos do início para o fim sugere declínio de vigilância ao longo da tarefa.</li>
+      <li>Os números servem de apoio à sua observação clínica, não a substituem. Compare sempre com o mesmo vídeo, gabarito e janela de acerto.</li>
+    </ul></details>
+    <textarea class="resumo" id="resumoTxt" hidden readonly></textarea>`;
+  desenharLinhaCompleta(R, P);
+  $('#resFechar').onclick = () => { el.hidden = true; };
+  $('#resResumo').onclick = () => { const t = $('#resumoTxt'); t.hidden = !t.hidden; t.value = resumoTexto(s, m); if (!t.hidden) t.select(); };
+  $('#resCsv').onclick = () => baixar('sincronia_' + s.paciente.replace(/\W+/g,'_') + '_' + s.data.slice(0,10) + '.csv', csv(s, R, P));
+  el.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
+}
+function resumoTexto(s, m){
+  return [
+    `Paciente: ${s.paciente}`,
+    `Data: ${dataHora(s.data)}`,
+    `Vídeo: ${s.videoNome} (gabarito: ${s.gabNome})`,
+    `Critério: janela de ±${s.cfg.janela} ms${s.cfg.soRitmo ? ', apenas ritmo' : (s.cfg.ignOit ? ', nota em qualquer oitava' : ', nota e oitava exatas')}`,
+    `Acertos: ${m.acertos}/${m.total} (${m.taxa}%)`,
+    `Omissões: ${m.omissoes} (${pct(m.omissoes, m.total)}%); maior sequência: ${m.maiorSeqOmissoes}`,
+    `Trocas de nota: ${m.trocas} (${pct(m.trocas, m.total)}%)`,
+    `Comissões: ${m.comissoes}; toques repetidos: ${m.duplicados}`,
+    `Precisão das respostas: ${m.precisao}%`,
+    `Sincronia: média ${m.media > 0 ? '+' : ''}${m.media} ms, desvio padrão ${m.dp} ms (antecipou ${m.antes}, junto ${m.junto}, atrasou ${m.depois})`,
+    `Acertos por terço (início/meio/fim): ${m.tercos.map(v => v == null ? '–' : v + '%').join(' / ')}`,
+    s.parcial ? 'Observação: sessão encerrada antes do fim do vídeo.' : ''
+  ].filter(Boolean).join('\n');
+}
+function csv(s, R, P){
+  const nomes = {acerto:'acerto', troca:'troca de nota', omissao:'omissão', comissao:'comissão', duplicado:'toque repetido'};
+  const linhas = [['tempo_s','nota_esperada','nota_tocada','diferenca_ms','resultado'].join(';')];
+  const itens = [];
+  R.forEach(r => itens.push({t: r.t, esp: nomeCurto(r.n), toc: r.j >= 0 ? nomeCurto(P[r.j].n) : '', dt: r.dt == null ? '' : Math.round(r.dt*1000), st: nomes[r.status]}));
+  P.forEach(p => { if (p.i < 0) itens.push({t: p.t, esp: '', toc: nomeCurto(p.n), dt: '', st: nomes[p.status]}); });
+  itens.sort((a,b) => a.t - b.t).forEach(i => linhas.push([String(i.t).replace('.', ','), i.esp, i.toc, i.dt, i.st].join(';')));
+  return '\ufeff' + resumoTexto(s, s.m).split('\n').map(l => '# ' + l).join('\n') + '\n' + linhas.join('\n');
+}
+function desenharLinhaCompleta(R, P){
+  const c = $('#linhaCompleta'); if (!c) return;
+  const fim = Math.max(...R.map(r => r.t), ...P.map(p => p.t), 1) + 1;
+  const dpr = devicePixelRatio || 1;
+  const w = Math.max(c.parentElement.clientWidth - 2, fim * 45), h = 130;
+  c.style.width = w + 'px'; c.width = w * dpr; c.height = h * dpr;
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cs = getComputedStyle(document.documentElement);
+  const tinta = cs.getPropertyValue('--muted').trim(), linha = cs.getPropertyValue('--line').trim();
+  const px = t => 12 + t / fim * (w - 24);
+  x.font = '11px "Atkinson Hyperlegible", sans-serif'; x.fillStyle = tinta; x.strokeStyle = linha;
+  for (let s = 0; s <= fim; s += 5) { x.beginPath(); x.moveTo(px(s), 8); x.lineTo(px(s), h - 18); x.stroke(); x.fillText(fmtTempo(s), px(s) + 3, h - 5); }
+  R.forEach(r => {
+    const X = px(r.t);
+    x.fillStyle = corNota(r.n); x.strokeStyle = corNota(r.n); x.lineWidth = 2;
+    if (r.status === 'omissao') { x.setLineDash([3,2]); rr(x, X - 6, 14, 12, 34); x.stroke(); x.setLineDash([]); }
+    else { rr(x, X - 6, 14, 12, 34); x.fill(); }
+  });
+  const cst = {acerto: cs.getPropertyValue('--good').trim(), troca: cs.getPropertyValue('--warn').trim(), comissao: cs.getPropertyValue('--bad').trim(), duplicado: cs.getPropertyValue('--bad').trim()};
+  P.forEach(p => {
+    const X = px(p.t);
+    x.beginPath(); x.arc(X, 78, 7, 0, Math.PI*2); x.fillStyle = corNota(p.n); x.fill();
+    x.lineWidth = 3; x.strokeStyle = cst[p.status]; x.stroke();
+  });
+}
+function rr(x, a, b, w, h){ x.beginPath(); if (x.roundRect) x.roundRect(a, b, w, h, 4); else x.rect(a, b, w, h); }
+
+/* ---------- histórico ---------- */
+function renderPacientes(){
+  const nomes = [...new Set(db.sessoes.map(s => s.paciente))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  $('#listaPac').innerHTML = nomes.map(n => `<option value="${esc(n)}">`).join('');
+  const atual = $('#histPac').value;
+  $('#histPac').innerHTML = '<option value="">Todos</option>' + nomes.map(n => `<option ${n===atual?'selected':''}>${esc(n)}</option>`).join('');
+}
+$('#histPac').addEventListener('change', renderHist);
+function renderHist(){
+  renderPacientes();
+  const pac = $('#histPac').value;
+  const lista = db.sessoes.filter(s => !pac || s.paciente === pac).sort((a,b) => a.data.localeCompare(b.data));
+  if (!lista.length) { $('#histLista').innerHTML = '<p class="dica">Nenhuma sessão salva ainda. Faça uma sessão na aba 3.</p>'; $('#histGrafico').innerHTML = ''; return; }
+  $('#histLista').innerHTML = '<table><thead><tr><th>Data</th>' + (pac ? '' : '<th>Paciente</th>') + '<th>Acertos</th><th>Omis.</th><th>Com.</th><th>DP</th><th></th></tr></thead><tbody>' +
+    lista.slice().reverse().map(s => `<tr class="clic" data-id="${s.id}"><td>${new Date(s.data).toLocaleDateString('pt-BR')}<br><span class="dica">${esc(s.videoNome || '')}</span></td>${pac ? '' : '<td>' + esc(s.paciente) + '</td>'}<td><b>${s.m.taxa}%</b></td><td>${s.m.omissoes}</td><td>${s.m.comissoes}</td><td>${s.m.dp} ms</td><td><button class="btn-ghost small perigo" data-del="${s.id}" aria-label="Excluir sessão">✕</button></td></tr>`).join('') + '</tbody></table>';
+  $('#histGrafico').innerHTML = pac && lista.length > 1 ? graficoHist(lista) : (pac ? '' : '<p class="dica">Escolha um paciente para ver a evolução.</p>');
+}
+$('#histLista').addEventListener('click', async e => {
+  const del = e.target.closest('[data-del]');
+  if (del) { e.stopPropagation(); if (await perguntar('Excluir esta sessão do histórico?', {ok: 'Excluir', perigo: true})) { db.sessoes = db.sessoes.filter(s => s.id !== del.dataset.del); salvar(); renderHist(); } return; }
+  const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+  const s = db.sessoes.find(x => x.id === tr.dataset.id); if (s) mostrarResultado(s);
+});
+function graficoHist(lista){
+  const W = 360, H = 150, n = lista.length, px = i => 30 + i * (W - 50) / Math.max(1, n - 1), py = v => 15 + (100 - v) / 100 * (H - 40);
+  const pts = lista.map((s, i) => [px(i), py(s.m.taxa)]);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;display:block;margin-bottom:.6rem" role="img" aria-label="Evolução dos acertos">
+    ${[0,50,100].map(v => `<line x1="30" x2="${W-20}" y1="${py(v)}" y2="${py(v)}" stroke="var(--line)"/><text x="2" y="${py(v)+4}" font-size="10" fill="var(--muted)">${v}%</text>`).join('')}
+    <polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="${pts.map(p => p.join(',')).join(' ')}"/>
+    ${pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="var(--accent)"/><text x="${p[0]}" y="${H-6}" font-size="9.5" fill="var(--muted)" text-anchor="middle">${new Date(lista[i].data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</text>`).join('')}
+  </svg>`;
+}
+$('#btnBackup').addEventListener('click', async () => {
+  const clips = {};
+  try { const t = await IDB.todos(); for (const [k, v] of Object.entries(t)) clips[k] = {sr: v.sr, pcm: b64(v.pcm)}; } catch(e) {}
+  baixar('sincronia_backup_' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(Object.assign({}, db, {clips})));
+});
+$('#arqBackup').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const o = JSON.parse(await f.text());
+    if (!o.gabaritos || !o.sessoes) throw 0;
+    if (!await perguntar('Juntar a cópia com os dados atuais? Itens repetidos são ignorados.', {ok: 'Juntar'})) return;
+    for (const k of ['gabaritos','sessoes','perfis']) { const ids = new Set(db[k].map(x => x.id)); (o[k] || []).forEach(x => { if (!ids.has(x.id)) db[k].push(x); }); }
+    db.visCfg = Object.assign({}, o.visCfg || {}, db.visCfg);
+    for (const [k, v] of Object.entries(o.clips || {})) { try { if (!(await IDB.get(k))) await IDB.put(k, {sr: v.sr, pcm: unb64(v.pcm)}); } catch(err) {} }
+    salvar(); renderGabs(); renderHist(); if (S.modo.startsWith('mic')) renderCalib(); toast('Cópia restaurada.');
+  } catch(err) { toast('Este arquivo não é uma cópia do Sincronia.'); }
+  e.target.value = '';
+});
+$('#btnOffline').addEventListener('click', () => baixar('sincronia.html', HTML_ORIGINAL));
+
+/* ---------- faixa ao vivo ---------- */
+function desenharFaixa(){
+  const c = $('#faixa'), dpr = devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)) { c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); }
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
+  const cs = getComputedStyle(document.documentElement);
+  const lane = cs.getPropertyValue('--lane').trim(), muted = cs.getPropertyValue('--muted').trim(), ink = cs.getPropertyValue('--ink').trim();
+  const t = video.currentTime || 0, antes = 2.5, depois = 5.5, pps = (w - 80) / (antes + depois), x0 = 80 + antes * pps;
+  const lh = (h - 18) / 2;
+  x.fillStyle = lane; rr(x, 80, 4, w - 80, lh); x.fill(); rr(x, 80, 10 + lh, w - 80, lh); x.fill();
+  x.fillStyle = muted; x.font = '12px "Atkinson Hyperlegible", sans-serif';
+  const gravGab = S.gravando === 'gabarito';
+  x.fillText(S.detectando ? 'Lendo' : 'Gabarito', 4, 4 + lh/2 + 4);
+  x.fillText(gravGab ? 'Gravando' : 'Toques', 4, 10 + lh + lh/2 + 4);
+  let ref = [];
+  if (S.detectando) ref = S.buf;
+  else { const g = S.gravando === 'sessao' ? db.gabaritos.find(z => z.id === S.sess.gabId) : gabAtual(); if (g && !gravGab) ref = g.eventos; }
+  const resp = (S.gravando) ? S.buf : [];
+  x.save(); x.beginPath(); x.rect(80, 0, w - 80, h); x.clip();
+  for (const e of ref) {
+    if (e.t < t - antes - 0.3 || e.t > t + depois + 0.3) continue;
+    const X = x0 + (e.t - t) * pps; x.fillStyle = corNota(e.n); rr(x, X - 7, 9, 14, lh - 10); x.fill();
+  }
+  for (const e of resp) {
+    if (e.t < t - antes - 0.3 || e.t > t + depois) continue;
+    const X = x0 + (e.t - t) * pps; x.fillStyle = corNota(e.n); x.beginPath(); x.arc(X, 10 + lh + lh/2, Math.min(9, lh/2 - 4), 0, Math.PI*2); x.fill();
+  }
+  x.restore();
+  x.strokeStyle = ink; x.lineWidth = 2; x.beginPath(); x.moveTo(x0, 0); x.lineTo(x0, h - 4); x.stroke();
+  requestAnimationFrame(desenharFaixa);
+}
+
+/* ---------- início ---------- */
+aplicarMicCfg(false); aplicarModo(); renderGabs(); renderPacientes(); requestAnimationFrame(desenharFaixa);
+</script></body></html>
