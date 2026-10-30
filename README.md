@@ -36,6 +36,14 @@ Tudo está em um único arquivo, `index.html`. Não precisa instalar nada.
 - O áudio é pedido **bruto**, sem cancelamento de eco, supressão de ruído nem ganho automático, e o app mostra se o aparelho respeitou.
 - **Amostras de som por nota** continuam disponíveis (aba Entrada).
 
+## Microfone com o vídeo tocando no alto-falante (v5)
+- **Som do vídeo por atividade** (aba Gabarito → Configuração da atividade): alto-falante, fone de ouvido ou sem som (o app silencia o vídeo na sessão).
+- **Cancelar o som do vídeo** (aba Entrada → "Som do vídeo entrando no microfone"): o app pega o áudio do próprio vídeo e subtrai do microfone o que o alto-falante devolve. Passo a passo: ative o microfone, abra o vídeo, toque em "Medir o eco do vídeo (8 s)" em silêncio. O app mostra o atraso do eco e quantos dB foram removidos. É experimental: quando o vídeo toca a mesma melodia que o paciente toca, sempre sobra um resíduo; o fone de ouvido continua sendo o jeito mais seguro.
+- **Modo eco do navegador:** pede ao aparelho o cancelamento de eco dele. Pode baixar o volume do vídeo e tratar o teclado como ruído; é só para comparar.
+- **Medir com o vídeo tocando (sem tocar):** calibra o limite acima do som do vídeo que chega ao microfone.
+- **Diagnóstico** (aba Teste): grava 15 s, mostra o espectrograma, deixa ouvir a gravação e gera um relatório com cada ataque, as alturas encontradas e o motivo de aceitar ou recusar. Se o cancelamento estiver ligado, o relatório compara "sem" e "com" cancelamento.
+- **Roteiro no iPad (4 gravações):** (1) vídeo sem som e 5 notas; (2) vídeo no alto-falante, sem cancelar; (3) com "Modo eco do navegador" (recarregue a página e ative o microfone de novo); (4) com "Cancelar o som do vídeo" depois de medir o eco. Copie cada relatório e cole na conversa.
+
 ## Tela de teste (aba 5)
 - **Ao vivo:** o que o app entendeu em cada entrada (MIDI, toque, microfone), com confiança.
 - **Teste guiado:** o app pede notas e intervalos e mostra a taxa de acerto separada para nota única e para cada intervalo, e o que foi ouvido nos erros.
