@@ -187,6 +187,8 @@ details.avancado summary{cursor:pointer;font-weight:700;padding:.5rem 0}
 .lista-gab select{padding:.25rem .35rem}
 .lista-gab .ic{border:0;background:none;cursor:pointer;padding:.2rem .45rem;border-radius:6px;color:var(--muted);font-size:1rem}
 .lista-gab .ic:hover{background:var(--surface2);color:var(--ink)}
+.nota-linha{display:flex;align-items:center;gap:.2rem;margin:.1rem 0}
+.acorde-tag{font-size:.7rem;color:var(--accent);font-weight:700}
 .pastilha{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:.3rem}
 .vazio-lista{padding:1rem;color:var(--muted);font-size:.92rem}
 
@@ -345,6 +347,9 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
         <div id="mapaTeclas" class="mapa-teclas"></div>
       </div>
 
+      <label class="campo">Tolerância para notas tocadas juntas: <span id="tolAcordeVal">100 ms</span><input type="range" id="tolAcorde" min="30" max="200" step="5" value="100"></label>
+      <p class="dica">Duas notas tocadas dentro deste tempo viram um acorde (2 notas juntas) no gabarito e na sessão.</p>
+
       <label class="campo">Compensação de atraso da entrada (ms)<input type="number" id="latencia" value="0" step="5"></label>
       <p class="dica">Se o gabarito for gravado com a mesma entrada que o paciente vai usar, deixe em 0: o atraso é igual nos dois e se anula.</p>
     </div>
@@ -482,6 +487,7 @@ if (!db.prefs.v2) { db.prefs.v2 = 1; if (matchMedia('(pointer:coarse)').matches 
 const S = {
   modo: db.prefs.modo || (matchMedia('(pointer:coarse)').matches ? 'teclado-tela' : 'teclado-pc'),
   latencia: 0,
+  tolAcorde: (db.prefs.tolAcorde || 100),
   videoKey: null, videoNome: null,
   gravando: null,       // 'gabarito' | 'sessao'
   buf: [],
@@ -600,8 +606,23 @@ function registrarNota(n, tVideo, fonte){
   mostrarAoVivo(n, fonte);
   if (!S.gravando || video.paused) return;
   const t = (tVideo ?? video.currentTime) - S.latencia/1000;
-  S.buf.push({t: Math.round(t*1000)/1000, n});
+  empurrar({t: Math.round(t*1000)/1000, n});
   atualizarStatusGrav();
+}
+/* notas de alturas diferentes tocadas dentro da tolerância viram um grupo (acorde) */
+function empurrar(ev){
+  const tol = S.tolAcorde / 1000;
+  if (ev.n >= 0) for (let i = S.buf.length - 1; i >= 0 && ev.t - S.buf[i].t <= tol; i--) {
+    const o = S.buf[i];
+    if (o.n >= 0 && o.n !== ev.n && !S.buf.some(x => x.g && x.g === o.g && x.n === ev.n)) { o.g = o.g || uid(); ev.g = o.g; break; }
+  }
+  S.buf.push(ev);
+}
+/* lista de grupos (acordes ou notas soltas) a partir de eventos ordenados */
+function grupos(evs){
+  const out = [];
+  for (const e of evs) { const u = out[out.length - 1]; if (e.g && u && u[0].g === e.g) u.push(e); else out.push([e]); }
+  return out;
 }
 function mostrarAoVivo(n, fonte){
   const b = $('#bolha');
@@ -641,6 +662,8 @@ function atualizarChip(){
   $('#chipTxt').textContent = nomes[S.modo] + (ok ? ': pronto' : ': falta ativar');
 }
 $('#latencia').addEventListener('input', e => { S.latencia = +e.target.value || 0; });
+$('#tolAcorde').value = S.tolAcorde; $('#tolAcordeVal').textContent = S.tolAcorde + ' ms';
+$('#tolAcorde').addEventListener('input', e => { S.tolAcorde = +e.target.value; $('#tolAcordeVal').textContent = S.tolAcorde + ' ms'; db.prefs.tolAcorde = S.tolAcorde; salvar(); });
 
 /* ---------- entrada: teclado do computador ---------- */
 const MAPA = {a:60,w:61,s:62,e:63,d:64,f:65,t:66,g:67,y:68,h:69,u:70,j:71,k:72};
@@ -975,6 +998,7 @@ $('#btnExcluirPerfil').addEventListener('click', async () => {
 const gabsDoVideo = () => db.gabaritos.filter(g => g.videoKey === S.videoKey);
 const gabAtual = () => db.gabaritos.find(g => g.id === S.gabSel) || null;
 function criarGabarito(eventos, nome, fonte){
+  const ini = {}; eventos = eventos.map(e => ({...e})); eventos.forEach(e => { if (e.g) ini[e.g] = Math.min(ini[e.g] ?? 1e9, e.t); }); eventos.forEach(e => { if (e.g) e.t = ini[e.g]; });
   const g = {id: uid(), nome, videoKey: S.videoKey, videoNome: S.videoNome, criado: new Date().toISOString(), fonte, eventos: eventos.slice().sort((a,b) => a.t - b.t)};
   db.gabaritos.push(g); S.gabSel = g.id; salvar(); renderGabs();
   toast('Gabarito criado com ' + g.eventos.length + ' notas. Confira a lista.');
@@ -994,24 +1018,36 @@ function renderListaGab(){
   $('#gabContagem').textContent = g ? '(' + g.eventos.length + ')' : '';
   if (!g) { $('#listaGab').innerHTML = '<div class="vazio-lista">Grave ou leia um gabarito para ver as notas aqui.</div>'; return; }
   if (!g.eventos.length) { $('#listaGab').innerHTML = '<div class="vazio-lista">Este gabarito está vazio.</div>'; return; }
-  $('#listaGab').innerHTML = '<table>' + g.eventos.map((e, i) => `<tr>
-    <td class="dica">${i+1}</td>
-    <td><input type="number" step="0.01" min="0" value="${e.t.toFixed(2)}" data-i="${i}" data-c="t" aria-label="Tempo em segundos"> s</td>
-    <td><span class="pastilha" style="background:${corNota(e.n)}"></span><select data-i="${i}" data-c="n" aria-label="Nota">${opcoesNotas(e.n)}</select></td>
-    <td><button class="ic" data-i="${i}" data-a="ir" title="Ouvir este trecho">▶</button><button class="ic" data-i="${i}" data-a="del" title="Apagar nota">✕</button></td></tr>`).join('') + '</table>';
+  let k = 0;
+  $('#listaGab').innerHTML = '<table>' + grupos(g.eventos).map((gr, j) => {
+    const ini = k; k += gr.length;
+    const notas = gr.map((e, q) => `<div class="nota-linha"><span class="pastilha" style="background:${corNota(e.n)}"></span><select data-i="${ini+q}" data-c="n" aria-label="Nota">${opcoesNotas(e.n)}</select>${gr.length > 1 ? `<button class="ic" data-i="${ini+q}" data-a="del" title="Apagar só esta nota">✕</button>` : ''}</div>`).join('');
+    return `<tr>
+    <td class="dica">${j+1}${gr.length > 1 ? '<br><span class="acorde-tag">junto</span>' : ''}</td>
+    <td><input type="number" step="0.01" min="0" value="${gr[0].t.toFixed(2)}" data-i="${ini}" data-n="${gr.length}" data-c="t" aria-label="Tempo em segundos"> s</td>
+    <td>${notas}</td>
+    <td><button class="ic" data-i="${ini}" data-a="ir" title="Ouvir este trecho">▶</button><button class="ic" data-i="${ini}" data-a="junto" title="Acrescentar uma nota junto">＋</button><button class="ic" data-i="${ini}" data-n="${gr.length}" data-a="delg" title="Apagar ${gr.length > 1 ? 'o acorde' : 'a nota'}">${gr.length > 1 ? '✕✕' : '✕'}</button></td></tr>`;
+  }).join('') + '</table>';
 }
 $('#listaGab').addEventListener('change', e => {
   const g = gabAtual(); const el = e.target; if (!g || el.dataset.i == null) return;
-  const ev = g.eventos[+el.dataset.i];
-  if (el.dataset.c === 't') ev.t = Math.max(0, +el.value || 0);
-  if (el.dataset.c === 'n') ev.n = +el.value;
+  const i = +el.dataset.i;
+  if (el.dataset.c === 't') { const t = Math.max(0, +el.value || 0); for (let q = 0; q < (+el.dataset.n || 1); q++) g.eventos[i+q].t = t; }
+  if (el.dataset.c === 'n') g.eventos[i].n = +el.value;
   g.eventos.sort((a,b) => a.t - b.t); salvar(); renderGabs();
 });
 $('#listaGab').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  const g = gabAtual(); const i = +b.dataset.i;
-  if (b.dataset.a === 'del') { g.eventos.splice(i, 1); salvar(); renderGabs(); }
-  if (b.dataset.a === 'ir') { video.currentTime = Math.max(0, g.eventos[i].t - 1.5); iniciarVideo(); }
+  const g = gabAtual(); const i = +b.dataset.i, ev = g.eventos[i];
+  if (b.dataset.a === 'del') { g.eventos.splice(i, 1); }
+  if (b.dataset.a === 'delg') { g.eventos.splice(i, +b.dataset.n || 1); }
+  if (b.dataset.a === 'junto') {
+    const usadas = g.eventos.filter(o => o.g && o.g === ev.g).map(o => o.n).concat(ev.n);
+    const n = [...NATURAIS].find(x => !usadas.includes(x)) ?? 64;
+    ev.g = ev.g || uid(); g.eventos.splice(i + 1 + g.eventos.filter(o => o.g === ev.g && o !== ev).length, 0, {t: ev.t, n, g: ev.g});
+  }
+  if (b.dataset.a === 'ir') { video.currentTime = Math.max(0, ev.t - 1.5); iniciarVideo(); return; }
+  salvar(); renderGabs();
 });
 $('#gabSel').addEventListener('change', e => { S.gabSel = e.target.value; renderGabs(); });
 $('#sessGab').addEventListener('change', e => { S.gabSel = e.target.value; renderGabs(); });
@@ -1020,7 +1056,10 @@ $('#gabExcluir').addEventListener('click', async () => { const g = gabAtual(); i
 $('#btnAddNota').addEventListener('click', () => {
   let g = gabAtual();
   if (!g) { criarGabarito([], 'Gabarito manual', 'manual'); g = gabAtual(); }
-  g.eventos.push({t: Math.round(video.currentTime*1000)/1000, n: +$('#notaAdd').value}); g.eventos.sort((a,b) => a.t - b.t); salvar(); renderGabs();
+  const t = Math.round(video.currentTime*1000)/1000, n = +$('#notaAdd').value;
+  const ev = {t, n}, viz = g.eventos.find(o => o.n >= 0 && n >= 0 && o.n !== n && Math.abs(o.t - t) <= S.tolAcorde / 1000);
+  if (viz) { viz.g = viz.g || uid(); ev.g = viz.g; ev.t = viz.t; toast('Nota adicionada junto com a nota que já estava neste ponto.'); }
+  g.eventos.push(ev); g.eventos.sort((a,b) => a.t - b.t); salvar(); renderGabs();
 });
 $('#btnDeslocar').addEventListener('click', () => {
   const g = gabAtual(); const ms = +$('#deslocar').value || 0; if (!g || !ms) return;
@@ -1134,7 +1173,7 @@ $('#btnDetectar').addEventListener('click', () => {
   S.buf = []; S.detectando = true; renderVisual();
   const tol = +$('#tolCor').value;
   const est = VIS.pontos.map(() => ({atual: -2, cand: -2, candT: 0, cont: 0}));
-  const emitir = (n, t) => { const u = S.buf[S.buf.length - 1]; if (u && u.n === n && t - u.t < 0.12) return; S.buf.push({t: Math.round(t*1000)/1000, n}); atualizarStatusGrav(); $('#detStatus').textContent = S.buf.length + ' notas encontradas até ' + fmtTempo(t) + '.'; };
+  const emitir = (n, t) => { const u = S.buf[S.buf.length - 1]; if (u && u.n === n && t - u.t < 0.12) return; empurrar({t: Math.round(t*1000)/1000, n}); atualizarStatusGrav(); $('#detStatus').textContent = S.buf.length + ' notas encontradas até ' + fmtTempo(t) + '.'; };
   const processar = mt => {
     VIS.pontos.forEach((p, k) => {
       const c = amostrarCor(p.x, p.y, 2);
@@ -1210,12 +1249,25 @@ function pontuar(ref, resp, cfg){
     R[p.i].j = p.j; R[p.i].dt = p.dt; R[p.i].status = p.mesma ? 'acerto' : 'troca';
     P[p.j].i = p.i; P[p.j].status = R[p.i].status;
   }
+  /* acordes: em 'juntas', as notas certas precisam vir dentro da tolerância; senão contam como 'separada' */
+  const tolA = (cfg.tolAcorde || 100) / 1000;
+  let acordes = 0, acordesOk = 0, acordesParc = 0, acordesSep = 0;
+  grupos(R).forEach(gr => {
+    if (gr.length < 2) return;
+    acordes++;
+    const certos = gr.filter(r => r.status === 'acerto');
+    if (certos.length === gr.length) {
+      const ts = certos.map(r => P[r.j].t), juntos = Math.max(...ts) - Math.min(...ts) <= tolA;
+      if (juntos || cfg.acorde !== 'juntas') acordesOk++;
+      else { acordesSep++; certos.forEach(r => { r.status = 'separada'; P[r.j].status = 'separada'; }); }
+    } else if (certos.length) acordesParc++;
+  });
   P.forEach((p, j) => {
     if (p.status !== 'comissao') return;
     for (let q = j - 1; q >= 0 && p.t - P[q].t <= 0.25; q--) if (k(P[q].n) === k(p.n)) { p.status = 'duplicado'; break; }
   });
   const conta = (arr, s) => arr.filter(x => x.status === s).length;
-  const total = R.length, ac = conta(R, 'acerto'), tr = conta(R, 'troca'), om = conta(R, 'omissao');
+  const total = R.length, ac = conta(R, 'acerto'), tr = conta(R, 'troca'), om = conta(R, 'omissao'), sep = conta(R, 'separada');
   const co = conta(P, 'comissao'), du = conta(P, 'duplicado');
   const dts = R.filter(r => r.status !== 'omissao').map(r => r.dt * 1000);
   const media = dts.length ? dts.reduce((a,b) => a + b, 0) / dts.length : 0;
@@ -1233,11 +1285,12 @@ function pontuar(ref, resp, cfg){
     const o = porNota[key] || (porNota[key] = {n: r.n, total: 0, ac: 0, tr: 0, om: 0, por: {}});
     o.total++;
     if (r.status === 'acerto') o.ac++;
+    else if (r.status === 'separada') o.sep = (o.sep || 0) + 1;
     else if (r.status === 'omissao') o.om++;
     else { o.tr++; const pn = nomeCurto(P[r.j].n); o.por[pn] = (o.por[pn] || 0) + 1; }
   });
   let seq = 0, maiorSeq = 0; R.forEach(r => { if (r.status === 'omissao') { seq++; maiorSeq = Math.max(maiorSeq, seq); } else seq = 0; });
-  const m = {total, acertos: ac, trocas: tr, omissoes: om, comissoes: co, duplicados: du, toques: P.length,
+  const m = {total, acertos: ac, trocas: tr, omissoes: om, separadas: sep, acordes, acordesOk, acordesParc, acordesSep, comissoes: co, duplicados: du, toques: P.length,
     taxa: pct(ac, total), precisao: pct(ac, P.length), media: Math.round(media), dp: Math.round(dp), absMed: Math.round(absMed),
     antes, junto, depois, tercos: tercos.map(x => x.t ? pct(x.a, x.t) : null), porNota, maiorSeqOmissoes: maiorSeq};
   return {R, P, m};
@@ -1275,6 +1328,7 @@ function mostrarResultado(s){
           <dt>Toques repetidos logo em seguida</dt><dd>${m.duplicados}</dd>
           <dt>Maior sequência de omissões</dt><dd>${m.maiorSeqOmissoes}</dd>
           <dt>Precisão (toques certos ÷ todos os toques)</dt><dd>${m.precisao}%</dd>
+          ${m.acordes ? `<dt>Acordes completos (2 notas juntas)</dt><dd>${m.acordesOk} de ${m.acordes}</dd><dt>Acordes só com uma nota certa</dt><dd>${m.acordesParc}</dd>${m.acordesSep ? `<dt>Acordes com as notas certas, mas separadas</dt><dd>${m.acordesSep}</dd>` : ''}` : ''}
         </dl>
         <h3>Sincronia</h3>
         <dl class="medidas">
@@ -1321,13 +1375,14 @@ function resumoTexto(s, m){
     `Trocas de nota: ${m.trocas} (${pct(m.trocas, m.total)}%)`,
     `Comissões: ${m.comissoes}; toques repetidos: ${m.duplicados}`,
     `Precisão das respostas: ${m.precisao}%`,
+    m.acordes ? `Acordes (2 notas juntas): ${m.acordesOk} completos de ${m.acordes}; ${m.acordesParc} só com uma nota certa${m.acordesSep ? '; ' + m.acordesSep + ' com as notas separadas' : ''}` : '',
     `Sincronia: média ${m.media > 0 ? '+' : ''}${m.media} ms, desvio padrão ${m.dp} ms (antecipou ${m.antes}, junto ${m.junto}, atrasou ${m.depois})`,
     `Acertos por terço (início/meio/fim): ${m.tercos.map(v => v == null ? '–' : v + '%').join(' / ')}`,
     s.parcial ? 'Observação: sessão encerrada antes do fim do vídeo.' : ''
   ].filter(Boolean).join('\n');
 }
 function csv(s, R, P){
-  const nomes = {acerto:'acerto', troca:'troca de nota', omissao:'omissão', comissao:'comissão', duplicado:'toque repetido'};
+  const nomes = {acerto:'acerto', separada:'nota certa, acorde desfeito', troca:'troca de nota', omissao:'omissão', comissao:'comissão', duplicado:'toque repetido'};
   const linhas = [['tempo_s','nota_esperada','nota_tocada','diferenca_ms','resultado'].join(';')];
   const itens = [];
   R.forEach(r => itens.push({t: r.t, esp: nomeCurto(r.n), toc: r.j >= 0 ? nomeCurto(P[r.j].n) : '', dt: r.dt == null ? '' : Math.round(r.dt*1000), st: nomes[r.status]}));
@@ -1347,18 +1402,18 @@ function desenharLinhaCompleta(R, P){
   const px = t => 12 + t / fim * (w - 24);
   x.font = '11px "Atkinson Hyperlegible", sans-serif'; x.fillStyle = tinta; x.strokeStyle = linha;
   for (let s = 0; s <= fim; s += 5) { x.beginPath(); x.moveTo(px(s), 8); x.lineTo(px(s), h - 18); x.stroke(); x.fillText(fmtTempo(s), px(s) + 3, h - 5); }
-  R.forEach(r => {
-    const X = px(r.t);
+  grupos(R).forEach(gr => gr.forEach((r, q) => {
+    const X = px(r.t), h = 34 / gr.length, Y = 14 + q * h;
     x.fillStyle = corNota(r.n); x.strokeStyle = corNota(r.n); x.lineWidth = 2;
-    if (r.status === 'omissao') { x.setLineDash([3,2]); rr(x, X - 6, 14, 12, 34); x.stroke(); x.setLineDash([]); }
-    else { rr(x, X - 6, 14, 12, 34); x.fill(); }
-  });
-  const cst = {acerto: cs.getPropertyValue('--good').trim(), troca: cs.getPropertyValue('--warn').trim(), comissao: cs.getPropertyValue('--bad').trim(), duplicado: cs.getPropertyValue('--bad').trim()};
-  P.forEach(p => {
-    const X = px(p.t);
-    x.beginPath(); x.arc(X, 78, 7, 0, Math.PI*2); x.fillStyle = corNota(p.n); x.fill();
+    if (r.status === 'omissao') { x.setLineDash([3,2]); rr(x, X - 6, Y, 12, h - 1); x.stroke(); x.setLineDash([]); }
+    else { rr(x, X - 6, Y, 12, h - 1); x.fill(); }
+  }));
+  const cst = {separada: cs.getPropertyValue('--warn').trim(), acerto: cs.getPropertyValue('--good').trim(), troca: cs.getPropertyValue('--warn').trim(), comissao: cs.getPropertyValue('--bad').trim(), duplicado: cs.getPropertyValue('--bad').trim()};
+  grupos(P).forEach(gr => gr.forEach((p, q) => {
+    const X = px(p.t), Y = 78 + (q - (gr.length - 1) / 2) * 16;
+    x.beginPath(); x.arc(X, Y, 7, 0, Math.PI*2); x.fillStyle = corNota(p.n); x.fill();
     x.lineWidth = 3; x.strokeStyle = cst[p.status]; x.stroke();
-  });
+  }));
 }
 function rr(x, a, b, w, h){ x.beginPath(); if (x.roundRect) x.roundRect(a, b, w, h, 4); else x.rect(a, b, w, h); }
 
@@ -1433,13 +1488,13 @@ function desenharFaixa(){
   else { const g = S.gravando === 'sessao' ? db.gabaritos.find(z => z.id === S.sess.gabId) : gabAtual(); if (g && !gravGab) ref = g.eventos; }
   const resp = (S.gravando) ? S.buf : [];
   x.save(); x.beginPath(); x.rect(80, 0, w - 80, h); x.clip();
-  for (const e of ref) {
-    if (e.t < t - antes - 0.3 || e.t > t + depois + 0.3) continue;
-    const X = x0 + (e.t - t) * pps; x.fillStyle = corNota(e.n); rr(x, X - 7, 9, 14, lh - 10); x.fill();
+  for (const gr of grupos(ref)) {
+    if (gr[0].t < t - antes - 0.3 || gr[0].t > t + depois + 0.3) continue;
+    gr.forEach((e, q) => { const X = x0 + (e.t - t) * pps, h = (lh - 10) / gr.length; x.fillStyle = corNota(e.n); rr(x, X - 7, 9 + q * h, 14, h - 1); x.fill(); });
   }
-  for (const e of resp) {
-    if (e.t < t - antes - 0.3 || e.t > t + depois) continue;
-    const X = x0 + (e.t - t) * pps; x.fillStyle = corNota(e.n); x.beginPath(); x.arc(X, 10 + lh + lh/2, Math.min(9, lh/2 - 4), 0, Math.PI*2); x.fill();
+  for (const gr of grupos(resp)) {
+    if (gr[0].t < t - antes - 0.3 || gr[0].t > t + depois) continue;
+    gr.forEach((e, q) => { const X = x0 + (e.t - t) * pps, rd = Math.min(9, lh/2 - 4) / (gr.length > 1 ? 1.5 : 1); x.fillStyle = corNota(e.n); x.beginPath(); x.arc(X, 10 + lh + lh/2 + (q - (gr.length - 1) / 2) * rd * 1.8, rd, 0, Math.PI*2); x.fill(); });
   }
   x.restore();
   x.strokeStyle = ink; x.lineWidth = 2; x.beginPath(); x.moveTo(x0, 0); x.lineTo(x0, h - 4); x.stroke();
