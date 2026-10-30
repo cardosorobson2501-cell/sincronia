@@ -345,6 +345,8 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
           </div>
           <label class="campo">Tolerância na identificação da altura: <span data-micval="rigor"></span><input type="range" data-mic="rigor" min="5" max="40" step="1"></label>
           <p class="dica">Menor = mais exigente (ignora sons incertos). Maior = aceita mais sons, com mais risco de errar a nota.</p>
+          <label class="check"><input type="checkbox" id="micDuas"> Esperar 2 notas ao mesmo tempo (experimental)</label>
+          <p class="dica">Tenta reconhecer duas notas no mesmo toque. Funciona melhor com amostras ensinadas de cada nota. Pode errar mais do que no modo de uma nota.</p>
           <button id="btnMicPadrao" class="btn-ghost small" type="button">Restaurar ajustes padrão</button>
         </details>
 
@@ -769,7 +771,7 @@ $('#btnMidi').addEventListener('click', async () => {
 });
 
 /* ---------- entrada: microfone ---------- */
-const MIC_PAD = {limDb:-34, ganho:1, intervalo:140, ataque:1.6, escuta:90, grave:48, aguda:96, rigor:15};
+const MIC_PAD = {duas:false, limDb:-34, ganho:1, intervalo:140, ataque:1.6, escuta:90, grave:48, aguda:96, rigor:15};
 let micCfg = Object.assign({}, MIC_PAD, db.prefs.mic || {});
 const Mic = {ctx:null, an:null, gain:null, sp:null, buf:null, freq:null, prev:0, ultimo:0, rms:0, thr:0.02, sr:48000, ring:null, rp:0, pico:0, medindo:null};
 const dbDe = r => 20 * Math.log10(Math.max(r, 1e-5));
@@ -780,6 +782,7 @@ const MIC_ROT = {limDb: v => fmt(v, 1) + ' dB', ganho: v => fmt(v, 1) + '×', in
 function aplicarMicCfg(gravar){
   Mic.thr = Math.pow(10, micCfg.limDb / 20);
   if (Mic.gain) Mic.gain.gain.value = micCfg.ganho;
+  $('#micDuas').checked = !!micCfg.duas;
   $$('[data-mic]').forEach(el => { if (document.activeElement !== el || el.tagName === 'SELECT') el.value = micCfg[el.dataset.mic]; });
   $$('[data-micval]').forEach(el => el.textContent = MIC_ROT[el.dataset.micval](micCfg[el.dataset.micval]));
   $('#limiar').style.left = nivelPct(Mic.thr) + '%';
@@ -788,6 +791,7 @@ function aplicarMicCfg(gravar){
 const atualizarLimiar = () => aplicarMicCfg(false);
 $$('[data-mic]').forEach(el => el.addEventListener('input', () => { micCfg[el.dataset.mic] = +el.value; aplicarMicCfg(true); }));
 const ajustarLim = d => { micCfg.limDb = Math.max(-70, Math.min(-15, Math.round((micCfg.limDb + d) * 2) / 2)); aplicarMicCfg(true); };
+$('#micDuas').addEventListener('change', e => { micCfg.duas = e.target.checked; aplicarMicCfg(true); });
 $('#limMenos').addEventListener('click', () => ajustarLim(-1));
 $('#limMais').addEventListener('click', () => ajustarLim(1));
 $('#btnMicPadrao').addEventListener('click', () => { micCfg = Object.assign({}, MIC_PAD); aplicarMicCfg(true); toast('Ajustes do microfone restaurados.'); });
@@ -860,6 +864,38 @@ function micTick(){
   }
   Mic.prev = Mic.prev * 0.6 + rms * 0.4;
 }
+/* 2 notas pelas amostras: v ≈ α·a + β·b com α, β ≥ 0 (mínimos quadrados em cada par de amostras) */
+function duasPorAmostras(v, p, simMin){
+  if (!p) return null;
+  const ms = Object.entries(p.modelos).map(([n, m]) => ({n: +n, m, r: cosseno(v, m)}));
+  if (ms.length < 2) return null;
+  const um = Math.max(...ms.map(x => x.r));
+  let melhor = null;
+  for (let i = 0; i < ms.length; i++) for (let j = i + 1; j < ms.length; j++) {
+    const a = ms[i], b = ms[j], c = cosseno(a.m, b.m), d = 1 - c * c; if (d < 0.02) continue;
+    const al = (a.r - c * b.r) / d, be = (b.r - c * a.r) / d;
+    if (al <= 0 || be <= 0 || Math.min(al, be) < 0.25 * Math.max(al, be)) continue;
+    const fit = Math.sqrt(Math.max(0, al * a.r + be * b.r));
+    if (!melhor || fit > melhor.fit) melhor = {fit, n: [a.n, b.n]};
+  }
+  return melhor && melhor.fit >= Math.max(simMin, um + 0.04) ? melhor.n : null;
+}
+/* 2 notas pela altura: soma de harmônicos; a 2ª nota só vale se não for harmônico da 1ª */
+function duasAlturas(){
+  const bin = Mic.sr / 4096, F = Mic.freq;
+  const mag = f => { const i = Math.round(f / bin); let m = 0; for (let k = i - 1; k <= i + 1; k++) if (F[k] != null) m = Math.max(m, Math.pow(10, F[k] / 20)); return m; };
+  const freq = n => 440 * Math.pow(2, (n - 69) / 12);
+  const sal = (n, tira) => { let s = 0; for (let h = 1; h <= 4; h++) { const fh = freq(n) * h; if (tira && tira.some(z => Math.abs(fh - z) / z < 0.03)) continue; s += mag(fh) / h; } return s; };
+  let fmax = 0; for (let n = micCfg.grave; n <= micCfg.aguda; n++) fmax = Math.max(fmax, mag(freq(n)));
+  /* só vale como nota quem tem a própria fundamental presente (evita tomar um som grave que só "aparece" pelos harmônicos) */
+  const melhorNota = (tira, longe) => { let bn = -1, bs = 0; for (let n = micCfg.grave; n <= micCfg.aguda; n++) { if (mag(freq(n)) < 0.3 * fmax || (longe != null && Math.abs(n - longe) < 2)) continue; const x = sal(n, tira); if (x > bs) { bs = x; bn = n; } } return [bn, bs]; };
+  const [n1, s1] = melhorNota(null);
+  if (n1 < 0 || s1 < 1e-5) return [];
+  const tira = []; for (let h = 1; h <= 8; h++) tira.push(freq(n1) * h);
+  const [n2, s2] = melhorNota(tira, n1);
+  if (n2 < 0 || Math.abs(n2 - n1) < 2 || s2 < 0.35 * s1 || mag(freq(n2)) < 0.25 * mag(freq(n1))) return [n1];
+  return [n1, n2].sort((a, b) => a - b);
+}
 const ranquear = (v, p) => p ? Object.entries(p.modelos).map(([n, m]) => ({n: +n, sim: cosseno(v, m)})).sort((a, b) => b.sim - a.sim) : [];
 function analisarAtaque(tv){
   if (!Mic.an) return;
@@ -868,6 +904,14 @@ function analisarAtaque(tv){
   const v = espectro(Mic.freq, Mic.sr);
   if (S.calib) { receberAmostra(v); return; }
   const p = perfilAtual(), simMin = +$('#simMin').value / 100, rk = ranquear(v, p);
+  if (micCfg.duas) {
+    const par = duasPorAmostras(v, p, simMin);
+    if (par) { par.forEach(n => registrarNota(n, tv, 'Microfone: 2 notas (amostras)')); return; }
+    if (S.modo === 'mic-altura') {
+      const alt = duasAlturas();
+      if (alt.length > 1) { alt.forEach(n => registrarNota(n, tv, 'Microfone: 2 notas (altura)')); return; }
+    }
+  }
   if (S.modo === 'mic-altura') {
     const f = yin(b, Mic.sr, micCfg.rigor / 100);
     const midi = f ? Math.round(69 + 12 * Math.log2(f / 440)) : 0;

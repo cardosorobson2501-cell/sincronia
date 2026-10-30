@@ -12,6 +12,17 @@ Tudo está em um único arquivo, `index.html`. Não precisa instalar nada.
 4. Aba **Gabarito**: grave tocando junto com o vídeo ou leia as cores do vídeo.
 5. Aba **Sessão**: inicie com o paciente. O resultado fica no **Histórico**.
 
+## Duas notas juntas (acordes)
+- Notas tocadas dentro da **tolerância para notas juntas** (aba Entrada) viram um acorde no gabarito.
+- Na aba Gabarito, cada linha é uma nota ou um acorde: dá para trocar as notas, acrescentar uma nota junto (＋) e apagar uma nota ou o acorde todo.
+- Na aba Sessão, escolha **aceitar em qualquer ordem** ou **exigir as duas juntas**.
+- Pelo microfone, ligue **Esperar 2 notas ao mesmo tempo** (experimental) nos ajustes avançados.
+
+## Sessão: treino e avaliação
+- **Treino**: feedback verde/vermelho em cada toque, contador de acertos, erros e perdidas, e a faixa que antecipa as notas (pode ser desligada).
+- **Avaliação**: sem nenhum feedback e sem a faixa; só o vídeo e as teclas. O resultado aparece no fim.
+- A sessão pode entrar em **tela cheia** sozinha; há botões para sair e para encerrar.
+
 ## Microfone
 - **Volume mínimo** em dB, com botões − / +, e botão **Medir o ruído da sala**.
 - **Ajustes avançados**: ganho, intervalo entre toques, força do ataque, tempo de escuta, faixa de notas e tolerância.
