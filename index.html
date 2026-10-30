@@ -294,6 +294,8 @@ body.nivel-avaliacao #faixaWrap,body.nivel-avaliacao .aovivo,body.nivel-avaliaca
 .toast{position:fixed;left:50%;bottom:calc(1.2rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(150%);background:var(--ink);color:var(--bg);padding:.7rem 1.1rem;border-radius:10px;max-width:min(92vw,520px);transition:transform .25s,visibility .25s;visibility:hidden;z-index:10;font-size:.95rem}
 .toast.show{transform:translateX(-50%) translateY(0);visibility:visible}
 textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid var(--line);border-radius:10px;padding:.6rem;background:var(--surface2);font:inherit;font-size:.9rem}
+.diag-esp{width:100%;height:120px;display:block;background:#000;border-radius:8px;margin:.4rem 0}
+.diag-texto{width:100%;font:12px/1.35 ui-monospace,Menlo,monospace;border:1px solid var(--line,#ccc);border-radius:8px;padding:.5rem;background:var(--card,#fff);color:inherit}
 </style>
 </head>
 <body>
@@ -376,6 +378,7 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
           <p class="dica"><b>1.</b> Fique em silêncio, com o vídeo parado. <b>2.</b> Toque em "Medir o silêncio": o app mede o ruído da sala durante 2 segundos e coloca o limite um pouco acima. <b>3.</b> Toque uma nota: a barra, a nota e a confiança aparecem ao vivo.</p>
           <div class="linha"><button id="btnRuido" class="btn" type="button">Medir o silêncio (2 s)</button></div>
           <p id="ruidoStatus" class="nota-status"></p>
+          <div class="linha"><button id="btnRuidoVideo" class="btn-ghost small" type="button">Medir com o vídeo tocando, sem tocar (4 s)</button></div>
           <div class="medidor-grande" aria-hidden="true"><div id="cMedidor"></div><div id="cPico"></div><div id="cLimiar"></div></div>
           <div class="calib-nota" id="calibNota" aria-live="off">–</div>
           <div class="campo" style="margin-bottom:.2rem">
@@ -384,6 +387,14 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
           </div>
           <label class="campo">Margem acima do ruído: <span data-micval="margemDb"></span><input type="range" data-mic="margemDb" min="6" max="24" step="1"></label>
           <p class="dica">A linha vermelha é o limite: só sons acima dela contam. Mais para a esquerda = mais sensível. Deixe o som do vídeo no fone do paciente ou bem baixo.</p>
+        </div>
+        <div class="calib-box" id="ecoBox">
+          <h3 style="margin:.1rem 0 .3rem">Som do vídeo entrando no microfone</h3>
+          <p class="dica">Se o vídeo toca no alto-falante, o microfone ouve a música do vídeo junto com o teclado. Estas duas chaves tentam separar os sons. Ligue uma de cada vez e compare em "Gravar diagnóstico" (aba Teste). O fone de ouvido continua sendo o jeito mais seguro.</p>
+          <label class="check"><input type="checkbox" id="chkEcoNav"> Modo eco do navegador (experimental; vale na próxima ativação do microfone)</label>
+          <label class="check"><input type="checkbox" id="chkEcoSoft"> Cancelar o som do vídeo pelo app (experimental)</label>
+          <div class="linha"><button id="btnEco" class="btn-ghost small" type="button">Medir o eco do vídeo (8 s)</button></div>
+          <p id="ecoStatus" class="nota-status"></p>
         </div>
         <p id="bpStatus" class="bp-status"></p>
 
@@ -441,6 +452,8 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
         <label class="campo">Notas esperadas
           <select id="atvNotas"><option value="1">1 nota por vez</option><option value="2">1 ou 2 notas juntas (intervalo)</option></select></label>
         <label class="campo">Tolerância de tempo: ± <span id="atvJanelaVal">300 ms</span><input type="range" id="atvJanela" min="100" max="800" step="25"></label>
+        <label class="campo">Som do vídeo durante a sessão
+          <select id="atvSomVideo"><option value="alto">Alto-falante (o microfone vai ouvir o vídeo)</option><option value="fone">Fone de ouvido (melhor para o microfone)</option><option value="sem">Sem som (o paciente toca pelas cores)</option></select></label>
         <div id="atvJuntasBox" hidden="">
           <label class="campo">Duas notas "juntas" no toque e no MIDI: dentro de <span id="atvJuntasVal">150 ms</span><input type="range" id="atvJuntas" min="50" max="400" step="10"></label>
           <label class="campo">Duas notas "juntas" no microfone: dentro de <span id="atvJuntasMicVal">250 ms</span><input type="range" id="atvJuntasMic" min="100" max="600" step="10"></label>
@@ -524,6 +537,19 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <button id="btnComparar" class="btn-ghost" type="button">Começar a comparar</button>
       <p class="dica" id="compStatus"></p>
 
+      <h3>Diagnóstico do microfone</h3>
+      <p class="dica">Grava 15 segundos do que o microfone ouve e mostra, nota por nota, o que o app entendeu e por que aceitou ou recusou. Toque umas 5 notas durante a gravação. Depois toque em "Copiar relatório" e cole na conversa.</p>
+      <label class="check"><input type="checkbox" id="diagVideo" checked=""> Tocar o vídeo durante a gravação</label>
+      <div class="linha"><button id="btnDiag" class="btn" type="button">Gravar diagnóstico (15 s)</button></div>
+      <p id="diagStatus" class="nota-status"></p>
+      <div id="diagSaida" hidden="">
+        <div class="linha"><button id="diagOuvirBruto" class="btn-ghost small" type="button">▶ Ouvir o que o microfone captou</button><button id="diagOuvirLimpo" class="btn-ghost small" type="button" hidden="">▶ Ouvir depois de cancelar o vídeo</button></div>
+        <canvas id="diagEspBruto" class="diag-esp" height="120"></canvas>
+        <canvas id="diagEspLimpo" class="diag-esp" height="120" hidden=""></canvas>
+        <textarea id="diagTexto" class="diag-texto" readonly="" rows="14"></textarea>
+        <div class="linha"><button id="diagCopiar" class="btn-ghost small" type="button">Copiar relatório</button><button id="diagBaixar" class="btn-ghost small" type="button">Baixar relatório</button></div>
+      </div>
+
       <div id="testeResultado"></div>
       <div class="linha"><button id="testeCsv" class="btn-ghost small" type="button" hidden="">Baixar planilha (CSV)</button></div>
     </div>
@@ -600,7 +626,7 @@ function perguntar(txt, o = {}){
 }
 
 /* ---------- eventos do gabarito: um tempo e 1 ou 2 notas ---------- */
-const CFG_ATIV = {notasEsperadas: 1, janela: 300, juntasMs: 150, juntasMic: 250};
+const CFG_ATIV = {notasEsperadas: 1, janela: 300, juntasMs: 150, juntasMic: 250, somVideo: 'alto'};
 const cfgAtiv = g => Object.assign({}, CFG_ATIV, g ? (g.cfg || {}) : (db.prefs.atividade || {}));
 const juntasEf = (c, modo) => c.notasEsperadas >= 2 ? (String(modo).startsWith('mic') ? c.juntasMic : c.juntasMs) : 0;
 /* aceita o formato novo {t, notas:[..]} e o antigo, plano {t, n, g} */
@@ -956,23 +982,29 @@ function renderCalibStatus(){
   if (c) { el.className = 'nota-status calib-ok'; el.textContent = '✓ Calibrado neste aparelho em ' + dataHora(c.data) + ' (silêncio ' + fmt(c.pisoDb, 0) + ' dB, limite ' + fmt(c.limDb, 0) + ' dB).'; }
   else { el.className = 'nota-status calib-falta'; el.textContent = 'Falta calibrar o microfone neste aparelho (' + Mic.chave + '). Faça o passo 2 abaixo.'; }
 }
-$('#btnRuido').addEventListener('click', () => {
+function medirSilencio(comVideo){
   const st = $('#ruidoStatus');
   if (!Mic.ctx) { st.className = 'nota-status erro'; st.textContent = 'Ative o microfone primeiro.'; return; }
   if (Mic.medindo) return;
+  if (comVideo && !temVideo()) { st.className = 'nota-status erro'; st.textContent = 'Abra o vídeo da atividade primeiro.'; return; }
   Mic.medindo = [];
-  st.className = 'nota-status'; st.textContent = 'Medindo… fique em silêncio e deixe o vídeo parado.';
+  st.className = 'nota-status'; st.textContent = comVideo ? 'Medindo com o vídeo tocando… não toque nada.' : 'Medindo… fique em silêncio e deixe o vídeo parado.';
+  const ms = comVideo ? 4000 : 2000;
+  if (comVideo) { video.muted = false; tocarVideoPor(ms + 100); }
   setTimeout(() => {
-    const v = Mic.medindo || []; Mic.medindo = null;
+    let v = Mic.medindo || []; Mic.medindo = null;
+    if (comVideo) v = v.slice(Math.floor(v.length * 0.25));   /* o primeiro segundo é o vídeo começando e o filtro se ajustando */
     if (v.length < 20) { st.className = 'nota-status erro'; st.textContent = 'Não deu para medir. Tente de novo.'; return; }
     v.sort((a, b) => a - b);
     const piso = dbDe(v[Math.floor(v.length * 0.95)]);
     micCfg.limDb = Math.max(-70, Math.min(-15, Math.round(piso + micCfg.margemDb)));
     aplicarMicCfg(true); salvarCalib(piso);
     st.className = piso > -30 ? 'nota-status erro' : 'nota-status ok';
-    st.textContent = (piso > -30 ? 'Havia som alto durante a medição: tente de novo em silêncio. ' : '') + 'Ruído da sala: ' + fmt(piso, 0) + ' dB. Limite colocado em ' + fmt(micCfg.limDb, 0) + ' dB (ruído + ' + micCfg.margemDb + ' dB). Toque uma nota para conferir e use − / + se precisar.';
-  }, 2000);
-});
+    st.textContent = (piso > -30 ? 'Havia som alto durante a medição: tente de novo em silêncio. ' : '') + (comVideo ? 'Som do vídeo que chega ao microfone: ' : 'Ruído da sala: ') + fmt(piso, 0) + ' dB. Limite colocado em ' + fmt(micCfg.limDb, 0) + ' dB (' + (comVideo ? 'vídeo' : 'ruído') + ' + ' + micCfg.margemDb + ' dB). Toque uma nota para conferir e use − / + se precisar.';
+  }, ms);
+}
+$('#btnRuido').addEventListener('click', () => medirSilencio(false));
+$('#btnRuidoVideo').addEventListener('click', () => medirSilencio(true));
 
 /* ---- ativar o microfone ---- */
 $('#btnMic').addEventListener('click', async () => {
@@ -982,30 +1014,38 @@ $('#btnMic').addEventListener('click', async () => {
     st.className = 'nota-status erro'; st.textContent = 'O navegador só libera o microfone em páginas seguras. Abra o Sincronia pelo endereço https (o link do Netlify ou do GitHub Pages).'; return;
   }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:1}});
+    const ecoPref = db.prefs.eco || {};
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:!!ecoPref.nav, noiseSuppression:false, autoGainControl:false, channelCount:1}});
     Mic.ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (Mic.ctx.state === 'suspended') Mic.ctx.resume();
     Mic.sr = Mic.ctx.sampleRate;
     const trilha = stream.getAudioTracks()[0], cfgT = (trilha && trilha.getSettings) ? trilha.getSettings() : {};
+    Mic.trilhaCfg = cfgT;
     Mic.micNome = (trilha && trilha.label) || '';
     const ligados = [['echoCancellation', 'cancelamento de eco'], ['noiseSuppression', 'supressão de ruído'], ['autoGainControl', 'ganho automático']].filter(([k]) => cfgT[k] === true).map(x => x[1]);
     const rawEl = $('#micRaw');
-    if (ligados.length) { rawEl.className = 'nota-status erro'; rawEl.textContent = 'Atenção: este aparelho manteve ligado: ' + ligados.join(', ') + '. Isso pode atrapalhar o reconhecimento das notas.'; }
+    if (ecoPref.nav) { rawEl.className = 'nota-status'; rawEl.textContent = 'Modo eco do navegador ligado (experimental): o aparelho pode reduzir o volume e tratar o teclado como ruído. Compare no diagnóstico.'; }
+    else if (ligados.length) { rawEl.className = 'nota-status erro'; rawEl.textContent = 'Atenção: este aparelho manteve ligado: ' + ligados.join(', ') + '. Isso pode atrapalhar o reconhecimento das notas.'; }
     else if (['echoCancellation', 'noiseSuppression', 'autoGainControl'].every(k => cfgT[k] === false)) { rawEl.className = 'nota-status ok'; rawEl.textContent = '✓ Áudio bruto: sem cancelamento de eco, supressão de ruído nem ganho automático.'; }
     else { rawEl.className = 'nota-status'; rawEl.textContent = 'Áudio bruto pedido ao navegador (ele não informa se foi respeitado).'; }
     const src = Mic.ctx.createMediaStreamSource(stream);
     Mic.gain = Mic.ctx.createGain(); Mic.gain.gain.value = micCfg.ganho;
     Mic.an = Mic.ctx.createAnalyser(); Mic.an.fftSize = 4096; Mic.an.smoothingTimeConstant = 0;
-    src.connect(Mic.gain); Mic.gain.connect(Mic.an);
+    src.connect(Mic.gain);
     Mic.buf = new Float32Array(4096); Mic.freq = new Float32Array(2048);
-    /* gravador circular de 2 s: amostras de áudio, estabilidade da nota e reconhecimento de 2 notas */
+    /* gravador circular de 2 s (amostras de áudio, estabilidade da nota, 2 notas). O ScriptProcessor recebe o microfone (canal 0) e o som do vídeo (canal 1) e entrega o microfone já sem o eco do vídeo, quando isso está ligado */
     try {
-      Mic.ring = new Float32Array(Math.ceil(Mic.sr * 2)); Mic.rp = 0;
-      Mic.sp = Mic.ctx.createScriptProcessor(2048, 1, 1);
-      Mic.sp.onaudioprocess = e => { const d = e.inputBuffer.getChannelData(0), n = Mic.ring.length; for (let i = 0; i < d.length; i++) { Mic.ring[Mic.rp] = d[i]; Mic.rp = (Mic.rp + 1) % n; } };
-      const mudo = Mic.ctx.createGain(); mudo.gain.value = 0;
-      Mic.gain.connect(Mic.sp); Mic.sp.connect(mudo); mudo.connect(Mic.ctx.destination);
-    } catch(e) { Mic.ring = null; }
+      Mic.ring = new Float32Array(Math.ceil(Mic.sr * 2)); Mic.ringBruto = new Float32Array(Mic.ring.length); Mic.rp = 0;
+      Mic.merger = Mic.ctx.createChannelMerger(2);
+      Mic.gain.connect(Mic.merger, 0, 0);
+      Mic.sp = Mic.ctx.createScriptProcessor(1024, 2, 2);
+      Mic.merger.connect(Mic.sp);
+      Mic.sp.onaudioprocess = ecoProcessar;
+      const sep = Mic.ctx.createChannelSplitter(2), mudo = Mic.ctx.createGain(); mudo.gain.value = 0;
+      Mic.sp.connect(sep); sep.connect(Mic.an, 0); Mic.sp.connect(mudo); mudo.connect(Mic.ctx.destination);
+      ECO.iniciar(Mic.sr);
+      if (ecoPref.soft) { ECO.ativo = true; ligarReferencia(); }
+    } catch(e) { Mic.ring = null; Mic.gain.connect(Mic.an); }
     setInterval(micTick, 8);
     S.micOk = true;
     Mic.chave = chaveAparelho();
@@ -1033,6 +1073,259 @@ $('#btnMic').addEventListener('click', async () => {
   }
 });
 /* iPhone/iPad e Android deixam o áudio "suspenso" até um toque ou ao voltar para o app */
+/* ---- cancelar o som do vídeo: o app sabe exatamente o que o vídeo toca (pega o áudio do próprio vídeo) e subtrai do microfone o que o alto-falante devolve (filtro adaptativo NLMS) ---- */
+const ECO = {
+  ativo: false, medindo: false, N: 1024, D: 0, Q: 4, mu: 0.3, w: null, h: new Float32Array(16384), pos: 0, en: 0, rhoLento: 0, rec: null,
+  am: 0, ar: 0, cnt: 0, blk: null, prev: null, tem: false, p0: 0, p1: 0, p2: 0, fifo: new Float32Array(8192), fh: 0, ft: 0,
+  iniciar(sr){ this.Q = Math.max(1, Math.round(sr / 12000)); this.w = new Float32Array(this.N); this.blk = new Float32Array(this.Q); this.prev = new Float32Array(this.Q); this.sr = sr; this.zerar(); this.fh = this.ft = 0; for (let i = 0; i < this.Q; i++) this.fifo[this.ft++] = 0; },
+  zerar(){ if (this.w) this.w.fill(0); this.h.fill(0); this.en = 0; this.rhoLento = 0; Mic.ecoDb = null; },
+  ms(){ return Math.round(this.D * this.Q / this.sr * 1000); }
+};
+Object.assign(Mic, {ringBruto: null, merger: null, vsrc: null, refOk: false, ecoDb: null, fundo: 0, trilhaCfg: null});
+const Diag = {ativo: false, n: 0, bruto: null, limpo: null, ref: null};
+function ligarReferencia(){
+  if (Mic.refOk) return true;
+  if (!Mic.ctx || !Mic.merger) return false;
+  try {
+    Mic.vsrc = Mic.ctx.createMediaElementSource(video);
+    Mic.vsrc.connect(Mic.ctx.destination);   /* o vídeo continua saindo no alto-falante */
+    Mic.vsrc.connect(Mic.merger, 0, 1);
+    Mic.refOk = true; acordarAudio();
+    return true;
+  } catch(e) { toast('Este navegador não deixou o app acompanhar o som do vídeo.'); return false; }
+}
+/* O filtro trabalha a ~12 kHz (basta para as notas e fica bem mais leve e rápido de aprender); o resto do som passa direto */
+function ecoProcessar(e){
+  const m = e.inputBuffer.getChannelData(0), r = e.inputBuffer.getChannelData(1);
+  const o = e.outputBuffer.getChannelData(0), o1 = e.outputBuffer.getChannelData(1), n = m.length;
+  const E = ECO, Q = E.Q, H = E.h, M = H.length - 1, W = E.w, N = E.N, D = E.D, ring = Mic.ring, rb = Mic.ringBruto, L = ring.length, F = E.fifo, FM = F.length - 1;
+  const usa = (E.ativo || E.medindo) && Mic.refOk, adapta = usa && E.adapta, mu = E.medindo ? 0.6 : E.mu;
+  let em = 0, ee = 0, er = 0, nl = 0, en = E.en, rp = Mic.rp;
+  for (let i = 0; i < n; i++) {
+    E.am += m[i]; E.ar += r[i]; E.blk[E.cnt++] = m[i];
+    if (E.cnt < Q) continue;
+    const mL = E.am / Q, rL = E.ar / Q; E.am = E.ar = 0; E.cnt = 0;
+    E.pos = (E.pos + 1) & M; H[E.pos] = rL;
+    const base = (E.pos - D) & M, saiu = H[(base - N) & M], ent = H[base];
+    en += ent * ent - saiu * saiu; if (en < 0) en = 0;
+    let pred = 0, el = mL;
+    if (usa) {
+      for (let k = 0; k < N; k++) pred += W[k] * H[(base - k) & M];
+      el = mL - pred;
+      if (adapta) { const g = mu * el / (en + 1e-4 * N); for (let k = 0; k < N; k++) W[k] += g * H[(base - k) & M]; }
+    }
+    em += mL * mL; ee += el * el; er += rL * rL; nl++;
+    E.p2 = E.p1; E.p1 = E.p0; E.p0 = pred;
+    if (E.tem) for (let q = 0; q < Q; q++) {
+      const u = (q - (Q - 1) / 2) / Q, pv = u <= 0 ? E.p2 + (E.p1 - E.p2) * (u + 1) : E.p1 + (E.p0 - E.p1) * u, x = E.prev[q], y = x - pv;
+      F[E.ft] = y; E.ft = (E.ft + 1) & FM;
+      ring[rp] = y; rb[rp] = x; rp = rp + 1 === L ? 0 : rp + 1;
+      if (Diag.ativo && Diag.n < Diag.bruto.length) { Diag.bruto[Diag.n] = x; Diag.limpo[Diag.n] = y; Diag.n++; }
+    }
+    E.prev.set(E.blk); E.tem = true;
+    if (Diag.ativo && Diag.n < Diag.ref.length) Diag.ref[Math.max(0, Diag.n - 1)] = rL;
+  }
+  for (let i = 0; i < n; i++) { o[i] = E.fh !== E.ft ? F[E.fh] : 0; if (E.fh !== E.ft) E.fh = (E.fh + 1) & FM; o1[i] = m[i]; }
+  Mic.rp = rp; E.en = en;
+  if (E.rec) { E.rec.m.push(m.slice()); E.rec.r.push(r.slice()); }
+  if (!nl) return;
+  em /= nl; ee /= nl; er /= nl;
+  /* só "aprende" quando o resto (erro) não salta de repente: assim as notas do paciente não são tomadas por eco */
+  const rho = ee / (er + 1e-12);
+  if (!E.rhoLento) E.rhoLento = rho;
+  E.adapta = E.medindo || (er > 1e-8 && rho <= 3 * E.rhoLento);
+  E.rhoLento = 0.95 * E.rhoLento + 0.05 * Math.min(rho, 3 * E.rhoLento);
+  if (usa && er > 1e-8 && ee > 0) { const d = 10 * Math.log10((em + 1e-12) / (ee + 1e-12)); Mic.ecoDb = Mic.ecoDb == null ? d : 0.9 * Mic.ecoDb + 0.1 * d; }
+}
+/* atraso entre o que o app manda ao alto-falante e o que o microfone ouve: correlação com fase (PHAT) em ~4 kHz, que acha o atraso certo mesmo com música cheia de notas repetidas */
+function atrasoEco(m, r, sr){
+  const f = Math.max(1, Math.round(sr / 4000)), n = Math.floor(Math.min(m.length, r.length) / f), fs = sr / f;
+  const NF = 1 << Math.ceil(Math.log2(n + fs * 0.7 + 8)), a = new Float64Array(NF), ai = new Float64Array(NF), b = new Float64Array(NF), bi = new Float64Array(NF);
+  for (let i = 0; i < n; i++) { let sa = 0, sb = 0; for (let k = 0; k < f; k++) { sa += m[i * f + k]; sb += r[i * f + k]; } a[i] = sa / f; b[i] = sb / f; }
+  fft(a, ai); fft(b, bi);
+  const k0 = Math.floor(150 / fs * NF), k1 = Math.floor(1900 / fs * NF);
+  for (let k = 0; k < NF; k++) {
+    const kk = k < NF / 2 ? k : NF - k;
+    if (kk < k0 || kk > k1) { a[k] = 0; ai[k] = 0; continue; }
+    const xr = a[k] * b[k] + ai[k] * bi[k], xi = ai[k] * b[k] - a[k] * bi[k], mg = Math.hypot(xr, xi) + 1e-12;
+    a[k] = xr / mg; ai[k] = -xi / mg;   /* conjugado para a transformada inversa */
+  }
+  fft(a, ai);
+  const LMAX = Math.min(n >> 1, Math.round(fs * 0.6));
+  let pico = 0, bl = 0; for (let l = 0; l <= LMAX; l++) { const v = Math.abs(a[l]); if (v > pico) { pico = v; bl = l; } }
+  let seg = 0; for (let l = 0; l <= LMAX; l++) if (Math.abs(l - bl) > 4) seg = Math.max(seg, Math.abs(a[l]));
+  return {lag: bl * f, q: seg > 0 ? Math.max(0, 1 - seg / pico) : 1};
+}
+const esperar = ms => new Promise(ok => setTimeout(ok, ms));
+async function tocarVideoPor(ms){
+  const t0 = video.currentTime, estava = !video.paused;
+  if (!estava) { try { await video.play(); } catch(e) {} }
+  await esperar(ms);
+  if (!estava) { video.pause(); try { video.currentTime = t0; } catch(e) {} }
+}
+async function ecoMedir(){
+  const st = $('#ecoStatus'), erro = t => { st.className = 'nota-status erro'; st.textContent = t; };
+  if (!Mic.ctx || !Mic.ring) return erro('Ative o microfone primeiro.');
+  if (!temVideo()) return erro('Abra o vídeo da atividade primeiro.');
+  if (ECO.medindo) return;
+  if (!ligarReferencia()) return erro('Não consegui acompanhar o som do vídeo neste navegador.');
+  video.muted = false;
+  st.className = 'nota-status'; st.textContent = 'Medindo o eco… fique em silêncio. O vídeo vai tocar por 8 segundos.';
+  ECO.medindo = true; ECO.ativo = false; ECO.zerar(); ECO.adapta = false;
+  const fim = () => { ECO.medindo = false; ECO.rec = null; };
+  try {
+    const t0 = video.currentTime, estava = !video.paused;
+    if (!estava) { try { await video.play(); } catch(e) {} }
+    ECO.rec = {m: [], r: []}; await esperar(4000);
+    const rec = ECO.rec; ECO.rec = null;
+    const junta = ar => { const t = new Float32Array(ar.length * 1024); ar.forEach((c, i) => t.set(c, i * 1024)); return t; };
+    const m = junta(rec.m), r = junta(rec.r);
+    let er = 0; for (let i = 0; i < r.length; i += 7) er += r[i] * r[i];
+    if (er / (r.length / 7) < 1e-8) { fim(); if (!estava) { video.pause(); video.currentTime = t0; } return erro('O app não recebeu som do vídeo. Confira se o vídeo tem áudio, se o volume do aparelho está alto e se o vídeo não está mudo.'); }
+    const at = atrasoEco(m, r, Mic.sr);
+    ECO.D = Math.max(0, Math.round(at.lag / ECO.Q) - 16); ECO.en = 0;
+    for (let k = 0; k < ECO.N; k++) { const q = (ECO.pos - ECO.D - k) & (ECO.h.length - 1); ECO.en += ECO.h[q] * ECO.h[q]; }
+    ECO.adapta = true; ECO.rhoLento = 0; Mic.ecoDb = null;
+    await esperar(4000);
+    fim();
+    if (!estava) { video.pause(); try { video.currentTime = t0; } catch(e) {} }
+    ECO.ativo = true; $('#chkEcoSoft').checked = true; db.prefs.eco = Object.assign({}, db.prefs.eco, {soft: true}); salvar();
+    const db_ = Mic.ecoDb == null ? 0 : Mic.ecoDb;
+    st.className = db_ >= 6 ? 'nota-status ok' : 'nota-status erro';
+    st.textContent = 'Atraso do eco: ' + Math.round(at.lag / Mic.sr * 1000) + ' ms (clareza ' + Math.round(at.q * 100) + '%). Eco removido: ' + fmt(db_, 1) + ' dB. ' +
+      (db_ >= 15 ? 'Bom: o som do vídeo foi bastante reduzido.' : db_ >= 6 ? 'Ajudou, mas ainda sobra som do vídeo. O fone de ouvido seria mais seguro.' : 'Quase não ajudou (a melodia do vídeo é parecida demais, ou a sala muda o som). Use fone de ouvido ou o vídeo sem som.');
+  } catch(e) { fim(); erro('A medição falhou (' + (e && e.message || 'erro') + ').'); }
+}
+$('#btnEco').addEventListener('click', ecoMedir);
+(db.prefs.eco = db.prefs.eco || {});
+$('#chkEcoNav').checked = !!db.prefs.eco.nav; $('#chkEcoSoft').checked = !!db.prefs.eco.soft;
+$('#chkEcoNav').addEventListener('change', e => { db.prefs.eco.nav = e.target.checked; salvar(); toast('Recarregue a página e ative o microfone de novo para valer.'); });
+$('#chkEcoSoft').addEventListener('change', e => {
+  db.prefs.eco.soft = e.target.checked; salvar(); ECO.ativo = e.target.checked;
+  if (e.target.checked && Mic.ctx) { if (ligarReferencia() && !ECO.D) toast('Toque em "Medir o eco do vídeo" para o app aprender o eco deste aparelho.'); }
+});
+setInterval(() => { const el = $('#ecoStatus'); if (ECO.ativo && !ECO.medindo && Mic.ecoDb != null && Mic.refOk && !video.paused && el.className.indexOf('erro') < 0) el.textContent = 'Cancelando o som do vídeo. Eco removido agora: ' + fmt(Mic.ecoDb, 1) + ' dB (atraso ' + ECO.ms() + ' ms).'; }, 700);
+
+/* ---- diagnóstico: grava 15 s, mostra o espectrograma e conta, ataque por ataque, o que o app entendeu ---- */
+function fft(re, im){
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) { let b = n >> 1; for (; j & b; b >>= 1) j ^= b; j ^= b; if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) { let cr = 1, ci = 0; for (let k = 0; k < len / 2; k++) {
+      const a = i + k, b = i + k + len / 2, tr = re[b] * cr - im[b] * ci, ti = re[b] * ci + im[b] * cr;
+      re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+      const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr; } }
+  }
+}
+function desenharEspectro(cv, x, sr){
+  const NF = 2048, hop = Math.round(sr * 0.02), cols = Math.max(1, Math.floor((x.length - NF) / hop)), fMax = 4000, bins = Math.floor(fMax / (sr / NF));
+  cv.width = Math.min(cols, 1500); cv.height = 120;
+  const g = cv.getContext('2d'), img = g.createImageData(cv.width, cv.height), re = new Float32Array(NF), im = new Float32Array(NF);
+  const passo = cols / cv.width;
+  for (let c = 0; c < cv.width; c++) {
+    const off = Math.floor(c * passo) * hop;
+    for (let i = 0; i < NF; i++) { re[i] = (x[off + i] || 0) * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / NF)); im[i] = 0; }
+    fft(re, im);
+    for (let y = 0; y < cv.height; y++) {
+      const b = Math.min(bins - 1, Math.floor((cv.height - 1 - y) / cv.height * bins)), v = 20 * Math.log10(Math.hypot(re[b], im[b]) / NF + 1e-9);
+      const t = Math.max(0, Math.min(1, (v + 100) / 60)), q = (y * cv.width + c) * 4;
+      img.data[q] = 255 * Math.min(1, t * 2); img.data[q + 1] = 255 * Math.max(0, t * 2 - 1); img.data[q + 2] = 120 * (1 - t) + 60 * t; img.data[q + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+}
+/* os mesmos ataques que o app contaria ao vivo (mesma regra do micTick) */
+function ataquesDe(x, sr){
+  const hop = Math.round(sr * 0.008), W = 512, out = []; let prev = 0, ult = -1e9, fundo = 0;
+  for (let i = W; i <= x.length; i += hop) {
+    let sm = 0; for (let k = i - W; k < i; k++) sm += x[k] * x[k];
+    const rms = Math.sqrt(sm / W), t = i / sr * 1000;
+    if (rms > Mic.thr && rms > prev * micCfg.ataque + 0.002 && rms > fundo * 1.4 && t - ult > micCfg.intervalo) { ult = t; out.push({i, t: i / sr, rms, fundo}); }
+    prev = prev * 0.6 + rms * 0.4;
+    fundo = rms < fundo ? rms * 0.3 + fundo * 0.7 : fundo + (rms - fundo) * 0.0015;
+  }
+  return out;
+}
+function relatarAtaques(x, sr, titulo){
+  const linhas = [titulo], res = {n: 0, ok: 0, motivos: {}};
+  const at = ataquesDe(x, sr), precisa = Math.max(2, Math.ceil(micCfg.estab / 10));
+  at.forEach(a => {
+    const ini = Math.max(0, a.i - Math.round(0.08 * sr)), seg = x.slice(ini, Math.min(x.length, a.i + Math.round(0.35 * sr)));
+    const frames = analisarClip(seg, Math.round(0.11 * sr));
+    const tally = {}; let comCand = 0;
+    frames.forEach(f => { if (f.cands.length) { comCand++; const c = f.cands.slice().sort((p, q) => q.p - p.p)[0], k = Math.round(c.midi); (tally[k] = tally[k] || {k, n: 0, p: 0}); tally[k].n++; tally[k].p += c.p; } });
+    const top = Object.values(tally).sort((p, q) => q.n - p.n).slice(0, 3);
+    const alt = top.length ? top.map(t => nomeOitava(t.k) + ' (' + t.n + '/' + frames.length + ' quadros, conf ' + Math.round(t.p / t.n * 100) + '%)').join('; ') : 'nenhuma';
+    const r = acharEstavel(frames); let motivo;
+    if (r) motivo = 'ACEITA: ' + nomeOitava(r.midi) + ', confiança ' + Math.round(r.conf * 100) + '%';
+    else if (!frames.length) motivo = 'recusada: trecho curto demais';
+    else if (!comCand) motivo = 'recusada: sem altura clara (som sem nota definida ou muito baixo)';
+    else if (top[0].n < precisa) motivo = 'recusada: instável (a nota mais frequente apareceu em ' + top[0].n + ' quadros; precisa de ' + precisa + ' seguidos)';
+    else motivo = 'recusada: confiança baixa ou nota variando';
+    res.n++; if (r) res.ok++; else { const k = motivo.replace(/\(.*\)/, '').trim(); res.motivos[k] = (res.motivos[k] || 0) + 1; }
+    linhas.push('  ' + fmt(a.t, 2) + ' s | ' + fmt(dbDe(a.rms), 0) + ' dB | ' + fmt(20 * Math.log10(a.rms / Math.max(a.fundo, 1e-5)), 0) + ' dB acima do fundo | alturas: ' + alt + ' | ' + motivo);
+  });
+  if (!at.length) linhas.push('  nenhum ataque contado (o som não passou do limite de ' + fmt(micCfg.limDb, 0) + ' dB ou não subiu de repente)');
+  linhas.push('  Total: ' + res.n + ' ataques, ' + res.ok + ' aceitos' + Object.entries(res.motivos).map(([k, v]) => ', ' + v + ' ' + k).join(''));
+  return linhas.join('\n');
+}
+let diagUltimo = null;
+function tocarGravacao(x){
+  if (!Mic.ctx) return;
+  acordarAudio();
+  let pico = 0; for (let i = 0; i < x.length; i += 3) pico = Math.max(pico, Math.abs(x[i]));
+  const b = Mic.ctx.createBuffer(1, x.length, Mic.sr), ch = b.getChannelData(0), g = pico > 0 ? Math.min(20, 0.8 / pico) : 1;
+  for (let i = 0; i < x.length; i++) ch[i] = x[i] * g;
+  const s = Mic.ctx.createBufferSource(); s.buffer = b; s.connect(Mic.ctx.destination); s.start();
+}
+$('#btnDiag').addEventListener('click', async () => {
+  const st = $('#diagStatus');
+  if (!Mic.ctx || !Mic.ring) { st.className = 'nota-status erro'; st.textContent = 'Ative o microfone primeiro (aba 1).'; return; }
+  if (Diag.ativo) return;
+  const comVideo = $('#diagVideo').checked && temVideo(), estava = !video.paused, t0 = video.currentTime;
+  Diag.bruto = new Float32Array(Math.ceil(Mic.sr * 15)); Diag.limpo = new Float32Array(Diag.bruto.length); Diag.ref = new Float32Array(Diag.bruto.length); Diag.n = 0;
+  $('#btnDiag').disabled = true; $('#diagSaida').hidden = true;
+  if (comVideo && !estava) { try { await video.play(); } catch(e) {} }
+  Diag.ativo = true;
+  const ini = performance.now(), tm = setInterval(() => {
+    const s = Math.max(0, 15 - (performance.now() - ini) / 1000);
+    st.className = 'nota-status'; st.textContent = 'Gravando… toque as notas agora. Faltam ' + Math.ceil(s) + ' s.';
+  }, 200);
+  await esperar(15200);
+  clearInterval(tm); Diag.ativo = false;
+  if (comVideo && !estava) { video.pause(); try { video.currentTime = t0; } catch(e) {} }
+  $('#btnDiag').disabled = false;
+  const sr = Mic.sr, bruto = Diag.bruto.subarray(0, Diag.n), limpo = Diag.limpo.subarray(0, Diag.n), ref = Diag.ref.subarray(0, Diag.n);
+  let comSom = 0, blocos = 0; for (let i = 0; i + 4800 <= ref.length; i += 4800) { blocos++; let s = 0; for (let k = i; k < i + 4800; k += 5) s += ref[k] * ref[k]; if (Math.sqrt(s / 960) > 0.003) comSom++; }
+  const cancelou = (ECO.ativo && Mic.refOk), g = gabAtual(), c = cfgAtiv(g), cal = calibAtual();
+  const cab = ['RELATÓRIO DO MICROFONE (Sincronia v5)', new Date().toLocaleString('pt-BR'),
+    'Aparelho: ' + (navigator.userAgent || '') , 'Chave: ' + Mic.chave, 'Taxa: ' + sr + ' Hz | áudio: ' + Mic.ctx.state + ' | latência base ' + fmt(Mic.ctx.baseLatency || 0, 3) + ' s, saída ' + fmt(Mic.ctx.outputLatency || 0, 3) + ' s',
+    'Trilha do microfone: ' + JSON.stringify(Mic.trilhaCfg || {}),
+    'Limite ' + fmt(micCfg.limDb, 1) + ' dB | margem ' + micCfg.margemDb + ' | ganho ' + micCfg.ganho + ' | ataque ' + micCfg.ataque + ' | intervalo ' + micCfg.intervalo + ' ms | estabilidade ' + micCfg.estab + ' ms | confiança mínima ' + Math.round(micCfg.confMin * 100) + '% | faixa ' + nomeOitava(micCfg.grave) + '–' + nomeOitava(micCfg.aguda),
+    'Calibração: ' + (cal ? 'silêncio ' + fmt(cal.pisoDb, 0) + ' dB' : 'não feita'),
+    'Eco do navegador: ' + (db.prefs.eco.nav ? 'ligado' : 'desligado') + ' | cancelar vídeo pelo app: ' + (cancelou ? 'LIGADO (atraso ' + ECO.ms() + ' ms, eco removido ' + (Mic.ecoDb == null ? '?' : fmt(Mic.ecoDb, 1)) + ' dB)' : 'desligado'),
+    'Som do vídeo na atividade: ' + c.somVideo + ' | vídeo no app durante a gravação: ' + (blocos ? Math.round(comSom / blocos * 100) : 0) + '% do tempo' + (Mic.refOk ? '' : ' (o app só vê o som do vídeo quando "Cancelar o som do vídeo" está ligado)'),
+    ''];
+  const partes = [cab.join('\n')];
+  partes.push(relatarAtaques(cancelou ? bruto : limpo, sr, cancelou ? 'SEM cancelamento (o que o microfone ouviu):' : 'O que o app analisou:'));
+  if (cancelou) partes.push('', relatarAtaques(limpo, sr, 'COM cancelamento do vídeo:'));
+  $('#diagTexto').value = partes.join('\n');
+  desenharEspectro($('#diagEspBruto'), bruto, sr);
+  $('#diagEspLimpo').hidden = !cancelou; $('#diagOuvirLimpo').hidden = !cancelou;
+  if (cancelou) desenharEspectro($('#diagEspLimpo'), limpo, sr);
+  diagUltimo = {bruto: bruto.slice(), limpo: limpo.slice()};
+  $('#diagSaida').hidden = false;
+  st.className = 'nota-status ok'; st.textContent = 'Pronto. Confira o relatório abaixo, toque em "Copiar relatório" e cole na conversa.';
+});
+$('#diagOuvirBruto').addEventListener('click', () => diagUltimo && tocarGravacao(diagUltimo.bruto));
+$('#diagOuvirLimpo').addEventListener('click', () => diagUltimo && tocarGravacao(diagUltimo.limpo));
+$('#diagCopiar').addEventListener('click', async () => {
+  const t = $('#diagTexto'); t.select();
+  try { await navigator.clipboard.writeText(t.value); toast('Relatório copiado.'); } catch(e) { try { document.execCommand('copy'); toast('Relatório copiado.'); } catch(e2) { toast('Selecione o texto e copie manualmente.'); } }
+});
+$('#diagBaixar').addEventListener('click', () => baixar('diagnostico-microfone.txt', $('#diagTexto').value));
+
 const acordarAudio = () => { if (Mic.ctx && Mic.ctx.state !== 'running') Mic.ctx.resume().catch(() => {}); };
 document.addEventListener('pointerdown', acordarAudio, {passive: true});
 document.addEventListener('visibilitychange', () => { if (!document.hidden) acordarAudio(); });
@@ -1200,12 +1493,13 @@ function micTick(){
   if (Mic.medindo) Mic.medindo.push(rms);
   const agora = performance.now();
   if (mostrar && agora - Mic.tNota > 120) { Mic.tNota = agora; atualizarNotaAoVivo(rms); }
-  if (escuta && rms > Mic.thr && rms > Mic.prev * micCfg.ataque + 0.002 && agora - Mic.ultimo > micCfg.intervalo) {
+  if (escuta && rms > Mic.thr && rms > Mic.prev * micCfg.ataque + 0.002 && rms > Mic.fundo * 1.4 && agora - Mic.ultimo > micCfg.intervalo) {
     Mic.ultimo = agora;
     const tv = video.currentTime, tOn = agora;
     setTimeout(() => analisarAtaque(tv, tOn), ESCUTA_AMOSTRA);
   }
   Mic.prev = Mic.prev * 0.6 + rms * 0.4;
+  Mic.fundo = rms < Mic.fundo ? rms * 0.3 + Mic.fundo * 0.7 : Mic.fundo + (rms - Mic.fundo) * 0.0015;
 }
 /* 2 notas pelas amostras: v ≈ α·a + β·b com α, β ≥ 0 (mínimos quadrados em cada par de amostras) */
 function duasPorAmostras(v, p, simMin){
@@ -1445,12 +1739,13 @@ function renderAtv(){
   const g = gabAtual(), c = cfgAtiv(g);
   $('#atvNotas').value = String(c.notasEsperadas);
   $('#atvJanela').value = c.janela; $('#atvJanelaVal').textContent = c.janela + ' ms';
+  $('#atvSomVideo').value = c.somVideo;
   $('#atvJuntas').value = c.juntasMs; $('#atvJuntasVal').textContent = c.juntasMs + ' ms';
   $('#atvJuntasMic').value = c.juntasMic; $('#atvJuntasMicVal').textContent = c.juntasMic + ' ms';
   $('#atvJuntasBox').hidden = c.notasEsperadas < 2;
   if (typeof garantirBP === 'function') garantirBP();
   $('#sessResumoAtv').textContent = g
-    ? 'Atividade: ' + (c.notasEsperadas === 2 ? '1 ou 2 notas juntas' : '1 nota por vez') + ', tolerância de ±' + c.janela + ' ms' + (c.notasEsperadas === 2 ? ', duas notas juntas dentro de ' + c.juntasMs + ' ms (' + c.juntasMic + ' ms no microfone)' : '') + '. Para mudar, use a aba Gabarito.'
+    ? 'Atividade: ' + (c.notasEsperadas === 2 ? '1 ou 2 notas juntas' : '1 nota por vez') + ', tolerância de ±' + c.janela + ' ms' + (c.notasEsperadas === 2 ? ', duas notas juntas dentro de ' + c.juntasMs + ' ms (' + c.juntasMic + ' ms no microfone)' : '') + '. Som do vídeo: ' + {alto: 'alto-falante', fone: 'fone de ouvido', sem: 'sem som'}[c.somVideo] + '. Para mudar, use a aba Gabarito.'
     : 'Escolha ou crie um gabarito na aba 2.';
 }
 async function mudarAtv(patch){
@@ -1470,6 +1765,7 @@ async function mudarAtv(patch){
 }
 $('#atvNotas').addEventListener('change', e => mudarAtv({notasEsperadas: +e.target.value}));
 $('#atvJanela').addEventListener('input', e => mudarAtv({janela: +e.target.value}));
+$('#atvSomVideo').addEventListener('change', e => mudarAtv({somVideo: e.target.value}));
 $('#atvJuntas').addEventListener('input', e => mudarAtv({juntasMs: +e.target.value}));
 $('#atvJuntasMic').addEventListener('input', e => mudarAtv({juntasMic: +e.target.value}));
 
@@ -1800,12 +2096,15 @@ $('#btnSessao').addEventListener('click', () => {
   S.sess = {paciente: $('#paciente').value.trim() || 'Sem nome', gabId: g.id,
     cfg: {janela: cfgAtiv(g).janela, notasEsperadas: cfgAtiv(g).notasEsperadas, juntas: juntasEf(cfgAtiv(g), S.modo), ignOit: $('#ignOit').checked, soRitmo: $('#soRitmo').checked, modo: S.modo, latencia: S.latencia, nivel: nivelEscolhido()}};
   S.buf = []; S.gravando = 'sessao'; destravarVideo(); irParaVideo(); prepararSessaoUI();
+  video.muted = cfgAtiv(g).somVideo === 'sem';
+  if (cfgAtiv(g).somVideo === 'fone' && S.modo.startsWith('mic')) toast('Use o fone de ouvido para o som do vídeo.');
   $('#btnSessao').textContent = 'Encerrar sessão agora'; $('#btnSessao').classList.add('parar');
   atualizarStatusGrav();
   contagem(() => { video.currentTime = 0; iniciarVideo(); });
 });
 function finalizarSessao(){
-  const g = db.gabaritos.find(x => x.id === S.sess.gabId);
+  video.muted = false;
+  const g =db.gabaritos.find(x => x.id === S.sess.gabId);
   const resp = S.buf.slice().sort((a,b) => a.t - b.t);
   const ref = g.eventos.map(e => ({t: e.t, notas: e.notas.slice()}));
   const fim = video.currentTime;
