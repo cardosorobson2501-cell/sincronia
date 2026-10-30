@@ -1,0 +1,4 @@
+Arquivos de terceiros usados pelo reconhecimento de 2 notas:
+- tf.min.js: TensorFlow.js 3.21.0 (Google LLC), licença Apache-2.0.
+- basic-pitch.js: @spotify/basic-pitch 1.0.1 (Spotify AB) e @tonejs/midi (MIT), empacotados sem alteração de lógica; licença Apache-2.0.
+- ../modelos/basic-pitch/*: modelo do Basic Pitch (Spotify AB), licença Apache-2.0.

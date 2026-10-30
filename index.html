@@ -2,6 +2,13 @@
 <html lang="pt-BR"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icones/icone-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sincronia">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1F5A70">
 <title>Sincronia: atenção com música em cores</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -211,6 +218,26 @@ body.nivel-avaliacao #faixaWrap,body.nivel-avaliacao .aovivo,body.nivel-avaliaca
 .tab-int{width:100%;border-collapse:collapse;font-size:.92rem}
 .tab-int th{text-align:left;color:var(--muted);font-weight:400;border-bottom:1px solid var(--line);padding:.3rem}
 .tab-int td{padding:.3rem;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.abas{grid-template-columns:repeat(5,1fr)}
+.abas button{font-size:.86rem}
+.calib-box{border:1px solid var(--line);border-radius:12px;padding:.7rem .8rem;margin:.8rem 0;background:var(--surface2)}
+.calib-box .linha{margin:.3rem 0}
+.calib-ok{color:var(--good);font-weight:700}.calib-falta{color:var(--warn);font-weight:700}
+.medidor-grande{position:relative;height:16px;border-radius:8px;background:var(--lane);overflow:hidden;margin:.4rem 0}
+.medidor-grande #cMedidor{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+.medidor-grande #cPico{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.55}
+.medidor-grande #cLimiar{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--bad)}
+.calib-nota{font-family:var(--f-titulo);font-weight:800;font-size:1.5rem;min-height:2rem}
+.calib-nota small{font-family:var(--f-corpo);font-weight:400;font-size:.9rem;color:var(--muted)}
+.teste-log{border:1px solid var(--line);border-radius:12px;max-height:230px;overflow:auto;background:var(--surface2)}
+.teste-log .tl{display:flex;gap:.5rem;align-items:center;padding:.35rem .6rem;border-bottom:1px solid var(--line);font-size:.92rem}
+.teste-log .tl:last-child{border-bottom:0}
+.canal{font-size:.72rem;font-weight:700;padding:.05rem .5rem;border-radius:999px;color:#fff;min-width:3.4rem;text-align:center}
+.canal.midi{background:#5E35B1}.canal.toque{background:#00897B}.canal.mic{background:#E65100}.canal.pc{background:#546E7A}
+.teste-pedido{font-family:var(--f-titulo);font-weight:800;font-size:1.8rem;text-align:center;padding:.6rem 0}
+.teste-pedido small{display:block;font-family:var(--f-corpo);font-size:.9rem;font-weight:400;color:var(--muted)}
+.teste-pedido.certo{color:var(--good)}.teste-pedido.errado{color:var(--bad)}
+.bp-status{font-size:.88rem;color:var(--muted);margin:.3rem 0}
 .dois{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 @media (max-width:480px){.dois{grid-template-columns:1fr}}
 .cartao-acao{border:1px solid var(--line);border-radius:12px;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
@@ -319,6 +346,7 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <button role="tab" data-aba="gabarito" aria-selected="false"><b>2</b>Gabarito</button>
       <button role="tab" data-aba="sessao" aria-selected="false"><b>3</b>Sessão</button>
       <button role="tab" data-aba="historico" aria-selected="false"><b>4</b>Histórico</button>
+      <button role="tab" data-aba="teste" aria-selected="false"><b>5</b>Teste</button>
     </nav>
 
     <div class="aba ativa" id="aba-entrada">
@@ -341,15 +369,23 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
         <button id="btnMic" class="btn">Ativar microfone</button>
         <p id="micStatus" class="nota-status"></p>
 
-        <h3 style="margin-top:1rem">Sensibilidade do microfone</h3>
-        <div class="campo" style="margin-bottom:.2rem">
-          <label for="limDb">Volume mínimo para contar um toque: <span data-micval="limDb"></span></label>
-          <div class="ajuste-db"><button class="btn-ghost" id="limMenos" aria-label="Diminuir 1 dB" type="button">−</button><input type="range" id="limDb" data-mic="limDb" min="-70" max="-15" step="0.5"><button class="btn-ghost" id="limMais" aria-label="Aumentar 1 dB" type="button">+</button></div>
+        <p id="micRaw" class="nota-status"></p>
+        <div class="calib-box" id="calibBox">
+          <h3 style="margin:.1rem 0 .3rem">Calibrar o microfone</h3>
+          <p id="calibStatus" class="nota-status"></p>
+          <p class="dica"><b>1.</b> Fique em silêncio, com o vídeo parado. <b>2.</b> Toque em "Medir o silêncio": o app mede o ruído da sala durante 2 segundos e coloca o limite um pouco acima. <b>3.</b> Toque uma nota: a barra, a nota e a confiança aparecem ao vivo.</p>
+          <div class="linha"><button id="btnRuido" class="btn" type="button">Medir o silêncio (2 s)</button></div>
+          <p id="ruidoStatus" class="nota-status"></p>
+          <div class="medidor-grande" aria-hidden="true"><div id="cMedidor"></div><div id="cPico"></div><div id="cLimiar"></div></div>
+          <div class="calib-nota" id="calibNota" aria-live="off">–</div>
+          <div class="campo" style="margin-bottom:.2rem">
+            <label for="limDb">Sensibilidade: volume mínimo para contar um toque: <span data-micval="limDb"></span></label>
+            <div class="ajuste-db"><button class="btn-ghost" id="limMenos" aria-label="Diminuir 1 dB" type="button">−</button><input type="range" id="limDb" data-mic="limDb" min="-70" max="-15" step="0.5"><button class="btn-ghost" id="limMais" aria-label="Aumentar 1 dB" type="button">+</button></div>
+          </div>
+          <label class="campo">Margem acima do ruído: <span data-micval="margemDb"></span><input type="range" data-mic="margemDb" min="6" max="24" step="1"></label>
+          <p class="dica">A linha vermelha é o limite: só sons acima dela contam. Mais para a esquerda = mais sensível. Deixe o som do vídeo no fone do paciente ou bem baixo.</p>
         </div>
-        <p class="dica">A linha vermelha no medidor é esse limite: só sons que passam dela contam. Mais para a esquerda (mais negativo) = mais sensível. O traço escuro no medidor mostra o pico recente do som.</p>
-        <div class="linha"><button id="btnRuido" class="btn-ghost small" type="button">Medir o ruído da sala (3 s)</button></div>
-        <p id="ruidoStatus" class="nota-status"></p>
-        <p class="dica">Deixe o som do vídeo no fone do paciente ou bem baixo, para o microfone não confundir a música do vídeo com o que ele toca.</p>
+        <p id="bpStatus" class="bp-status"></p>
 
         <details class="avancado"><summary>Ajustes avançados</summary>
           <label class="campo">Ganho do microfone: <span data-micval="ganho"></span><input type="range" data-mic="ganho" min="0.5" max="8" step="0.1"></label>
@@ -358,16 +394,14 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
           <p class="dica">Evita contar o mesmo toque duas vezes (eco do sino). Diminua para músicas muito rápidas.</p>
           <label class="campo">Força do ataque: <span data-micval="ataque"></span><input type="range" data-mic="ataque" min="1.1" max="4" step="0.1"></label>
           <p class="dica">Quanto o som precisa “subir de repente” para ser um toque. Maior = ignora sons que crescem devagar.</p>
-          <label class="campo">Tempo de escuta da nota: <span data-micval="escuta"></span><input type="range" data-mic="escuta" min="30" max="250" step="5"></label>
-          <p class="dica">Espera um instante depois do toque para identificar a nota. Teclados: 60–90 ms. Sinos: 90–150 ms.</p>
+          <label class="campo">Estabilidade da nota: <span data-micval="estab"></span><input type="range" data-mic="estab" min="40" max="200" step="10"></label>
+          <p class="dica">A nota só vale se ficar firme por este tempo. Mais curto = mais rápido, mais curto também erra mais.</p>
           <div class="dois">
             <label class="campo">Nota mais grave aceita<select data-mic="grave" id="micGrave"></select></label>
             <label class="campo">Nota mais aguda aceita<select data-mic="aguda" id="micAguda"></select></label>
           </div>
-          <label class="campo">Tolerância na identificação da altura: <span data-micval="rigor"></span><input type="range" data-mic="rigor" min="5" max="40" step="1"></label>
-          <p class="dica">Menor = mais exigente (ignora sons incertos). Maior = aceita mais sons, com mais risco de errar a nota.</p>
-          <label class="check"><input type="checkbox" id="micDuas"> Esperar 2 notas ao mesmo tempo (experimental)</label>
-          <p class="dica">Tenta reconhecer duas notas no mesmo toque. Funciona melhor com amostras ensinadas de cada nota. Pode errar mais do que no modo de uma nota.</p>
+          <label class="campo">Confiança mínima: <span data-micval="confMin"></span><input type="range" data-mic="confMin" min="0.2" max="0.95" step="0.05"></label>
+          <p class="dica">Notas reconhecidas com confiança menor que isto são ignoradas. Mais alto = mais seguro, mas ignora mais toques.</p>
           <button id="btnMicPadrao" class="btn-ghost small" type="button">Restaurar ajustes padrão</button>
         </details>
 
@@ -468,6 +502,32 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <p class="dica">O vídeo volta ao início, conta 3 segundos e começa. A sessão termina sozinha no fim do vídeo, e o resultado aparece abaixo e fica salvo no histórico.</p>
     </div>
 
+    <div class="aba" id="aba-teste">
+      <h2>Teste das entradas</h2>
+      <p class="dica">Veja o que o app entendeu em cada entrada e onde o microfone acerta ou erra. Nada aqui entra no histórico dos pacientes.</p>
+      <p class="dica" id="testeEntradaAtiva"></p>
+      <h3>O que o app entendeu, ao vivo</h3>
+      <div id="testeLog" class="teste-log" aria-live="polite"><div class="vazio-lista">Toque uma nota em qualquer entrada ativa.</div></div>
+
+      <h3>Teste guiado</h3>
+      <p class="dica">O app pede uma nota ou um intervalo de cada vez, na entrada escolhida na aba 1, e conta os acertos.</p>
+      <label class="campo">O que testar<select id="testeTipo"><option value="ambos">Notas e intervalos</option><option value="notas">Só notas únicas</option><option value="intervalos">Só intervalos (2 notas)</option></select></label>
+      <div id="guiadoPainel" class="editor-ev" hidden="">
+        <div id="guiadoPedido" class="teste-pedido" aria-live="assertive"></div>
+        <div class="linha" style="justify-content:center"><button id="guiadoPular" class="btn-ghost small" type="button">Pular</button><button id="guiadoParar" class="btn-ghost small perigo" type="button">Terminar agora</button></div>
+      </div>
+      <button id="btnGuiado" class="btn" type="button">Começar o teste guiado</button>
+
+      <h3>Comparar MIDI × microfone</h3>
+      <p class="dica">Toque no teclado MIDI e deixe o microfone ouvir o mesmo som. O MIDI vale como resposta certa e o app mostra em que notas e intervalos o microfone erra. Precisa do MIDI e do microfone ativos na aba 1.</p>
+      <div class="linha"><button id="tBtnMidi" class="btn-ghost small" type="button">Ativar MIDI</button><button id="tBtnMic" class="btn-ghost small" type="button">Ativar microfone</button></div>
+      <button id="btnComparar" class="btn-ghost" type="button">Começar a comparar</button>
+      <p class="dica" id="compStatus"></p>
+
+      <div id="testeResultado"></div>
+      <div class="linha"><button id="testeCsv" class="btn-ghost small" type="button" hidden="">Baixar planilha (CSV)</button></div>
+    </div>
+
     <div class="aba" id="aba-historico">
       <h2>Histórico</h2>
       <label class="campo">Paciente<select id="histPac"></select></label>
@@ -517,8 +577,8 @@ const dataHora = iso => { const d = new Date(iso); return d.toLocaleDateString('
 const CHAVE = 'sincronia_v1';
 let db = carregar();
 function carregar(){
-  try { const s = localStorage.getItem(CHAVE); if (s) { const o = JSON.parse(s); return Object.assign({gabaritos:[],perfis:[],sessoes:[],visCfg:{},prefs:{}}, o); } } catch(e) {}
-  return {gabaritos:[],perfis:[],sessoes:[],visCfg:{},prefs:{}};
+  try { const s = localStorage.getItem(CHAVE); if (s) { const o = JSON.parse(s); return Object.assign({gabaritos:[],perfis:[],sessoes:[],testes:[],visCfg:{},prefs:{}}, o); } } catch(e) {}
+  return {gabaritos:[],perfis:[],sessoes:[],testes:[],visCfg:{},prefs:{}};
 }
 function salvar(){
   try { localStorage.setItem(CHAVE, JSON.stringify(db)); }
@@ -620,6 +680,7 @@ function abrirAba(nome){
   $$('.abas button').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === nome));
   $$('.aba').forEach(a => a.classList.toggle('ativa', a.id === 'aba-' + nome));
   if (nome === 'historico') renderHist();
+  if (nome === 'teste') renderTesteInfo(); else cancelarTestes();
 }
 
 /* ---------- vídeo ---------- */
@@ -716,8 +777,9 @@ video.addEventListener('ended', () => {
 });
 
 /* ---------- registro de notas (todas as entradas passam por aqui) ---------- */
-function registrarNota(n, tVideo, fonte){
+function registrarNota(n, tVideo, fonte, canal, info){
   mostrarAoVivo(n, fonte);
+  if (canal) testeRecebeu(canal, n, info);
   if (!S.gravando || video.paused) return;
   const t = (tVideo ?? video.currentTime) - S.latencia/1000;
   S.buf.push({t: Math.round(t*1000)/1000, n});
@@ -746,7 +808,7 @@ function aplicarModo(){
   $('#cfg-teclas').hidden = S.modo !== 'teclado-pc';
   $('#medidorWrap').hidden = !(S.modo.startsWith('mic') && S.micOk);
   db.prefs.modo = S.modo; salvar();
-  atualizarChip();
+  atualizarChip(); renderCalibStatus(); garantirBP();
   if (S.modo.startsWith('mic')) renderCalib();
 }
 $$('input[name=modo]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.modo = r.value; S.calib = null; aplicarModo(); } }));
@@ -775,8 +837,8 @@ document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (['input','select','textarea'].includes(tag)) return;
   const k = e.key.toLowerCase();
-  if (k === ' ') { e.preventDefault(); registrarNota(-1, null, 'Teclado do computador'); return; }
-  if (k in MAPA) { e.preventDefault(); registrarNota(MAPA[k], null, 'Teclado do computador'); }
+  if (k === ' ') { e.preventDefault(); registrarNota(-1, null, 'Teclado do computador', 'pc'); return; }
+  if (k in MAPA) { e.preventDefault(); registrarNota(MAPA[k], null, 'Teclado do computador', 'pc'); }
 });
 
 /* ---------- entrada: teclado na tela (toque) ---------- */
@@ -802,7 +864,7 @@ $('#tecladoTela').addEventListener('pointerdown', e => {
   e.preventDefault();
   const n = +b.dataset.n;
   b.classList.add('press');
-  registrarNota(n, null, 'Teclado na tela');
+  registrarNota(n, null, 'Teclado na tela', 'toque');
   tocarSom(n);
   if ($('#telaVibra').checked && navigator.vibrate) navigator.vibrate(12);
 });
@@ -829,7 +891,7 @@ $('#btnMidi').addEventListener('click', async () => {
             if ((s0 & 0xf0) === 0x90 && d2 > 0) {
               /* o MIDI traz o instante exato da tecla: volta no tempo do vídeo o atraso até aqui */
               const atrasoMs = Math.max(0, Math.min(500, performance.now() - (m.timeStamp || performance.now())));
-              registrarNota(d1, video.currentTime - atrasoMs / 1000 * (video.playbackRate || 1), 'Teclado MIDI: ' + (i.name || ''));
+              registrarNota(d1, video.currentTime - atrasoMs / 1000 * (video.playbackRate || 1), 'Teclado MIDI: ' + (i.name || ''), 'midi');
             }
           } catch(e) {}
         });
@@ -846,30 +908,54 @@ $('#btnMidi').addEventListener('click', async () => {
 });
 
 /* ---------- entrada: microfone ---------- */
-const MIC_PAD = {duas:false, limDb:-34, ganho:1, intervalo:140, ataque:1.6, escuta:90, grave:48, aguda:96, rigor:15};
+const MIC_PAD = {limDb:-34, margemDb:12, ganho:1, intervalo:140, ataque:1.6, estab:80, confMin:0.5, grave:48, aguda:96};
 let micCfg = Object.assign({}, MIC_PAD, db.prefs.mic || {});
-const Mic = {ctx:null, an:null, gain:null, sp:null, buf:null, freq:null, prev:0, ultimo:0, rms:0, thr:0.02, sr:48000, ring:null, rp:0, pico:0, medindo:null};
+const Mic = {ctx:null, an:null, gain:null, sp:null, buf:null, freq:null, prev:0, ultimo:0, rms:0, thr:0.02, sr:48000, ring:null, rp:0, pico:0, medindo:null, chave:'', micNome:'', tNota:0};
+const ESCUTA_AMOSTRA = 90;   /* ms depois do ataque para tirar a "foto" do som (amostras) */
 const dbDe = r => 20 * Math.log10(Math.max(r, 1e-5));
 const nivelPct = r => Math.max(0, Math.min(100, (dbDe(r) + 80) / 70 * 100));   /* -80 dB a -10 dB */
 const nomeOitava = n => NOMES[n % 12] + (Math.floor(n / 12) - 1);
-const MIC_ROT = {limDb: v => fmt(v, 1) + ' dB', ganho: v => fmt(v, 1) + '×', intervalo: v => v + ' ms', ataque: v => fmt(v, 1) + '×', escuta: v => v + ' ms', rigor: v => v + '%'};
+const MIC_ROT = {limDb: v => fmt(v, 1) + ' dB', margemDb: v => v + ' dB', ganho: v => fmt(v, 1) + '×', intervalo: v => v + ' ms', ataque: v => fmt(v, 1) + '×', estab: v => v + ' ms', confMin: v => Math.round(v * 100) + '%'};
 ['#micGrave', '#micAguda'].forEach(id => { let h = ''; for (let n = 36; n <= 96; n++) h += `<option value="${n}">${nomeOitava(n)}</option>`; $(id).innerHTML = h; });
 function aplicarMicCfg(gravar){
   Mic.thr = Math.pow(10, micCfg.limDb / 20);
   if (Mic.gain) Mic.gain.gain.value = micCfg.ganho;
-  $('#micDuas').checked = !!micCfg.duas;
   $$('[data-mic]').forEach(el => { if (document.activeElement !== el || el.tagName === 'SELECT') el.value = micCfg[el.dataset.mic]; });
-  $$('[data-micval]').forEach(el => el.textContent = MIC_ROT[el.dataset.micval](micCfg[el.dataset.micval]));
-  $('#limiar').style.left = nivelPct(Mic.thr) + '%';
-  if (gravar) { db.prefs.mic = Object.assign({}, micCfg); salvar(); }
+  $$('[data-micval]').forEach(el => { const f = MIC_ROT[el.dataset.micval]; if (f) el.textContent = f(micCfg[el.dataset.micval]); });
+  $('#limiar').style.left = nivelPct(Mic.thr) + '%'; $('#cLimiar').style.left = nivelPct(Mic.thr) + '%';
+  if (gravar) {
+    db.prefs.mic = Object.assign({}, micCfg);
+    const c = calibAtual(); if (c) { c.limDb = micCfg.limDb; c.margemDb = micCfg.margemDb; }
+    salvar();
+  }
 }
 const atualizarLimiar = () => aplicarMicCfg(false);
 $$('[data-mic]').forEach(el => el.addEventListener('input', () => { micCfg[el.dataset.mic] = +el.value; aplicarMicCfg(true); }));
 const ajustarLim = d => { micCfg.limDb = Math.max(-70, Math.min(-15, Math.round((micCfg.limDb + d) * 2) / 2)); aplicarMicCfg(true); };
-$('#micDuas').addEventListener('change', e => { micCfg.duas = e.target.checked; aplicarMicCfg(true); });
 $('#limMenos').addEventListener('click', () => ajustarLim(-1));
 $('#limMais').addEventListener('click', () => ajustarLim(1));
 $('#btnMicPadrao').addEventListener('click', () => { micCfg = Object.assign({}, MIC_PAD); aplicarMicCfg(true); toast('Ajustes do microfone restaurados.'); });
+
+/* ---- calibração: guardada separadamente por aparelho + navegador + microfone ---- */
+function chaveAparelho(){
+  const ua = navigator.userAgent || '';
+  const sis = (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) ? 'iOS' : /Android/.test(ua) ? 'Android' : (navigator.platform || 'Computador');
+  const nav = /Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\/|CriOS/.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Outro';
+  return [sis, nav, Mic.micNome || 'microfone', Math.round(Mic.sr)].join(' | ');
+}
+const calibAtual = () => (db.prefs.calib || {})[Mic.chave] || null;
+function salvarCalib(piso){
+  db.prefs.calib = db.prefs.calib || {};
+  db.prefs.calib[Mic.chave] = {pisoDb: piso, margemDb: micCfg.margemDb, limDb: micCfg.limDb, data: new Date().toISOString()};
+  salvar(); renderCalibStatus();
+}
+function renderCalibStatus(){
+  const el = $('#calibStatus');
+  if (!Mic.ctx) { el.className = 'nota-status'; el.textContent = 'Ative o microfone para calibrar.'; return; }
+  const c = calibAtual();
+  if (c) { el.className = 'nota-status calib-ok'; el.textContent = '✓ Calibrado neste aparelho em ' + dataHora(c.data) + ' (silêncio ' + fmt(c.pisoDb, 0) + ' dB, limite ' + fmt(c.limDb, 0) + ' dB).'; }
+  else { el.className = 'nota-status calib-falta'; el.textContent = 'Falta calibrar o microfone neste aparelho (' + Mic.chave + '). Faça o passo 2 abaixo.'; }
+}
 $('#btnRuido').addEventListener('click', () => {
   const st = $('#ruidoStatus');
   if (!Mic.ctx) { st.className = 'nota-status erro'; st.textContent = 'Ative o microfone primeiro.'; return; }
@@ -880,27 +966,39 @@ $('#btnRuido').addEventListener('click', () => {
     const v = Mic.medindo || []; Mic.medindo = null;
     if (v.length < 20) { st.className = 'nota-status erro'; st.textContent = 'Não deu para medir. Tente de novo.'; return; }
     v.sort((a, b) => a - b);
-    const ruido = dbDe(v[Math.floor(v.length * 0.95)]);
-    micCfg.limDb = Math.max(-70, Math.min(-15, Math.round(ruido + 10)));
-    aplicarMicCfg(true);
-    st.className = ruido > -30 ? 'nota-status erro' : 'nota-status ok';
-    st.textContent = (ruido > -30 ? 'Havia som alto durante a medição: tente de novo em silêncio. ' : '') + 'Ruído da sala: ' + fmt(ruido, 0) + ' dB. Volume mínimo ajustado para ' + fmt(micCfg.limDb, 0) + ' dB. Toque uma nota para conferir e use − / + se precisar.';
-  }, 3000);
+    const piso = dbDe(v[Math.floor(v.length * 0.95)]);
+    micCfg.limDb = Math.max(-70, Math.min(-15, Math.round(piso + micCfg.margemDb)));
+    aplicarMicCfg(true); salvarCalib(piso);
+    st.className = piso > -30 ? 'nota-status erro' : 'nota-status ok';
+    st.textContent = (piso > -30 ? 'Havia som alto durante a medição: tente de novo em silêncio. ' : '') + 'Ruído da sala: ' + fmt(piso, 0) + ' dB. Limite colocado em ' + fmt(micCfg.limDb, 0) + ' dB (ruído + ' + micCfg.margemDb + ' dB). Toque uma nota para conferir e use − / + se precisar.';
+  }, 2000);
 });
+
+/* ---- ativar o microfone ---- */
 $('#btnMic').addEventListener('click', async () => {
   const st = $('#micStatus');
   if (Mic.ctx) { st.className='nota-status ok'; st.textContent = 'Microfone já está ativo.'; return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || window.isSecureContext === false) {
+    st.className = 'nota-status erro'; st.textContent = 'O navegador só libera o microfone em páginas seguras. Abra o Sincronia pelo endereço https (o link do Netlify ou do GitHub Pages).'; return;
+  }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:1}});
     Mic.ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (Mic.ctx.state === 'suspended') Mic.ctx.resume();
     Mic.sr = Mic.ctx.sampleRate;
+    const trilha = stream.getAudioTracks()[0], cfgT = (trilha && trilha.getSettings) ? trilha.getSettings() : {};
+    Mic.micNome = (trilha && trilha.label) || '';
+    const ligados = [['echoCancellation', 'cancelamento de eco'], ['noiseSuppression', 'supressão de ruído'], ['autoGainControl', 'ganho automático']].filter(([k]) => cfgT[k] === true).map(x => x[1]);
+    const rawEl = $('#micRaw');
+    if (ligados.length) { rawEl.className = 'nota-status erro'; rawEl.textContent = 'Atenção: este aparelho manteve ligado: ' + ligados.join(', ') + '. Isso pode atrapalhar o reconhecimento das notas.'; }
+    else if (['echoCancellation', 'noiseSuppression', 'autoGainControl'].every(k => cfgT[k] === false)) { rawEl.className = 'nota-status ok'; rawEl.textContent = '✓ Áudio bruto: sem cancelamento de eco, supressão de ruído nem ganho automático.'; }
+    else { rawEl.className = 'nota-status'; rawEl.textContent = 'Áudio bruto pedido ao navegador (ele não informa se foi respeitado).'; }
     const src = Mic.ctx.createMediaStreamSource(stream);
     Mic.gain = Mic.ctx.createGain(); Mic.gain.gain.value = micCfg.ganho;
     Mic.an = Mic.ctx.createAnalyser(); Mic.an.fftSize = 4096; Mic.an.smoothingTimeConstant = 0;
     src.connect(Mic.gain); Mic.gain.connect(Mic.an);
     Mic.buf = new Float32Array(4096); Mic.freq = new Float32Array(2048);
-    /* gravador circular de 2 s, usado para guardar o áudio das amostras */
+    /* gravador circular de 2 s: amostras de áudio, estabilidade da nota e reconhecimento de 2 notas */
     try {
       Mic.ring = new Float32Array(Math.ceil(Mic.sr * 2)); Mic.rp = 0;
       Mic.sp = Mic.ctx.createScriptProcessor(2048, 1, 1);
@@ -909,33 +1007,203 @@ $('#btnMic').addEventListener('click', async () => {
       Mic.gain.connect(Mic.sp); Mic.sp.connect(mudo); mudo.connect(Mic.ctx.destination);
     } catch(e) { Mic.ring = null; }
     setInterval(micTick, 8);
-    S.micOk = true; aplicarMicCfg(false);
-    st.className = 'nota-status ok'; st.textContent = 'Microfone ativo. Toque uma nota para testar.';
-    $('#medidorWrap').hidden = false; atualizarChip();
+    S.micOk = true;
+    Mic.chave = chaveAparelho();
+    const c = calibAtual();
+    if (c) { micCfg.limDb = c.limDb; if (c.margemDb != null) micCfg.margemDb = c.margemDb; }
+    aplicarMicCfg(false); renderCalibStatus();
+    st.className = 'nota-status ok';
+    st.textContent = c ? 'Microfone ativo e calibrado. Toque uma nota para testar.' : 'Microfone ativo. Falta calibrar neste aparelho: toque em "Medir o silêncio" abaixo.';
+    if (!c) toast('Calibre o microfone neste aparelho (passo 2 na aba 1).');
+    $('#medidorWrap').hidden = false; atualizarChip(); garantirBP();
     requestAnimationFrame(function m(){
       const r = Mic.rms; Mic.pico = r > Mic.pico ? r : Mic.pico * 0.985;
       $('#medidor').style.width = nivelPct(r) + '%'; $('#pico').style.left = nivelPct(Mic.pico) + '%';
       $('#medidorTxt').textContent = fmt(dbDe(r), 0) + ' dB (limite ' + fmt(micCfg.limDb, 0) + ' dB)';
+      $('#cMedidor').style.width = nivelPct(r) + '%'; $('#cPico').style.left = nivelPct(Mic.pico) + '%';
       requestAnimationFrame(m);
     });
   } catch(e) {
     st.className = 'nota-status erro';
-    st.textContent = 'Não consegui usar o microfone. Permita o acesso no navegador. Se continuar bloqueado, use o botão “Baixar o app para usar offline” e abra o arquivo no Chrome.';
+    const nome = e && e.name;
+    st.textContent = (nome === 'NotAllowedError' || nome === 'SecurityError')
+      ? 'O microfone está bloqueado. No iPad: Ajustes → Safari → Microfone → Permitir (ou toque em "aA" na barra do Safari → Configurações do Site → Microfone → Permitir). Depois toque em "Ativar microfone" de novo.'
+      : nome === 'NotFoundError' ? 'Nenhum microfone encontrado neste aparelho.'
+      : 'Não consegui usar o microfone (' + (nome || 'erro') + '). Toque em "Ativar microfone" para tentar de novo.';
   }
 });
-/* iPhone/Android deixam o áudio "suspenso" até um toque do usuário */
-document.addEventListener('pointerdown', () => { if (Mic.ctx && Mic.ctx.state === 'suspended') Mic.ctx.resume(); }, {passive: true});
+/* iPhone/iPad e Android deixam o áudio "suspenso" até um toque ou ao voltar para o app */
+const acordarAudio = () => { if (Mic.ctx && Mic.ctx.state !== 'running') Mic.ctx.resume().catch(() => {}); };
+document.addEventListener('pointerdown', acordarAudio, {passive: true});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) acordarAudio(); });
+
+/* ---- pYIN simplificado: vários limiares de YIN dão candidatos com probabilidade; uma suavização no tempo escolhe a nota ---- */
+const freqMidi = n => 440 * Math.pow(2, (n - 69) / 12);
+const PY_TH = [0.05, 0.1, 0.15, 0.2, 0.3, 0.4], PY_W = [0.10, 0.20, 0.30, 0.20, 0.12, 0.08];
+const tauMin = () => Math.max(2, Math.floor(Mic.sr / freqMidi(micCfg.aguda + 1)));
+const tauMax = () => Math.ceil(Mic.sr / freqMidi(micCfg.grave - 1));
+function pyinQuadro(x, off, W){
+  const tMin = tauMin(), tMax = tauMax();
+  const d = new Float32Array(tMax + 2), c = new Float32Array(tMax + 2);
+  for (let t = 1; t <= tMax; t++) { let sm = 0; for (let i = 0; i < W; i++) { const a = x[off + i] - x[off + i + t]; sm += a * a; } d[t] = sm; }
+  c[0] = 1; let run = 0;
+  for (let t = 1; t <= tMax; t++) { run += d[t]; c[t] = run ? d[t] * t / run : 1; }
+  const prob = {};
+  PY_TH.forEach((th, k) => {
+    for (let t = Math.max(2, tMin); t < tMax; t++) if (c[t] < th) { while (t + 1 < tMax && c[t + 1] < c[t]) t++; prob[t] = (prob[t] || 0) + PY_W[k] * (1 - c[t]); return; }
+  });
+  const cands = Object.entries(prob).map(([t, p]) => {
+    t = +t; const x0 = c[t - 1], x1 = c[t], x2 = c[t + 1], den = x0 + x2 - 2 * x1, t2 = den ? t + (x0 - x2) / (2 * den) : t;
+    return {midi: 69 + 12 * Math.log2(Mic.sr / t2 / 440), p};
+  }).sort((a, b) => b.p - a.p);
+  const out = [];
+  cands.forEach(cd => { const j = out.find(o => Math.abs(o.midi - cd.midi) < 0.5); if (j) j.p += cd.p; else out.push({midi: cd.midi, p: cd.p}); });
+  out.forEach(o => { o.p = Math.min(1, o.p); });
+  return out;
+}
+/* escolhe, quadro a quadro, a melhor sequência (pouca troca de nota, sem voz custa um pouco) */
+function suavizar(frames){
+  const est = frames.map(f => {
+    const sp = Math.min(1, f.cands.reduce((a, c) => a + c.p, 0));
+    return [...f.cands.map(c => ({midi: c.midi, p: c.p, lp: Math.log(Math.max(c.p, 1e-3))})), {midi: null, p: 0, lp: Math.log(Math.max(1 - sp, 0.05))}];
+  });
+  const custo = (a, b) => (a.midi == null && b.midi == null) ? 0 : (a.midi == null || b.midi == null) ? -1.5 : -1.2 * Math.min(3, Math.abs(a.midi - b.midi));
+  const score = [], volta = [];
+  est.forEach((E, i) => {
+    score[i] = []; volta[i] = [];
+    E.forEach((e, j) => {
+      if (i === 0) { score[i][j] = e.lp; volta[i][j] = -1; return; }
+      let melhor = -1e9, bk = 0;
+      est[i - 1].forEach((pe, k) => { const v = score[i - 1][k] + custo(pe, e); if (v > melhor) { melhor = v; bk = k; } });
+      score[i][j] = melhor + e.lp; volta[i][j] = bk;
+    });
+  });
+  const out = new Array(est.length);
+  if (!est.length) return out;
+  let j = score[est.length - 1].indexOf(Math.max(...score[est.length - 1]));
+  for (let i = est.length - 1; i >= 0; i--) { const e = est[i][j]; out[i] = e.midi == null ? {midi: null, mf: null, conf: 0} : {midi: Math.round(e.midi), mf: e.midi, conf: e.p}; j = volta[i][j]; }
+  return out;
+}
+function analisarClip(clip, ini){
+  const W = 1024, hop = Math.round(Mic.sr * 0.01), tMax = tauMax(), frames = [];
+  for (let off = Math.max(0, ini); off + W + tMax + 2 <= clip.length; off += hop) {
+    let sm = 0; for (let i = 0; i < W; i++) sm += clip[off + i] * clip[off + i];
+    const rms = Math.sqrt(sm / W);
+    frames.push({cands: rms < Mic.thr * 0.7 ? [] : pyinQuadro(clip, off, W), rms});
+  }
+  return frames;
+}
+/* primeira nota que fica firme pelo tempo de estabilidade, com confiança acima do mínimo */
+function acharEstavel(frames){
+  const sel = suavizar(frames), precisa = Math.max(2, Math.ceil(micCfg.estab / 10));
+  let i = 0;
+  while (i < sel.length) {
+    const a = sel[i];
+    if (a.midi == null || a.conf < micCfg.confMin) { i++; continue; }
+    let j = i + 1, lo = a.mf, hi = a.mf;
+    /* firme = mesma nota, confiança suficiente e a altura variando no máximo meio semitom */
+    while (j < sel.length && sel[j].midi === a.midi && sel[j].conf >= micCfg.confMin && Math.max(hi, sel[j].mf) - Math.min(lo, sel[j].mf) <= 0.5) { lo = Math.min(lo, sel[j].mf); hi = Math.max(hi, sel[j].mf); j++; }
+    if (j - i >= precisa) { const cs = sel.slice(i, j).map(x => x.conf); return {midi: a.midi, conf: cs.reduce((x, y) => x + y, 0) / cs.length}; }
+    i = j;
+  }
+  return null;
+}
+function atualizarNotaAoVivo(rms){
+  const el = $('#calibNota');
+  if (rms < Mic.thr * 0.8) { el.textContent = '–'; return; }
+  const W = 1024, tMax = tauMax(); if (Mic.buf.length < W + tMax + 2) return;
+  const m = pyinQuadro(Mic.buf, Mic.buf.length - W - tMax - 2, W).sort((a, b) => b.p - a.p)[0];
+  if (!m) { el.textContent = 'sem nota clara'; return; }
+  const conf = Math.min(1, m.p);
+  el.innerHTML = nomeOitava(Math.round(m.midi)) + ' <small>confiança ' + Math.round(conf * 100) + '%' + (conf < micCfg.confMin ? ' (abaixo do mínimo, seria ignorada)' : '') + '</small>';
+}
+
+/* ---- reconhecimento de 2 notas: Basic Pitch (Spotify), guardado no próprio app e carregado só quando precisa ---- */
+const BP = {estado: 'nao', obj: null, promessa: null, fila: Promise.resolve(), ms: null};
+function atualizarBPStatus(){
+  const el = $('#bpStatus'); if (!el) return;
+  const t = {nao: '', carregando: 'Carregando o reconhecedor de 2 notas… (uma vez só, cerca de 2 MB)', pronto: 'Reconhecedor de 2 notas pronto' + (BP.ms ? ' (última análise: ' + Math.round(BP.ms) + ' ms)' : '') + '.', erro: 'Não consegui carregar o reconhecedor de 2 notas. Usando um método mais simples, menos preciso. Confira a internet e recarregue a página.'}[BP.estado];
+  el.textContent = t + (BP.estado === 'pronto' && BP.ms > 2500 ? ' Atenção: neste aparelho cada análise leva ' + fmt(BP.ms / 1000, 1) + ' s. As notas valem para a pontuação, mas o verde/vermelho do treino chega atrasado.' : ''); el.style.color = BP.estado === 'erro' ? 'var(--bad)' : '';
+}
+const carregarScript = src => new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => no(new Error('falhou ' + src)); document.head.appendChild(sc); });
+function carregarBP(){
+  if (BP.promessa) return BP.promessa;
+  BP.estado = 'carregando'; atualizarBPStatus();
+  BP.promessa = (async () => {
+    try {
+      if (!window.tf) await carregarScript('vendor/tf.min.js');
+      if (!window.BasicPitchLib) await carregarScript('vendor/basic-pitch.js');
+      BP.obj = new BasicPitchLib.BasicPitch('modelos/basic-pitch/model.json');
+      await BP.obj.model;
+      await bpRodar(new Float32Array(22050 * 2));   /* aquecimento: a primeira análise é a mais lenta */
+      BP.estado = 'pronto';
+    } catch(e) { BP.estado = 'erro'; BP.promessa = null; }
+    atualizarBPStatus();
+  })();
+  return BP.promessa;
+}
+function garantirBP(){ if (S.micOk && esperaDuas() && BP.estado === 'nao') carregarBP(); atualizarBPStatus(); }
+async function bpRodar(a){
+  const t0 = performance.now(), frames = [], ons = [];
+  await BP.obj.evaluateModel(a, (f, o) => { frames.push(...f); ons.push(...o); }, () => {});
+  BP.ms = performance.now() - t0;
+  return BasicPitchLib.noteFramesToTime(BasicPitchLib.outputToNotesPoly(frames, ons, 0.5, 0.3, 5, true, null, null, true));
+}
+async function reamostrar(x, sr){
+  if (sr === 22050) return x;
+  const n = Math.round(x.length * 22050 / sr);
+  try {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext, oc = new OAC(1, n, 22050);
+    const b = oc.createBuffer(1, x.length, sr); b.copyToChannel(x, 0);
+    const f = oc.createBufferSource(); f.buffer = b; f.connect(oc.destination); f.start();
+    return (await oc.startRendering()).getChannelData(0).slice();
+  } catch(e) {
+    const o = new Float32Array(n), k = sr / 22050;
+    for (let i = 0; i < n; i++) { const pp = i * k, j = Math.floor(pp), fr = pp - j; o[i] = (x[j] || 0) * (1 - fr) + (x[j + 1] || 0) * fr; }
+    return o;
+  }
+}
+/* ~380 ms depois do ataque, pega os últimos 2 s do microfone e pergunta ao Basic Pitch quais notas começaram junto do ataque */
+function agendarDuasNotas(tv, tOn){
+  setTimeout(() => {
+    const clip = pegarClipe(2.0); if (!clip) return;
+    const decorrido = (performance.now() - tOn) / 1000;
+    BP.fila = BP.fila.then(async () => {
+      try {
+        const evs = await bpRodar(await reamostrar(clip, Mic.sr));
+        const alvo = Math.max(0, 2.0 - decorrido + 0.03);
+        const escolhidas = [];
+        evs.filter(e => Math.abs(e.startTimeSeconds - alvo) <= 0.2 && e.durationSeconds >= micCfg.estab / 1000 && e.amplitude >= 0.25 && e.pitchMidi >= micCfg.grave - 1 && e.pitchMidi <= micCfg.aguda + 1)
+          .sort((a, b) => b.amplitude - a.amplitude)
+          .forEach(e => { if (escolhidas.length < 2 && !escolhidas.some(o => o.pitchMidi === e.pitchMidi)) escolhidas.push(e); });
+        atualizarBPStatus();
+        if (!escolhidas.length) { $('#aovivoFonte').textContent = 'Reconhecedor de 2 notas: nada claro neste toque'; return; }
+        escolhidas.sort((a, b) => a.pitchMidi - b.pitchMidi).forEach(e => registrarNota(e.pitchMidi, tv, 'Microfone (2 notas): ' + nomeOitava(e.pitchMidi) + ', confiança ' + Math.round(e.amplitude * 100) + '%', 'mic', {conf: e.amplitude}));
+      } catch(e) { BP.estado = 'erro'; atualizarBPStatus(); }
+    });
+  }, Math.max(0, 380 - (performance.now() - tOn)));
+}
+
+/* ---- gatilho: ataque do som; depois a nota precisa ficar estável ---- */
+function esperaDuas(){
+  if (typeof TESTE !== 'undefined' && TESTE.ativo) return TESTE.esperaDuas();
+  if (S.gravando === 'sessao') return S.sess.cfg.notasEsperadas >= 2;
+  return cfgAtiv(gabAtual()).notasEsperadas >= 2;
+}
 function micTick(){
-  if (!Mic.an || !(S.modo.startsWith('mic') || Mic.medindo)) return;
+  const escuta = S.modo.startsWith('mic') || TESTE.escutaMic();
+  const mostrar = !$('#cfg-mic').hidden && $('#aba-entrada').classList.contains('ativa');
+  if (!Mic.an || !(escuta || Mic.medindo || mostrar)) return;
   Mic.an.getFloatTimeDomainData(Mic.buf);
-  let s = 0; for (let i = 4096 - 512; i < 4096; i++) s += Mic.buf[i] * Mic.buf[i];
-  const rms = Math.sqrt(s / 512); Mic.rms = rms;
+  let sm = 0; for (let i = 4096 - 512; i < 4096; i++) sm += Mic.buf[i] * Mic.buf[i];
+  const rms = Math.sqrt(sm / 512); Mic.rms = rms;
   if (Mic.medindo) Mic.medindo.push(rms);
   const agora = performance.now();
-  if (S.modo.startsWith('mic') && rms > Mic.thr && rms > Mic.prev * micCfg.ataque + 0.002 && agora - Mic.ultimo > micCfg.intervalo) {
+  if (mostrar && agora - Mic.tNota > 120) { Mic.tNota = agora; atualizarNotaAoVivo(rms); }
+  if (escuta && rms > Mic.thr && rms > Mic.prev * micCfg.ataque + 0.002 && agora - Mic.ultimo > micCfg.intervalo) {
     Mic.ultimo = agora;
-    const tv = video.currentTime;
-    setTimeout(() => analisarAtaque(tv), micCfg.escuta);
+    const tv = video.currentTime, tOn = agora;
+    setTimeout(() => analisarAtaque(tv, tOn), ESCUTA_AMOSTRA);
   }
   Mic.prev = Mic.prev * 0.6 + rms * 0.4;
 }
@@ -972,39 +1240,46 @@ function duasAlturas(){
   return [n1, n2].sort((a, b) => a - b);
 }
 const ranquear = (v, p) => p ? Object.entries(p.modelos).map(([n, m]) => ({n: +n, sim: cosseno(v, m)})).sort((a, b) => b.sim - a.sim) : [];
-function analisarAtaque(tv){
+function analisarAtaque(tv, tOn){
   if (!Mic.an) return;
-  const b = new Float32Array(4096); Mic.an.getFloatTimeDomainData(b);
+  const modoMic = S.modo.startsWith('mic') ? S.modo : 'mic-altura';
   Mic.an.getFloatFrequencyData(Mic.freq);
   const v = espectro(Mic.freq, Mic.sr);
   if (S.calib) { receberAmostra(v); return; }
-  const p = perfilAtual(), simMin = +$('#simMin').value / 100, rk = ranquear(v, p);
-  if (micCfg.duas) {
-    const par = duasPorAmostras(v, p, simMin);
-    if (par) { par.forEach(n => registrarNota(n, tv, 'Microfone: 2 notas (amostras)')); return; }
-    if (S.modo === 'mic-altura') {
-      const alt = duasAlturas();
-      if (alt.length > 1) { alt.forEach(n => registrarNota(n, tv, 'Microfone: 2 notas (altura)')); return; }
-    }
-  }
-  if (S.modo === 'mic-altura') {
-    const f = yin(b, Mic.sr, micCfg.rigor / 100);
-    const midi = f ? Math.round(69 + 12 * Math.log2(f / 440)) : 0;
-    if (midi && midi >= micCfg.grave && midi <= micCfg.aguda) {
-      const prox = rk.find(c => Math.abs(c.n - midi) <= 2 && c.sim >= simMin);
-      if (prox) registrarNota(prox.n, tv, 'Microfone + amostra (' + Math.round(prox.sim * 100) + '% parecido)');
-      else registrarNota(midi, tv, 'Microfone (' + Math.round(f) + ' Hz)');
-    } else if (rk[0] && rk[0].sim >= simMin) {
-      registrarNota(rk[0].n, tv, 'Amostra (' + Math.round(rk[0].sim * 100) + '% parecido)');
-    } else if (f) {
-      $('#aovivoFonte').textContent = 'Som fora da faixa de notas aceitas (' + Math.round(f) + ' Hz)';
-    }
-  } else if (S.modo === 'mic-calib') {
+  const p = perfilAtual(), simMin = +$('#simMin').value / 100, rk = ranquear(v, p), duas = esperaDuas();
+  if (modoMic === 'mic-calib') {
+    if (duas) { const par = duasPorAmostras(v, p, simMin); if (par) { par.forEach(n => registrarNota(n, tv, 'Amostras: 2 notas', 'mic')); return; } }
     if (!rk.length) return;
     const melhor = rk[0].n, ms = rk[0].sim;
     if (ms < simMin) { $('#aovivoFonte').textContent = 'Som ignorado (' + Math.round(ms*100) + '% parecido com ' + nomeNota(melhor) + ')'; return; }
-    registrarNota(melhor, tv, 'Amostra (' + Math.round(ms*100) + '% parecido)');
+    registrarNota(melhor, tv, 'Amostra (' + Math.round(ms*100) + '% parecido)', 'mic');
+    return;
   }
+  if (duas) {
+    if (BP.estado === 'pronto') { agendarDuasNotas(tv, tOn); return; }
+    carregarBP();
+    const alt = duasAlturas();
+    if (alt.length > 1) { alt.forEach(n => registrarNota(n, tv, 'Microfone: 2 notas (método simples)', 'mic')); return; }
+  }
+  ouvirAltura(tv, tOn, rk, simMin);
+}
+/* 1 nota: a altura precisa ficar estável pelo tempo escolhido (tenta aos ~200 ms e de novo aos ~340 ms) */
+function ouvirAltura(tv, tOn, rk, simMin){
+  const tentar = ultimo => {
+    const ms = performance.now() - tOn, clip = pegarClipe((ms + 80) / 1000);
+    if (!clip) return true;
+    const ini = clip.length - Math.round(ms / 1000 * Mic.sr) + Math.round(0.03 * Mic.sr);
+    const r = acharEstavel(analisarClip(clip, ini));
+    if (r) {
+      const prox = rk.find(c => Math.abs(c.n - r.midi) <= 2 && c.sim >= simMin);
+      if (prox) registrarNota(prox.n, tv, 'Microfone + amostra: ' + nomeOitava(prox.n) + ' (' + Math.round(prox.sim * 100) + '% parecido)', 'mic', {conf: r.conf});
+      else registrarNota(r.midi, tv, 'Microfone: ' + nomeOitava(r.midi) + ', confiança ' + Math.round(r.conf * 100) + '%', 'mic', {conf: r.conf});
+      return true;
+    }
+    if (ultimo) $('#aovivoFonte').textContent = 'Som instável ou pouco claro: ignorado';
+    return false;
+  };
+  setTimeout(() => { if (!tentar(false)) setTimeout(() => tentar(true), 140); }, Math.max(0, 200 - (performance.now() - tOn)));
 }
 function yin(b, sr, limite = 0.15){
   const W = 2048, maxT = Math.min(Math.floor(sr/55), 1000), minT = Math.floor(sr/2200);
@@ -1109,7 +1384,7 @@ function receberAmostra(v){
   C.amostras.push(v);
   mostrarAoVivo(C.nota, 'Ensinando: toque ' + C.amostras.length + ' de 3');
   /* o áudio é recortado um pouco depois, para pegar o toque inteiro */
-  const espera = Math.max(300, 640 - micCfg.escuta);
+  const espera = Math.max(300, 640 - ESCUTA_AMOSTRA);
   const clipe = new Promise(ok => setTimeout(() => ok(pegarClipe(0.7)), espera));
   if (C.amostras.length >= 3) {
     const m = v.map((_, i) => C.amostras.reduce((s, a) => s + a[i], 0) / 3);
@@ -1173,6 +1448,7 @@ function renderAtv(){
   $('#atvJuntas').value = c.juntasMs; $('#atvJuntasVal').textContent = c.juntasMs + ' ms';
   $('#atvJuntasMic').value = c.juntasMic; $('#atvJuntasMicVal').textContent = c.juntasMic + ' ms';
   $('#atvJuntasBox').hidden = c.notasEsperadas < 2;
+  if (typeof garantirBP === 'function') garantirBP();
   $('#sessResumoAtv').textContent = g
     ? 'Atividade: ' + (c.notasEsperadas === 2 ? '1 ou 2 notas juntas' : '1 nota por vez') + ', tolerância de ±' + c.janela + ' ms' + (c.notasEsperadas === 2 ? ', duas notas juntas dentro de ' + c.juntasMs + ' ms (' + c.juntasMic + ' ms no microfone)' : '') + '. Para mudar, use a aba Gabarito.'
     : 'Escolha ou crie um gabarito na aba 2.';
@@ -1794,7 +2070,8 @@ $('#arqBackup').addEventListener('change', async e => {
     const o = JSON.parse(await f.text());
     if (!o.gabaritos || !o.sessoes) throw 0;
     if (!await perguntar('Juntar a cópia com os dados atuais? Itens repetidos são ignorados.', {ok: 'Juntar'})) return;
-    for (const k of ['gabaritos','sessoes','perfis']) { const ids = new Set(db[k].map(x => x.id)); (o[k] || []).forEach(x => { if (!ids.has(x.id)) db[k].push(x); }); }
+    db.testes = db.testes || [];
+    for (const k of ['gabaritos','sessoes','perfis','testes']) { const ids = new Set(db[k].map(x => x.id)); (o[k] || []).forEach(x => { if (!ids.has(x.id)) db[k].push(x); }); }
     db.visCfg = Object.assign({}, o.visCfg || {}, db.visCfg);
     for (const [k, v] of Object.entries(o.clips || {})) { try { if (!(await IDB.get(k))) await IDB.put(k, {sr: v.sr, pcm: unb64(v.pcm)}); } catch(err) {} }
     migrarDb(); salvar(); renderGabs(); renderHist(); if (S.modo.startsWith('mic')) renderCalib(); toast('Cópia restaurada.');
@@ -1839,6 +2116,150 @@ function desenharFaixa(){
   x.strokeStyle = ink; x.lineWidth = 2; x.beginPath(); x.moveTo(x0, 0); x.lineTo(x0, h - 4); x.stroke();
   requestAnimationFrame(desenharFaixa);
 }
+
+/* ---------- tela de teste ---------- */
+const CANAL_DO_MODO = m => m === 'midi' ? 'midi' : m === 'teclado-tela' ? 'toque' : m === 'teclado-pc' ? 'pc' : 'mic';
+const NOME_CANAL = {midi: 'MIDI', toque: 'Toque', mic: 'Microfone', pc: 'Teclado do PC'};
+const TESTE = {
+  log: [], cl: {}, guiado: null, comp: null, ultimo: null, midiVisto: {ts: 0, notas: []},
+  get ativo(){ return $('#aba-teste').classList.contains('ativa'); },
+  escutaMic(){ return this.ativo && S.micOk; },
+  esperaDuas(){
+    if (this.guiado) return !!(this.guiado.item && this.guiado.item.notas.length >= 2);
+    return performance.now() - this.midiVisto.ts < 900 && this.midiVisto.notas.length >= 2;
+  }
+};
+const nomesNotas = ns => ns.map(n => n < 0 ? 'sem nota' : nomeOitava(n)).join(' + ');
+const iguais = (esp, ouv) => relacaoNotas(esp, ouv, {ignOit: false, soRitmo: false}) === 'igual';
+function testeRecebeu(canal, n, info){
+  if (!TESTE.ativo) return;
+  const ts = performance.now();
+  if (canal === 'midi') { const v = TESTE.midiVisto; if (ts - v.ts > 400) v.notas = []; v.ts = ts; if (n >= 0 && !v.notas.includes(n)) v.notas.push(n); }
+  const c = TESTE.cl[canal] || (TESTE.cl[canal] = {taps: [], timer: null, ts});
+  if (!c.taps.length) c.ts = ts;
+  c.taps.push({n, conf: info && info.conf != null ? info.conf : null});
+  clearTimeout(c.timer);
+  const cfg = cfgAtiv(null);
+  c.timer = setTimeout(() => testeFecha(canal), canal === 'mic' ? cfg.juntasMic : cfg.juntasMs);
+}
+function testeFecha(canal){
+  const c = TESTE.cl[canal]; if (!c || !c.taps.length) return;
+  const notas = [...new Set(c.taps.map(t => t.n))].sort((a, b) => a - b), confs = c.taps.map(t => t.conf).filter(x => x != null);
+  const e = {canal, notas, conf: confs.length ? Math.min(...confs) : null, ts: c.ts, hora: new Date()};
+  c.taps = []; testeEntrada(e);
+}
+function testeEntrada(e){
+  TESTE.log.unshift(e); if (TESTE.log.length > 14) TESTE.log.pop();
+  renderTesteLog();
+  if (TESTE.guiado && e.canal === TESTE.guiado.canal) guiadoResposta(e);
+  if (TESTE.comp) compEntrada(e);
+}
+function renderTesteLog(){
+  $('#testeLog').innerHTML = TESTE.log.length ? TESTE.log.map(e => `<div class="tl"><span class="canal ${e.canal}">${NOME_CANAL[e.canal]}</span><b>${nomesNotas(e.notas)}</b><span class="dica">${e.conf != null ? 'confiança ' + Math.round(e.conf * 100) + '% · ' : ''}${e.hora.toLocaleTimeString('pt-BR')}</span></div>`).join('') : '<div class="vazio-lista">Toque uma nota em qualquer entrada ativa.</div>';
+}
+function renderTesteInfo(){
+  const c = CANAL_DO_MODO(S.modo);
+  $('#testeEntradaAtiva').textContent = 'Entrada escolhida na aba 1: ' + NOME_CANAL[c] + (entradaPronta() ? ' (pronta).' : ' (falta ativar).') + ' O microfone ativo também aparece na lista ao vivo.';
+  renderTesteLog();
+}
+function cancelarTestes(){
+  if (TESTE.guiado) { TESTE.guiado = null; $('#guiadoPainel').hidden = true; $('#btnGuiado').hidden = false; }
+  if (TESTE.comp) { TESTE.comp = null; $('#btnComparar').textContent = 'Começar a comparar'; $('#compStatus').textContent = ''; }
+}
+function sequenciaTeste(tipo){
+  const out = [];
+  if (tipo !== 'intervalos') for (let n = 60; n <= 72; n++) out.push({notas: [n]});
+  if (tipo !== 'notas') for (let d = 1; d <= 12; d++) out.push({notas: [60, 60 + d]});
+  return out;
+}
+/* --- teste guiado --- */
+$('#btnGuiado').addEventListener('click', () => {
+  if (!entradaPronta()) { toast('Ative a entrada escolhida na aba 1 primeiro.'); return; }
+  cancelarTestes();
+  const seq = sequenciaTeste($('#testeTipo').value);
+  TESTE.guiado = {canal: CANAL_DO_MODO(S.modo), seq, i: 0, res: [], item: null, trava: false};
+  if (TESTE.guiado.canal === 'mic' && seq.some(x => x.notas.length > 1)) { carregarBP(); }
+  $('#btnGuiado').hidden = true; $('#guiadoPainel').hidden = false; $('#testeResultado').innerHTML = ''; $('#testeCsv').hidden = true;
+  guiadoMostrar();
+});
+function guiadoMostrar(){
+  const g = TESTE.guiado; if (!g) return;
+  if (g.i >= g.seq.length) { guiadoFim(); return; }
+  g.item = g.seq[g.i]; g.trava = false;
+  const el = $('#guiadoPedido'); el.className = 'teste-pedido';
+  const d = g.item.notas.length > 1 ? g.item.notas[1] - g.item.notas[0] : null;
+  el.innerHTML = 'Toque agora: ' + nomesNotas(g.item.notas) + '<small>' + (d != null ? nomeIntervalo(d) + ' · ' : 'nota única · ') + (g.i + 1) + ' de ' + g.seq.length + '</small>';
+}
+function guiadoResposta(e){
+  const g = TESTE.guiado; if (!g || !g.item || g.trava) return;
+  g.trava = true;
+  const ok = iguais(g.item.notas, e.notas);
+  g.res.push({esp: g.item.notas, ouv: e.notas, ok, conf: e.conf});
+  const el = $('#guiadoPedido'); el.className = 'teste-pedido ' + (ok ? 'certo' : 'errado');
+  el.innerHTML = (ok ? '✓ ' : '✗ ') + 'Ouvi: ' + nomesNotas(e.notas) + '<small>' + (ok ? 'certo' : 'esperado: ' + nomesNotas(g.item.notas)) + '</small>';
+  setTimeout(() => { if (TESTE.guiado === g) { g.i++; guiadoMostrar(); } }, 900);
+}
+$('#guiadoPular').addEventListener('click', () => { const g = TESTE.guiado; if (!g || !g.item) return; g.res.push({esp: g.item.notas, ouv: null, ok: false}); g.i++; guiadoMostrar(); });
+$('#guiadoParar').addEventListener('click', () => guiadoFim());
+function guiadoFim(){
+  const g = TESTE.guiado; if (!g) return;
+  TESTE.guiado = null; $('#guiadoPainel').hidden = true; $('#btnGuiado').hidden = false;
+  mostrarResultadoTeste(g.res, 'Teste guiado: ' + NOME_CANAL[g.canal], 'guiado', g.canal);
+}
+/* --- comparar MIDI × microfone (o MIDI é a resposta certa) --- */
+const compEspera = n => n >= 2 ? 8000 : 1500;
+$('#tBtnMidi').addEventListener('click', () => $('#btnMidi').click());
+$('#tBtnMic').addEventListener('click', () => $('#btnMic').click());
+$('#btnComparar').addEventListener('click', () => {
+  if (TESTE.comp) { compFim(); return; }
+  if (!S.midiOk || !S.micOk) { $('#compStatus').textContent = 'Antes, ative o ' + (!S.midiOk ? 'MIDI' : '') + (!S.midiOk && !S.micOk ? ' e o ' : '') + (!S.micOk ? 'microfone' : '') + ' (botões acima).'; return; }
+  cancelarTestes();
+  TESTE.comp = {linhas: [], sobras: 0}; $('#btnComparar').textContent = 'Parar e ver o resultado'; $('#testeResultado').innerHTML = ''; $('#testeCsv').hidden = true;
+  compStatus();
+});
+function compStatus(){ const c = TESTE.comp; if (!c) return; const f = c.linhas.filter(l => l.ok != null); $('#compStatus').textContent = 'Comparando: toque no teclado MIDI. ' + f.length + ' comparados, o microfone acertou ' + f.filter(l => l.ok).length + '.'; }
+function compEntrada(e){
+  const c = TESTE.comp;
+  if (e.canal === 'midi') {
+    const l = {esp: e.notas, ouv: null, ts: e.ts, ok: null}; c.linhas.push(l);
+    setTimeout(() => { if (l.ok == null) { l.ok = !!(l.ouv && iguais(l.esp, l.ouv)); compStatus(); } }, compEspera(e.notas.length));
+  } else if (e.canal === 'mic') {
+    const l = c.linhas.find(x => x.ouv == null && e.ts >= x.ts - 250 && e.ts <= x.ts + compEspera(x.esp.length));
+    if (l) { l.ouv = e.notas; l.conf = e.conf; l.ok = iguais(l.esp, l.ouv); compStatus(); } else c.sobras++;
+  }
+}
+function compFim(){
+  const c = TESTE.comp; if (!c) return;
+  TESTE.comp = null; $('#btnComparar').textContent = 'Começar a comparar'; $('#compStatus').textContent = '';
+  c.linhas.forEach(l => { if (l.ok == null) l.ok = !!(l.ouv && iguais(l.esp, l.ouv)); });
+  if (!c.linhas.length) { $('#testeResultado').innerHTML = '<p class="dica">Nenhuma nota tocada no MIDI durante a comparação.</p>'; return; }
+  mostrarResultadoTeste(c.linhas, 'Comparação MIDI × microfone', 'comparar', 'mic', c.sobras);
+}
+/* --- resultado: acerto separado para nota única e para cada intervalo --- */
+function mostrarResultadoTeste(linhas, titulo, tipo, canal, sobras){
+  const pctT = (a, b) => b ? Math.round(100 * a / b) + '%' : '–';
+  const simples = {}, inter = {}, tot = {s: [0, 0], i: [0, 0]};
+  linhas.forEach(l => {
+    const dupla = l.esp.length >= 2, chave = dupla ? Math.abs(l.esp[1] - l.esp[0]) : l.esp[0], tab = dupla ? inter : simples;
+    const o = tab[chave] || (tab[chave] = {k: chave, esp: l.esp, t: 0, ok: 0, erros: {}});
+    o.t++; tot[dupla ? 'i' : 's'][1]++;
+    if (l.ok) { o.ok++; tot[dupla ? 'i' : 's'][0]++; } else { const q = l.ouv ? nomesNotas(l.ouv) : 'nada'; o.erros[q] = (o.erros[q] || 0) + 1; }
+  });
+  const linhaTab = (nome, o) => `<tr><td>${nome}</td><td>${o.ok}/${o.t}</td><td>${pctT(o.ok, o.t)}</td><td>${Object.entries(o.erros).map(([q, n]) => q + (n > 1 ? ' ×' + n : '')).join(', ') || '–'}</td></tr>`;
+  const col = tipo === 'comparar' ? 'O microfone ouviu (nos erros)' : 'O que foi ouvido (nos erros)';
+  $('#testeResultado').innerHTML = `<h3>${titulo}</h3>
+    <dl class="medidas"><dt>Notas únicas</dt><dd>${tot.s[0]}/${tot.s[1]} (${pctT(tot.s[0], tot.s[1])})</dd><dt>Intervalos (2 notas)</dt><dd>${tot.i[0]}/${tot.i[1]} (${pctT(tot.i[0], tot.i[1])})</dd>${sobras ? `<dt>Sons do microfone sem nota no MIDI</dt><dd>${sobras}</dd>` : ''}</dl>
+    ${tot.s[1] ? `<h3>Por nota</h3><table class="tab-int"><thead><tr><th>Nota</th><th>Acertos</th><th>Taxa</th><th>${col}</th></tr></thead><tbody>${Object.values(simples).sort((a, b) => a.k - b.k).map(o => linhaTab(nomesNotas(o.esp), o)).join('')}</tbody></table>` : ''}
+    ${tot.i[1] ? `<h3>Por intervalo</h3><table class="tab-int"><thead><tr><th>Intervalo</th><th>Acertos</th><th>Taxa</th><th>${col}</th></tr></thead><tbody>${Object.values(inter).sort((a, b) => a.k - b.k).map(o => linhaTab(nomeIntervalo(o.k), o)).join('')}</tbody></table>` : ''}`;
+  TESTE.ultimo = {tipo, canal, data: new Date().toISOString(), linhas: linhas.map(l => ({esp: l.esp, ouv: l.ouv, ok: l.ok}))};
+  db.testes = db.testes || []; db.testes.push(Object.assign({id: uid()}, TESTE.ultimo)); db.testes = db.testes.slice(-30); salvar();
+  $('#testeCsv').hidden = false;
+}
+$('#testeCsv').addEventListener('click', () => {
+  const t = TESTE.ultimo; if (!t) return;
+  const l = ['esperado;ouvido;resultado;tipo'].concat(t.linhas.map(x => [nomesNotas(x.esp), x.ouv ? nomesNotas(x.ouv) : '', x.ok ? 'acerto' : 'erro', x.esp.length >= 2 ? nomeIntervalo(Math.abs(x.esp[1] - x.esp[0])) : 'nota única'].join(';')));
+  baixar('sincronia_teste_' + t.tipo + '_' + t.data.slice(0, 10) + '.csv', '﻿' + l.join('\n'));
+});
 
 /* ---------- início ---------- */
 aplicarMicCfg(false); aplicarModo(); renderGabs(); renderPacientes(); requestAnimationFrame(desenharFaixa);
