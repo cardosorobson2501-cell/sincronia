@@ -171,6 +171,46 @@ details.avancado summary{cursor:pointer;font-weight:700;padding:.5rem 0}
 .modal-caixa input{width:100%;padding:.6rem;border:1px solid var(--line);border-radius:9px;background:var(--surface2);margin-bottom:.8rem}
 .modal-caixa .linha{justify-content:flex-end}
 .btn.perigo{background:var(--bad);color:#fff}
+.placar{position:absolute;left:.6rem;top:.6rem;background:rgba(0,0,0,.62);color:#fff;padding:.3rem .7rem;border-radius:999px;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums;pointer-events:none}
+.placar b.ok{color:#7BE0A4}.placar b.erro{color:#FF9C93}
+.fb-flash{position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0}
+.fb-flash.on{animation:fbflash .6s ease-out}
+.fb-flash.fb-ok{box-shadow:inset 0 0 0 10px #2E9E5B,inset 0 0 70px 6px rgba(46,158,91,.55)}
+.fb-flash.fb-erro{box-shadow:inset 0 0 0 10px #D93A2F,inset 0 0 70px 6px rgba(217,58,47,.55)}
+@keyframes fbflash{from{opacity:1}to{opacity:0}}
+.bolha.fb-ok{box-shadow:0 0 0 7px #2E9E5B}.bolha.fb-erro{box-shadow:0 0 0 7px #D93A2F}
+.tecla.fb-ok{outline:5px solid #2E9E5B;outline-offset:-2px}.tecla.fb-erro{outline:5px solid #D93A2F;outline-offset:-2px}
+.botoes-tela{position:absolute;right:.6rem;top:.6rem;display:none;gap:.4rem}
+.botoes-tela button{background:rgba(0,0,0,.62);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:.35rem .8rem;font-size:.85rem;font-weight:700;cursor:pointer}
+.palco.tela-cheia .botoes-tela{display:flex}
+body.tela-cheia-ativa{overflow:hidden}
+.palco.tela-cheia{position:fixed;inset:0;z-index:100;background:#0c1110;padding:max(.5rem,env(safe-area-inset-top,0px)) max(.5rem,env(safe-area-inset-right,0px)) max(.5rem,env(safe-area-inset-bottom,0px)) max(.5rem,env(safe-area-inset-left,0px));gap:.5rem;overflow:hidden}
+.palco.tela-cheia .caixa-video{flex:1;min-height:0;aspect-ratio:auto;max-height:none}
+.palco.tela-cheia .barra-video,.palco.tela-cheia .aovivo{display:none}
+.palco.tela-cheia .teclado-tela{position:static;border-radius:12px;box-shadow:none;padding:.4rem}
+.palco.tela-cheia .tecla{height:clamp(56px,14vh,96px)}
+.palco.tela-cheia .faixa{padding:.3rem}.palco.tela-cheia .faixa canvas{height:84px}
+body.nivel-avaliacao #faixaWrap,body.nivel-avaliacao .aovivo,body.nivel-avaliacao #statusGrav,body.sem-faixa #faixaWrap{display:none}
+.nivel-tag{font-size:.75rem;font-weight:700;padding:.05rem .45rem;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.piano{position:relative;display:flex;height:132px;margin:.4rem 0;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.piano .pk{border:1px solid #9aa6a2;font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:0}
+.piano .pb{flex:1;min-width:0;background:#fff;color:#1c2b29;border-radius:0 0 8px 8px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:.35rem;font-size:.78rem;font-weight:700;box-shadow:inset 0 -14px 0 var(--cn)}
+.piano .pp{position:absolute;top:0;width:9%;height:62%;background:#26302d;color:#fff;border-radius:0 0 6px 6px;z-index:2;display:flex;align-items:flex-end;justify-content:center;padding-bottom:.2rem;font-size:.66rem;font-weight:700;box-shadow:inset 0 -8px 0 var(--cn)}
+.piano .pk.sel{background:var(--cn);color:#fff;outline:3px solid var(--ink);outline-offset:-3px;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.piano .pp.sel{z-index:3}
+.piano .pk.sel.pp{box-shadow:none}
+.chips-nota{display:flex;flex-wrap:wrap;gap:.4rem;min-height:2rem;align-items:center;margin:.3rem 0}
+.chip-nota{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .3rem .2rem .7rem;border-radius:999px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.chip-nota button{border:0;background:rgba(255,255,255,.28);color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;line-height:1}
+.editor-ev{border:1px solid var(--line);border-radius:12px;padding:.7rem .8rem;margin:.5rem 0;background:var(--surface2)}
+.editor-ev.editando{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.lista-gab tr.clic-ev{cursor:pointer}.lista-gab tr.clic-ev:hover td,.lista-gab tr.sel td{background:var(--surface2)}
+.chips-mini{display:inline-flex;gap:.25rem;flex-wrap:wrap}
+.chips-mini span{padding:.05rem .5rem;border-radius:999px;color:#fff;font-size:.82rem;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.aviso-midi{font-size:.82rem;padding:.2rem .65rem;border-radius:999px;border:1px solid var(--warn);color:var(--warn)}
+.tab-int{width:100%;border-collapse:collapse;font-size:.92rem}
+.tab-int th{text-align:left;color:var(--muted);font-weight:400;border-bottom:1px solid var(--line);padding:.3rem}
+.tab-int td{padding:.3rem;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
 .dois{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 @media (max-width:480px){.dois{grid-template-columns:1fr}}
 .cartao-acao{border:1px solid var(--line);border-radius:12px;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
@@ -187,6 +227,8 @@ details.avancado summary{cursor:pointer;font-weight:700;padding:.5rem 0}
 .lista-gab select{padding:.25rem .35rem}
 .lista-gab .ic{border:0;background:none;cursor:pointer;padding:.2rem .45rem;border-radius:6px;color:var(--muted);font-size:1rem}
 .lista-gab .ic:hover{background:var(--surface2);color:var(--ink)}
+.nota-linha{display:flex;align-items:center;gap:.2rem;margin:.1rem 0}
+.acorde-tag{font-size:.7rem;color:var(--accent);font-weight:700}
 .pastilha{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:.3rem}
 .vazio-lista{padding:1rem;color:var(--muted);font-size:.92rem}
 
@@ -235,15 +277,19 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
   </div>
   <div class="topo-dir">
     <span id="chipEntrada" class="chip"><span class="pt"></span><span id="chipTxt">Nenhuma entrada ativa</span></span>
+    <span id="avisoMidiTopo" class="aviso-midi" hidden="">MIDI indisponível neste aparelho</span>
     <button id="btnOffline" class="btn-ghost small">Baixar o app para usar offline</button>
   </div>
 </header>
 
 <main class="grade">
-  <section class="palco">
+  <section class="palco" id="palco">
     <div id="caixaVideo" class="caixa-video vazio">
       <video id="video" playsinline="" webkit-playsinline="" controls="" preload="auto"></video>
       <div id="camada" class="camada"></div>
+      <div id="fbFlash" class="fb-flash"></div>
+      <div id="placar" class="placar" hidden="" aria-live="off"></div>
+      <div class="botoes-tela"><button id="btnEncerrarTela" type="button" hidden="">■ Encerrar sessão</button><button id="btnSairTela" type="button">✕ Sair da tela cheia</button></div>
       <button id="btnPlayGrande" class="play-grande" aria-label="Tocar o vídeo" hidden="">▶</button>
       <div id="contagem" class="contagem" hidden=""></div>
       <div id="videoMsg" class="video-msg" hidden="" role="status"></div>
@@ -253,9 +299,9 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
         <small>ou arraste o arquivo para cá</small>
       </div>
     </div>
-    <div class="barra-video"><span id="nomeVideo">Nenhum vídeo aberto</span><label class="btn-ghost small">Trocar vídeo<input type="file" accept="video/*" id="arquivoVideo2" hidden=""></label></div>
+    <div class="barra-video"><span id="nomeVideo">Nenhum vídeo aberto</span><span class="linha" style="margin:0"><button id="btnTelaCheia" class="btn-ghost small" type="button">Tela cheia</button><label class="btn-ghost small">Trocar vídeo<input type="file" accept="video/*" id="arquivoVideo2" hidden=""></label></span></div>
     <div id="tecladoTela" class="teclado-tela" hidden="" aria-label="Teclado na tela"></div>
-    <div class="faixa"><canvas id="faixa" aria-label="Faixa de notas: gabarito em cima, toques embaixo"></canvas></div>
+    <div class="faixa" id="faixaWrap"><canvas id="faixa" aria-label="Faixa de notas: gabarito em cima, toques embaixo"></canvas></div>
     <div class="aovivo">
       <div id="bolha" class="bolha"><span id="bolhaNome">–</span></div>
       <div class="aovivo-info">
@@ -288,6 +334,7 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <div id="cfg-midi" class="bloco" hidden="">
         <button id="btnMidi" class="btn">Ativar teclado MIDI</button>
         <p id="midiStatus" class="nota-status"></p>
+        <p class="dica">No celular e tablet Android, use um cabo OTG. No iPad e iPhone o MIDI por cabo não funciona nos navegadores comuns: use o teclado na tela ou o microfone.</p>
       </div>
 
       <div id="cfg-mic" class="bloco" hidden="">
@@ -319,6 +366,8 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
           </div>
           <label class="campo">Tolerância na identificação da altura: <span data-micval="rigor"></span><input type="range" data-mic="rigor" min="5" max="40" step="1"></label>
           <p class="dica">Menor = mais exigente (ignora sons incertos). Maior = aceita mais sons, com mais risco de errar a nota.</p>
+          <label class="check"><input type="checkbox" id="micDuas"> Esperar 2 notas ao mesmo tempo (experimental)</label>
+          <p class="dica">Tenta reconhecer duas notas no mesmo toque. Funciona melhor com amostras ensinadas de cada nota. Pode errar mais do que no modo de uma nota.</p>
           <button id="btnMicPadrao" class="btn-ghost small" type="button">Restaurar ajustes padrão</button>
         </details>
 
@@ -354,6 +403,15 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <p class="dica" id="gabSemVideo">Abra um vídeo para criar ou escolher o gabarito dele.</p>
       <div id="gabConteudo" hidden="">
         <div class="linha"><select id="gabSel" aria-label="Gabarito"></select><button id="gabRenomear" class="btn-ghost small">Renomear</button><button id="gabExcluir" class="btn-ghost small perigo">Excluir</button></div>
+        <h3>Configuração da atividade</h3>
+        <label class="campo">Notas esperadas
+          <select id="atvNotas"><option value="1">1 nota por vez</option><option value="2">1 ou 2 notas juntas (intervalo)</option></select></label>
+        <label class="campo">Tolerância de tempo: ± <span id="atvJanelaVal">300 ms</span><input type="range" id="atvJanela" min="100" max="800" step="25"></label>
+        <div id="atvJuntasBox" hidden="">
+          <label class="campo">Duas notas "juntas" no toque e no MIDI: dentro de <span id="atvJuntasVal">150 ms</span><input type="range" id="atvJuntas" min="50" max="400" step="10"></label>
+          <label class="campo">Duas notas "juntas" no microfone: dentro de <span id="atvJuntasMicVal">250 ms</span><input type="range" id="atvJuntasMic" min="100" max="600" step="10"></label>
+        </div>
+        <p class="dica">Vale para o gabarito escolhido acima. Acerto = exatamente as notas esperadas, nenhuma a mais, dentro da tolerância de tempo.</p>
         <h3>Criar um gabarito novo</h3>
         <div class="dois">
           <div class="cartao-acao"><b>Tocar junto com o vídeo</b><p>Você toca a música certa uma vez, com a entrada escolhida na aba 1. O app anota cada nota e o momento dela.</p><button id="btnGravarGab" class="btn">Gravar gabarito</button></div>
@@ -372,8 +430,21 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
               <p class="dica">Se a mesma nota se repete sem a cor apagar entre um toque e outro, o app vê um toque só. Confira a lista abaixo e acrescente o que faltar.</p></li>
           </ol>
         </div>
-        <h3>Notas do gabarito <span id="gabContagem" class="dica"></span></h3>
-        <div class="linha"><select id="notaAdd" aria-label="Nota para adicionar"></select><button id="btnAddNota" class="btn-ghost small">Adicionar no ponto atual do vídeo</button></div>
+        <h3>Programar o gabarito</h3>
+        <div class="editor-ev" id="editorEv">
+          <p class="dica" id="evTitulo">Escolha o tempo e toque as teclas do piano. Depois clique em "Adicionar evento".</p>
+          <div class="linha">
+            <label class="campo inline" for="evT">Tempo (s)&nbsp;<input type="number" id="evT" step="0.1" min="0" value="0"></label>
+            <button id="evMenos" class="btn-ghost small" type="button" aria-label="Voltar 0,1 segundo">−0,1</button>
+            <button id="evMais" class="btn-ghost small" type="button" aria-label="Avançar 0,1 segundo">+0,1</button>
+            <button id="evAgora" class="btn-ghost small" type="button">Usar o tempo do vídeo</button>
+          </div>
+          <div id="piano" class="piano" role="group" aria-label="Piano"></div>
+          <div class="linha"><button id="oitMenos" class="btn-ghost small" type="button" aria-label="Oitava mais grave">◀ Oitava</button><span id="oitNome" class="dica"></span><button id="oitMais" class="btn-ghost small" type="button" aria-label="Oitava mais aguda">Oitava ▶</button><button id="evRitmo" class="btn-ghost small" type="button">Toque sem nota</button></div>
+          <div id="evNotas" class="chips-nota" aria-live="polite"></div>
+          <div class="linha"><button id="evAdd" class="btn" type="button">Adicionar evento</button><button id="evSalvar" class="btn" type="button" hidden="">Salvar alterações</button><button id="evApagar" class="btn-ghost small perigo" type="button" hidden="">Apagar evento</button><button id="evNovo" class="btn-ghost small" type="button" hidden="">Novo evento</button></div>
+        </div>
+        <h3>Eventos do gabarito <span id="gabContagem" class="dica"></span></h3>
         <div class="linha"><label class="campo inline">Mover todas (ms)&nbsp;<input type="number" id="deslocar" value="0" step="10"></label><button id="btnDeslocar" class="btn-ghost small">Aplicar</button></div>
         <div id="listaGab" class="lista-gab"></div>
       </div>
@@ -383,7 +454,14 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <h2>Sessão com o paciente</h2>
       <label class="campo">Paciente<input id="paciente" list="listaPac" placeholder="Nome ou código" autocomplete="off"><datalist id="listaPac"></datalist></label>
       <label class="campo">Gabarito<select id="sessGab"></select></label>
-      <label class="campo">Janela de acerto: ± <span id="janelaVal">300</span> ms<input type="range" id="janela" min="100" max="800" step="25" value="300"></label>
+      <h3 style="margin-top:.4rem">Nível da sessão</h3>
+      <div class="opcoes">
+        <label class="opcao"><input type="radio" name="nivel" value="treino" checked=""><span><b>Treino</b><small>O paciente vê na hora se acertou (verde) ou errou (vermelho), com contador e a faixa das próximas notas.</small></span></label>
+        <label class="opcao"><input type="radio" name="nivel" value="avaliacao"><span><b>Avaliação</b><small>Sem nenhum feedback e sem a faixa que antecipa as notas: só o vídeo e as teclas. O resultado aparece no fim.</small></span></label>
+      </div>
+      <label class="check" id="linhaTreinoFaixa"><input type="checkbox" id="treinoFaixa" checked=""> Mostrar a faixa de notas no treino</label>
+      <label class="check"><input type="checkbox" id="autoFull" checked=""> Entrar em tela cheia ao iniciar</label>
+      <p class="dica" id="sessResumoAtv"></p>
       <label class="check"><input type="checkbox" id="ignOit" checked=""> Aceitar a nota certa em qualquer oitava</label>
       <label class="check"><input type="checkbox" id="soRitmo"> Avaliar só o ritmo (qualquer nota vale)</label>
       <button id="btnSessao" class="btn grande">Iniciar sessão</button>
@@ -460,6 +538,48 @@ function perguntar(txt, o = {}){
     m.onkeydown = e => { if (e.key === 'Escape') nao.onclick(); if (e.key === 'Enter' && o.campo) { e.preventDefault(); ok.onclick(); } };
   });
 }
+
+/* ---------- eventos do gabarito: um tempo e 1 ou 2 notas ---------- */
+const CFG_ATIV = {notasEsperadas: 1, janela: 300, juntasMs: 150, juntasMic: 250};
+const cfgAtiv = g => Object.assign({}, CFG_ATIV, g ? (g.cfg || {}) : (db.prefs.atividade || {}));
+const juntasEf = (c, modo) => c.notasEsperadas >= 2 ? (String(modo).startsWith('mic') ? c.juntasMic : c.juntasMs) : 0;
+/* aceita o formato novo {t, notas:[..]} e o antigo, plano {t, n, g} */
+function normalizarEventos(evs){
+  if (!evs || !evs.length) return [];
+  if (evs[0].notas) return evs.map(e => ({t: e.t, notas: e.notas.slice()}));
+  const out = [], vistos = {};
+  evs.slice().sort((a, b) => a.t - b.t).forEach(e => {
+    if (e.g && vistos[e.g]) { vistos[e.g].notas.push(e.n); return; }
+    const ev = {t: e.t, notas: [e.n]}; out.push(ev); if (e.g) vistos[e.g] = ev;
+  });
+  out.forEach(e => e.notas.sort((a, b) => a - b));
+  return out;
+}
+/* toques soltos {t, n} viram respostas: toques dentro de ms (a partir do primeiro) formam uma resposta */
+function agruparToques(taps, ms){
+  const out = [];
+  taps.slice().sort((a, b) => a.t - b.t).forEach(tp => {
+    const u = out[out.length - 1];
+    if (ms > 0 && u && u.notas[0] !== -1 && tp.n !== -1 && tp.t - u.t <= ms / 1000) { if (u.notas.includes(tp.n)) u.dup++; else u.notas.push(tp.n); u.taps.push(tp); }
+    else out.push({t: tp.t, notas: [tp.n], taps: [tp], dup: 0});
+  });
+  out.forEach(r => r.notas.sort((a, b) => a - b));
+  return out;
+}
+function eventosDeToques(taps, ms, max){
+  return agruparToques(taps, ms).map(r => {
+    const ordem = []; r.taps.forEach(tp => { if (!ordem.includes(tp.n)) ordem.push(tp.n); });
+    return {t: Math.round(r.t * 1000) / 1000, notas: ordem.slice(0, Math.max(1, max)).sort((a, b) => a - b)};
+  });
+}
+function migrarDb(){
+  db.gabaritos.forEach(g => {
+    g.eventos = normalizarEventos(g.eventos);
+    g.cfg = Object.assign({}, CFG_ATIV, g.cfg || {});
+    if (g.cfg.notasEsperadas < 2 && g.eventos.some(e => e.notas.length > 1)) g.cfg.notasEsperadas = 2;
+  });
+}
+migrarDb();
 
 /* ---------- avisos e downloads ---------- */
 let toastT;
@@ -601,6 +721,7 @@ function registrarNota(n, tVideo, fonte){
   if (!S.gravando || video.paused) return;
   const t = (tVideo ?? video.currentTime) - S.latencia/1000;
   S.buf.push({t: Math.round(t*1000)/1000, n});
+  if (S.gravando === 'sessao' && S.sess.cfg.nivel === 'treino') avaliarToque(n, t);
   atualizarStatusGrav();
 }
 function mostrarAoVivo(n, fonte){
@@ -619,6 +740,7 @@ function aplicarModo(){
   $('#tecladoTela').hidden = S.modo !== 'teclado-tela';
   document.body.classList.toggle('com-teclado', S.modo === 'teclado-tela');
   $('#cfg-midi').hidden = S.modo !== 'midi';
+  if (S.modo === 'midi' && !MIDI_OK) statusMidi(MIDI_MSG, 'erro');
   $('#cfg-mic').hidden = !S.modo.startsWith('mic');
   $('#cfg-calib').hidden = !S.modo.startsWith('mic');
   $('#cfg-teclas').hidden = S.modo !== 'teclado-pc';
@@ -635,7 +757,8 @@ function entradaPronta(){
   return true;
 }
 function atualizarChip(){
-  const nomes = {'teclado-tela':'Teclado na tela','midi':'Teclado MIDI','mic-altura':'Teclado pelo microfone','mic-calib':'Sinos pelo microfone','teclado-pc':'Teclado do computador'};
+  if (S.modo === 'midi' && !MIDI_OK) { $('#chipEntrada').classList.remove('ok'); $('#chipTxt').textContent = 'Teclado MIDI: indisponível neste aparelho'; return; }
+  const nomes = {'teclado-tela':'Teclado na tela (toque)','midi':'Teclado MIDI','mic-altura':'Teclado pelo microfone','mic-calib':'Sinos pelo microfone','teclado-pc':'Teclado do computador'};
   const ok = entradaPronta();
   $('#chipEntrada').classList.toggle('ok', ok);
   $('#chipTxt').textContent = nomes[S.modo] + (ok ? ': pronto' : ': falta ativar');
@@ -689,31 +812,41 @@ $('#telaSust').addEventListener('change', montarTeclado);
 montarTeclado();
 
 /* ---------- entrada: MIDI ---------- */
+const MIDI_MSG = 'MIDI indisponível neste navegador. Use o teclado na tela ou o microfone, ou abra o Sincronia no navegador MIDIWeb.';
+const MIDI_OK = typeof navigator !== 'undefined' && typeof navigator.requestMIDIAccess === 'function';
+$('#avisoMidiTopo').hidden = MIDI_OK;
+function statusMidi(txt, tipo){ const st = $('#midiStatus'); st.className = 'nota-status ' + (tipo || ''); st.textContent = txt; }
 $('#btnMidi').addEventListener('click', async () => {
-  const st = $('#midiStatus');
-  if (!navigator.requestMIDIAccess) { st.className = 'nota-status erro'; st.textContent = 'Este navegador não lê teclados MIDI. Use o Google Chrome ou o Edge no computador.'; return; }
+  if (!MIDI_OK) { statusMidi(MIDI_MSG, 'erro'); return; }
   try {
     const acc = await navigator.requestMIDIAccess();
     const ligar = () => {
-      const ins = Array.from(acc.inputs.values());
-      ins.forEach(i => i.onmidimessage = m => {
-        const [s, d1, d2] = m.data;
-        if ((s & 0xf0) === 0x90 && d2 > 0) registrarNota(d1, null, 'Teclado MIDI: ' + (i.name || ''));
-      });
-      S.midiOk = ins.length > 0;
-      st.className = 'nota-status ' + (ins.length ? 'ok' : 'erro');
-      st.textContent = ins.length ? 'Conectado: ' + ins.map(i => i.name).join(', ') + '. Toque uma tecla para testar.' : 'Nenhum teclado encontrado. Confira o cabo USB; o app conecta sozinho quando o teclado aparecer.';
-      atualizarChip();
+      try {
+        const ins = Array.from(acc.inputs.values()).filter(i => i.state !== 'disconnected');
+        ins.forEach(i => i.onmidimessage = m => {
+          try {
+            const [s0, d1, d2] = m.data;
+            if ((s0 & 0xf0) === 0x90 && d2 > 0) {
+              /* o MIDI traz o instante exato da tecla: volta no tempo do vídeo o atraso até aqui */
+              const atrasoMs = Math.max(0, Math.min(500, performance.now() - (m.timeStamp || performance.now())));
+              registrarNota(d1, video.currentTime - atrasoMs / 1000 * (video.playbackRate || 1), 'Teclado MIDI: ' + (i.name || ''));
+            }
+          } catch(e) {}
+        });
+        const eraOk = S.midiOk; S.midiOk = ins.length > 0;
+        statusMidi(ins.length ? '✓ Conectado: ' + ins.map(i => i.name).join(', ') + '. Toque uma tecla para testar.' : (eraOk ? 'Teclado desconectado. Confira o cabo; o app conecta sozinho quando ele voltar.' : 'Nenhum teclado encontrado. Confira o cabo USB; o app conecta sozinho quando o teclado aparecer.'), ins.length ? 'ok' : 'erro');
+        atualizarChip();
+      } catch(e) { statusMidi('Não consegui ler o teclado MIDI. ' + MIDI_MSG, 'erro'); }
     };
     acc.onstatechange = ligar; ligar();
   } catch(e) {
-    st.className = 'nota-status erro';
-    st.textContent = 'O navegador bloqueou o acesso ao MIDI nesta página. Use o botão “Baixar o app para usar offline”, abra o arquivo no Chrome e permita o acesso.';
+    S.midiOk = false; atualizarChip();
+    statusMidi('O navegador bloqueou o acesso ao MIDI. Permita o acesso nesta página ou use o teclado na tela ou o microfone.', 'erro');
   }
 });
 
 /* ---------- entrada: microfone ---------- */
-const MIC_PAD = {limDb:-34, ganho:1, intervalo:140, ataque:1.6, escuta:90, grave:48, aguda:96, rigor:15};
+const MIC_PAD = {duas:false, limDb:-34, ganho:1, intervalo:140, ataque:1.6, escuta:90, grave:48, aguda:96, rigor:15};
 let micCfg = Object.assign({}, MIC_PAD, db.prefs.mic || {});
 const Mic = {ctx:null, an:null, gain:null, sp:null, buf:null, freq:null, prev:0, ultimo:0, rms:0, thr:0.02, sr:48000, ring:null, rp:0, pico:0, medindo:null};
 const dbDe = r => 20 * Math.log10(Math.max(r, 1e-5));
@@ -724,6 +857,7 @@ const MIC_ROT = {limDb: v => fmt(v, 1) + ' dB', ganho: v => fmt(v, 1) + '×', in
 function aplicarMicCfg(gravar){
   Mic.thr = Math.pow(10, micCfg.limDb / 20);
   if (Mic.gain) Mic.gain.gain.value = micCfg.ganho;
+  $('#micDuas').checked = !!micCfg.duas;
   $$('[data-mic]').forEach(el => { if (document.activeElement !== el || el.tagName === 'SELECT') el.value = micCfg[el.dataset.mic]; });
   $$('[data-micval]').forEach(el => el.textContent = MIC_ROT[el.dataset.micval](micCfg[el.dataset.micval]));
   $('#limiar').style.left = nivelPct(Mic.thr) + '%';
@@ -732,6 +866,7 @@ function aplicarMicCfg(gravar){
 const atualizarLimiar = () => aplicarMicCfg(false);
 $$('[data-mic]').forEach(el => el.addEventListener('input', () => { micCfg[el.dataset.mic] = +el.value; aplicarMicCfg(true); }));
 const ajustarLim = d => { micCfg.limDb = Math.max(-70, Math.min(-15, Math.round((micCfg.limDb + d) * 2) / 2)); aplicarMicCfg(true); };
+$('#micDuas').addEventListener('change', e => { micCfg.duas = e.target.checked; aplicarMicCfg(true); });
 $('#limMenos').addEventListener('click', () => ajustarLim(-1));
 $('#limMais').addEventListener('click', () => ajustarLim(1));
 $('#btnMicPadrao').addEventListener('click', () => { micCfg = Object.assign({}, MIC_PAD); aplicarMicCfg(true); toast('Ajustes do microfone restaurados.'); });
@@ -804,6 +939,38 @@ function micTick(){
   }
   Mic.prev = Mic.prev * 0.6 + rms * 0.4;
 }
+/* 2 notas pelas amostras: v ≈ α·a + β·b com α, β ≥ 0 (mínimos quadrados em cada par de amostras) */
+function duasPorAmostras(v, p, simMin){
+  if (!p) return null;
+  const ms = Object.entries(p.modelos).map(([n, m]) => ({n: +n, m, r: cosseno(v, m)}));
+  if (ms.length < 2) return null;
+  const um = Math.max(...ms.map(x => x.r));
+  let melhor = null;
+  for (let i = 0; i < ms.length; i++) for (let j = i + 1; j < ms.length; j++) {
+    const a = ms[i], b = ms[j], c = cosseno(a.m, b.m), d = 1 - c * c; if (d < 0.02) continue;
+    const al = (a.r - c * b.r) / d, be = (b.r - c * a.r) / d;
+    if (al <= 0 || be <= 0 || Math.min(al, be) < 0.25 * Math.max(al, be)) continue;
+    const fit = Math.sqrt(Math.max(0, al * a.r + be * b.r));
+    if (!melhor || fit > melhor.fit) melhor = {fit, n: [a.n, b.n]};
+  }
+  return melhor && melhor.fit >= Math.max(simMin, um + 0.04) ? melhor.n : null;
+}
+/* 2 notas pela altura: soma de harmônicos; a 2ª nota só vale se não for harmônico da 1ª */
+function duasAlturas(){
+  const bin = Mic.sr / 4096, F = Mic.freq;
+  const mag = f => { const i = Math.round(f / bin); let m = 0; for (let k = i - 1; k <= i + 1; k++) if (F[k] != null) m = Math.max(m, Math.pow(10, F[k] / 20)); return m; };
+  const freq = n => 440 * Math.pow(2, (n - 69) / 12);
+  const sal = (n, tira) => { let s = 0; for (let h = 1; h <= 4; h++) { const fh = freq(n) * h; if (tira && tira.some(z => Math.abs(fh - z) / z < 0.03)) continue; s += mag(fh) / h; } return s; };
+  let fmax = 0; for (let n = micCfg.grave; n <= micCfg.aguda; n++) fmax = Math.max(fmax, mag(freq(n)));
+  /* só vale como nota quem tem a própria fundamental presente (evita tomar um som grave que só "aparece" pelos harmônicos) */
+  const melhorNota = (tira, longe) => { let bn = -1, bs = 0; for (let n = micCfg.grave; n <= micCfg.aguda; n++) { if (mag(freq(n)) < 0.3 * fmax || (longe != null && Math.abs(n - longe) < 2)) continue; const x = sal(n, tira); if (x > bs) { bs = x; bn = n; } } return [bn, bs]; };
+  const [n1, s1] = melhorNota(null);
+  if (n1 < 0 || s1 < 1e-5) return [];
+  const tira = []; for (let h = 1; h <= 8; h++) tira.push(freq(n1) * h);
+  const [n2, s2] = melhorNota(tira, n1);
+  if (n2 < 0 || Math.abs(n2 - n1) < 2 || s2 < 0.35 * s1 || mag(freq(n2)) < 0.25 * mag(freq(n1))) return [n1];
+  return [n1, n2].sort((a, b) => a - b);
+}
 const ranquear = (v, p) => p ? Object.entries(p.modelos).map(([n, m]) => ({n: +n, sim: cosseno(v, m)})).sort((a, b) => b.sim - a.sim) : [];
 function analisarAtaque(tv){
   if (!Mic.an) return;
@@ -812,6 +979,14 @@ function analisarAtaque(tv){
   const v = espectro(Mic.freq, Mic.sr);
   if (S.calib) { receberAmostra(v); return; }
   const p = perfilAtual(), simMin = +$('#simMin').value / 100, rk = ranquear(v, p);
+  if (micCfg.duas) {
+    const par = duasPorAmostras(v, p, simMin);
+    if (par) { par.forEach(n => registrarNota(n, tv, 'Microfone: 2 notas (amostras)')); return; }
+    if (S.modo === 'mic-altura') {
+      const alt = duasAlturas();
+      if (alt.length > 1) { alt.forEach(n => registrarNota(n, tv, 'Microfone: 2 notas (altura)')); return; }
+    }
+  }
   if (S.modo === 'mic-altura') {
     const f = yin(b, Mic.sr, micCfg.rigor / 100);
     const midi = f ? Math.round(69 + 12 * Math.log2(f / 440)) : 0;
@@ -975,53 +1150,139 @@ $('#btnExcluirPerfil').addEventListener('click', async () => {
 const gabsDoVideo = () => db.gabaritos.filter(g => g.videoKey === S.videoKey);
 const gabAtual = () => db.gabaritos.find(g => g.id === S.gabSel) || null;
 function criarGabarito(eventos, nome, fonte){
-  const g = {id: uid(), nome, videoKey: S.videoKey, videoNome: S.videoNome, criado: new Date().toISOString(), fonte, eventos: eventos.slice().sort((a,b) => a.t - b.t)};
+  const g = {id: uid(), nome, videoKey: S.videoKey, videoNome: S.videoNome, criado: new Date().toISOString(), fonte,
+    cfg: cfgAtiv(null), eventos: normalizarEventos(eventos).sort((a,b) => a.t - b.t)};
   db.gabaritos.push(g); S.gabSel = g.id; salvar(); renderGabs();
-  toast('Gabarito criado com ' + g.eventos.length + ' notas. Confira a lista.');
+  toast('Gabarito criado com ' + g.eventos.length + ' eventos. Confira a lista.');
 }
 function renderGabs(){
   $('#gabSemVideo').hidden = temVideo();
   $('#gabConteudo').hidden = !temVideo();
   const gs = gabsDoVideo();
-  const opts = gs.length ? gs.map(g => `<option value="${g.id}" ${g.id===S.gabSel?'selected':''}>${esc(g.nome)} (${g.eventos.length} notas)</option>`).join('') : '<option value="">Nenhum gabarito ainda</option>';
+  const opts = gs.length ? gs.map(g => `<option value="${g.id}" ${g.id===S.gabSel?'selected':''}>${esc(g.nome)} (${g.eventos.length} eventos)</option>`).join('') : '<option value="">Nenhum gabarito ainda</option>';
   $('#gabSel').innerHTML = opts; $('#sessGab').innerHTML = opts;
   $('#gabRenomear').disabled = $('#gabExcluir').disabled = !gs.length;
-  $('#notaAdd').innerHTML = opcoesNotas(60);
-  renderListaGab(); renderPacientes();
+  renderAtv(); renderListaGab(); renderEditor(); renderPacientes();
 }
+
+/* ---- configuração da atividade (por gabarito) ---- */
+function renderAtv(){
+  const g = gabAtual(), c = cfgAtiv(g);
+  $('#atvNotas').value = String(c.notasEsperadas);
+  $('#atvJanela').value = c.janela; $('#atvJanelaVal').textContent = c.janela + ' ms';
+  $('#atvJuntas').value = c.juntasMs; $('#atvJuntasVal').textContent = c.juntasMs + ' ms';
+  $('#atvJuntasMic').value = c.juntasMic; $('#atvJuntasMicVal').textContent = c.juntasMic + ' ms';
+  $('#atvJuntasBox').hidden = c.notasEsperadas < 2;
+  $('#sessResumoAtv').textContent = g
+    ? 'Atividade: ' + (c.notasEsperadas === 2 ? '1 ou 2 notas juntas' : '1 nota por vez') + ', tolerância de ±' + c.janela + ' ms' + (c.notasEsperadas === 2 ? ', duas notas juntas dentro de ' + c.juntasMs + ' ms (' + c.juntasMic + ' ms no microfone)' : '') + '. Para mudar, use a aba Gabarito.'
+    : 'Escolha ou crie um gabarito na aba 2.';
+}
+async function mudarAtv(patch){
+  const g = gabAtual();
+  if (patch.notasEsperadas === 1 && g) {
+    const dupl = g.eventos.filter(e => e.notas.length > 1).length;
+    if (dupl) {
+      if (!await perguntar('Este gabarito tem ' + dupl + ' evento(s) de 2 notas. Passar para 1 nota por vez mantém só a primeira nota de cada um. Continuar?', {ok: 'Continuar', perigo: true})) { renderAtv(); return; }
+      g.eventos.forEach(e => { e.notas = e.notas.slice(0, 1); });
+    }
+  }
+  const novo = Object.assign({}, cfgAtiv(g), patch);
+  if (g) g.cfg = novo;
+  db.prefs.atividade = novo; salvar();
+  if (patch.notasEsperadas != null) { ED.notas = ED.notas.slice(-novo.notasEsperadas); renderListaGab(); renderEditor(); }
+  renderAtv();
+}
+$('#atvNotas').addEventListener('change', e => mudarAtv({notasEsperadas: +e.target.value}));
+$('#atvJanela').addEventListener('input', e => mudarAtv({janela: +e.target.value}));
+$('#atvJuntas').addEventListener('input', e => mudarAtv({juntasMs: +e.target.value}));
+$('#atvJuntasMic').addEventListener('input', e => mudarAtv({juntasMic: +e.target.value}));
+
+/* ---- programar o gabarito: tempo + piano na tela ---- */
+const ED = {i: -1, notas: [], base: 60};
+const nomeOitava2 = n => NOMES[n % 12] + (Math.floor(n / 12) - 1);
+const maxNotas = () => cfgAtiv(gabAtual()).notasEsperadas;
+const PRETAS = [{o: 1, a: 0}, {o: 3, a: 1}, {o: 6, a: 3}, {o: 8, a: 4}, {o: 10, a: 5}];
+function montarPiano(){
+  const base = ED.base, sel = new Set(ED.notas);
+  const brancas = [0, 2, 4, 5, 7, 9, 11, 12].map(o => base + o);
+  $('#piano').innerHTML = brancas.map(n => `<button type="button" class="pk pb ${sel.has(n) ? 'sel' : ''}" data-n="${n}" style="--cn:${corNota(n)}" aria-pressed="${sel.has(n)}" aria-label="${nomeOitava2(n)}">${nomeOitava2(n)}</button>`).join('')
+    + PRETAS.map(x => { const n = base + x.o; return `<button type="button" class="pk pp ${sel.has(n) ? 'sel' : ''}" data-n="${n}" style="--cn:${corNota(n)};left:calc(${(x.a + 1) * 12.5}% - 4.5%)" aria-pressed="${sel.has(n)}" aria-label="${nomeOitava2(n)}">${NOMES[n % 12]}</button>`; }).join('');
+  $('#oitNome').textContent = nomeOitava2(base) + ' a ' + nomeOitava2(base + 12);
+  $('#oitMenos').disabled = base <= 36; $('#oitMais').disabled = base >= 84;
+}
+function renderEditor(){
+  const g = gabAtual(), ev = (g && ED.i >= 0) ? g.eventos[ED.i] : null;
+  if (!ev) ED.i = -1;
+  const editando = !!ev;
+  $('#editorEv').classList.toggle('editando', editando);
+  $('#evTitulo').textContent = editando ? 'Editando o evento ' + (ED.i + 1) + '. Mude o tempo ou as notas e clique em "Salvar alterações".' : 'Escolha o tempo e toque ' + (maxNotas() === 2 ? 'uma ou duas teclas' : 'uma tecla') + ' do piano. Depois clique em "Adicionar evento".';
+  $('#evAdd').hidden = editando; $('#evSalvar').hidden = $('#evApagar').hidden = $('#evNovo').hidden = !editando;
+  montarPiano();
+  $('#evNotas').innerHTML = ED.notas.length
+    ? ED.notas.map(n => `<span class="chip-nota" style="background:${n < 0 ? '#6B7774' : corNota(n)}">${n < 0 ? 'Toque sem nota' : nomeOitava2(n)}<button type="button" data-rm="${n}" aria-label="Tirar esta nota">✕</button></span>`).join('')
+    : '<span class="dica">Nenhuma nota escolhida.</span>';
+}
+function alternarNota(n){
+  const i = ED.notas.indexOf(n);
+  if (i >= 0) ED.notas.splice(i, 1);
+  else { if (ED.notas.includes(-1) || n === -1) ED.notas = []; ED.notas.push(n); while (ED.notas.length > maxNotas()) ED.notas.shift(); }
+  ED.notas.sort((a, b) => a - b);
+  renderEditor();
+}
+$('#piano').addEventListener('click', e => { const b = e.target.closest('.pk'); if (!b) return; alternarNota(+b.dataset.n); tocarSom(+b.dataset.n); });
+$('#evRitmo').addEventListener('click', () => alternarNota(-1));
+$('#evNotas').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) alternarNota(+b.dataset.rm); });
+$('#oitMenos').addEventListener('click', () => { ED.base = Math.max(36, ED.base - 12); renderEditor(); });
+$('#oitMais').addEventListener('click', () => { ED.base = Math.min(84, ED.base + 12); renderEditor(); });
+const setT = t => { $('#evT').value = (Math.max(0, Math.round(t * 100) / 100)).toFixed(2); };
+$('#evMenos').addEventListener('click', () => setT((+$('#evT').value || 0) - 0.1));
+$('#evMais').addEventListener('click', () => setT((+$('#evT').value || 0) + 0.1));
+$('#evAgora').addEventListener('click', () => setT(video.currentTime || 0));
+function lerEditor(){ return {t: Math.max(0, Math.round((+$('#evT').value || 0) * 1000) / 1000), notas: ED.notas.slice().sort((a, b) => a - b)}; }
+$('#evAdd').addEventListener('click', () => {
+  if (!ED.notas.length) { toast('Toque uma tecla do piano para escolher a nota.'); return; }
+  let g = gabAtual(); if (!g) { criarGabarito([], 'Gabarito programado', 'manual'); g = gabAtual(); }
+  const ev = lerEditor(); g.eventos.push(ev); g.eventos.sort((a, b) => a.t - b.t);
+  ED.notas = []; salvar(); renderGabs(); toast('Evento adicionado em ' + ev.t.toFixed(2).replace('.', ',') + ' s.');
+});
+$('#evSalvar').addEventListener('click', () => {
+  const g = gabAtual(); if (!g || ED.i < 0) return;
+  if (!ED.notas.length) { toast('Escolha pelo menos uma nota.'); return; }
+  g.eventos[ED.i] = lerEditor(); g.eventos.sort((a, b) => a.t - b.t);
+  ED.i = -1; ED.notas = []; salvar(); renderGabs(); toast('Evento atualizado.');
+});
+$('#evApagar').addEventListener('click', () => {
+  const g = gabAtual(); if (!g || ED.i < 0) return;
+  g.eventos.splice(ED.i, 1); ED.i = -1; ED.notas = []; salvar(); renderGabs(); toast('Evento apagado.');
+});
+$('#evNovo').addEventListener('click', () => { ED.i = -1; ED.notas = []; renderListaGab(); renderEditor(); });
+
+/* ---- lista de eventos ---- */
+const chipsMini = notas => '<span class="chips-mini">' + notas.map(n => `<span style="background:${n < 0 ? '#6B7774' : corNota(n)}">${n < 0 ? 'sem nota' : nomeOitava2(n)}</span>`).join('') + '</span>';
 function renderListaGab(){
   const g = gabAtual();
   $('#gabContagem').textContent = g ? '(' + g.eventos.length + ')' : '';
-  if (!g) { $('#listaGab').innerHTML = '<div class="vazio-lista">Grave ou leia um gabarito para ver as notas aqui.</div>'; return; }
-  if (!g.eventos.length) { $('#listaGab').innerHTML = '<div class="vazio-lista">Este gabarito está vazio.</div>'; return; }
-  $('#listaGab').innerHTML = '<table>' + g.eventos.map((e, i) => `<tr>
-    <td class="dica">${i+1}</td>
-    <td><input type="number" step="0.01" min="0" value="${e.t.toFixed(2)}" data-i="${i}" data-c="t" aria-label="Tempo em segundos"> s</td>
-    <td><span class="pastilha" style="background:${corNota(e.n)}"></span><select data-i="${i}" data-c="n" aria-label="Nota">${opcoesNotas(e.n)}</select></td>
-    <td><button class="ic" data-i="${i}" data-a="ir" title="Ouvir este trecho">▶</button><button class="ic" data-i="${i}" data-a="del" title="Apagar nota">✕</button></td></tr>`).join('') + '</table>';
+  if (!g) { $('#listaGab').innerHTML = '<div class="vazio-lista">Grave, leia ou programe um gabarito para ver os eventos aqui.</div>'; return; }
+  if (!g.eventos.length) { $('#listaGab').innerHTML = '<div class="vazio-lista">Este gabarito está vazio. Use o piano acima para adicionar o primeiro evento.</div>'; return; }
+  $('#listaGab').innerHTML = '<table>' + g.eventos.map((e, i) => `<tr class="clic-ev ${i === ED.i ? 'sel' : ''}" data-i="${i}">
+    <td class="dica">${i + 1}</td><td>${e.t.toFixed(2).replace('.', ',')} s</td><td>${chipsMini(e.notas)}</td>
+    <td><button class="ic" data-i="${i}" data-a="ir" title="Ouvir este trecho" aria-label="Ouvir o trecho do evento ${i + 1}">▶</button></td></tr>`).join('') + '</table>';
 }
-$('#listaGab').addEventListener('change', e => {
-  const g = gabAtual(); const el = e.target; if (!g || el.dataset.i == null) return;
-  const ev = g.eventos[+el.dataset.i];
-  if (el.dataset.c === 't') ev.t = Math.max(0, +el.value || 0);
-  if (el.dataset.c === 'n') ev.n = +el.value;
-  g.eventos.sort((a,b) => a.t - b.t); salvar(); renderGabs();
-});
 $('#listaGab').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const g = gabAtual(); const i = +b.dataset.i;
-  if (b.dataset.a === 'del') { g.eventos.splice(i, 1); salvar(); renderGabs(); }
-  if (b.dataset.a === 'ir') { video.currentTime = Math.max(0, g.eventos[i].t - 1.5); iniciarVideo(); }
+  const g = gabAtual(); if (!g) return;
+  const b = e.target.closest('button');
+  if (b && b.dataset.a === 'ir') { video.currentTime = Math.max(0, g.eventos[+b.dataset.i].t - 1.5); iniciarVideo(); return; }
+  const tr = e.target.closest('tr[data-i]'); if (!tr) return;
+  const i = +tr.dataset.i, ev = g.eventos[i];
+  ED.i = i; ED.notas = ev.notas.slice(); setT(ev.t);
+  const ok = ev.notas.filter(n => n >= 0); if (ok.length) ED.base = Math.max(36, Math.min(84, Math.floor(Math.min(...ok) / 12) * 12));
+  renderListaGab(); renderEditor();
+  $('#editorEv').scrollIntoView({block: 'nearest', behavior: 'smooth'});
 });
-$('#gabSel').addEventListener('change', e => { S.gabSel = e.target.value; renderGabs(); });
-$('#sessGab').addEventListener('change', e => { S.gabSel = e.target.value; renderGabs(); });
+$('#gabSel').addEventListener('change', e => { S.gabSel = e.target.value; ED.i = -1; ED.notas = []; renderGabs(); });
+$('#sessGab').addEventListener('change', e => { S.gabSel = e.target.value; ED.i = -1; ED.notas = []; renderGabs(); });
 $('#gabRenomear').addEventListener('click', async () => { const g = gabAtual(); if (!g) return; const n = await perguntar('Novo nome do gabarito', {campo: true, valor: g.nome, ok: 'Salvar'}); if (n) { g.nome = n; salvar(); renderGabs(); } });
-$('#gabExcluir').addEventListener('click', async () => { const g = gabAtual(); if (!g || !await perguntar('Excluir o gabarito “' + g.nome + '”? As sessões já salvas continuam no histórico.', {ok: 'Excluir', perigo: true})) return; db.gabaritos = db.gabaritos.filter(x => x.id !== g.id); const gs = gabsDoVideo(); S.gabSel = gs.length ? gs[0].id : null; salvar(); renderGabs(); });
-$('#btnAddNota').addEventListener('click', () => {
-  let g = gabAtual();
-  if (!g) { criarGabarito([], 'Gabarito manual', 'manual'); g = gabAtual(); }
-  g.eventos.push({t: Math.round(video.currentTime*1000)/1000, n: +$('#notaAdd').value}); g.eventos.sort((a,b) => a.t - b.t); salvar(); renderGabs();
-});
+$('#gabExcluir').addEventListener('click', async () => { const g = gabAtual(); if (!g || !await perguntar('Excluir o gabarito “' + g.nome + '”? As sessões já salvas continuam no histórico.', {ok: 'Excluir', perigo: true})) return; db.gabaritos = db.gabaritos.filter(x => x.id !== g.id); const gs = gabsDoVideo(); S.gabSel = gs.length ? gs[0].id : null; ED.i = -1; salvar(); renderGabs(); });
 $('#btnDeslocar').addEventListener('click', () => {
   const g = gabAtual(); const ms = +$('#deslocar').value || 0; if (!g || !ms) return;
   g.eventos.forEach(e => e.t = Math.max(0, Math.round((e.t + ms/1000)*1000)/1000)); salvar(); renderGabs(); toast('Todas as notas foram movidas ' + ms + ' ms.');
@@ -1046,12 +1307,13 @@ function pararGravacao(){
   $('#btnSessao').textContent = 'Iniciar sessão'; $('#btnSessao').classList.remove('parar');
   if (modo === 'gabarito') {
     if (!S.buf.length) { toast('Nenhuma nota foi registrada. Confira a entrada na aba 1.'); return; }
-    criarGabarito(S.buf, 'Tocado em ' + new Date().toLocaleDateString('pt-BR'), 'tocado');
-  } else if (modo === 'sessao') finalizarSessao();
+    const c = cfgAtiv(null);
+    criarGabarito(eventosDeToques(S.buf, juntasEf(c, S.modo), c.notasEsperadas), 'Tocado em ' + new Date().toLocaleDateString('pt-BR'), 'tocado');
+  } else if (modo === 'sessao') { encerrarSessaoUI(); finalizarSessao(); }
 }
 function atualizarStatusGrav(){
   const el = $('#statusGrav');
-  if (S.gravando === 'gabarito') { el.hidden = false; el.textContent = 'Gravando gabarito: ' + S.buf.length + ' notas'; }
+  if (S.gravando === 'gabarito') { el.hidden = false; el.textContent = 'Gravando gabarito: ' + S.buf.length + ' toques'; }
   else if (S.gravando === 'sessao') { el.hidden = false; el.textContent = 'Sessão em andamento: ' + S.buf.length + ' toques'; }
   else if (S.detectando) { el.hidden = false; el.textContent = 'Lendo as cores: ' + S.buf.length + ' notas'; }
   else el.hidden = true;
@@ -1155,12 +1417,103 @@ $('#btnDetectar').addEventListener('click', () => {
 function finalizarDeteccao(){
   S.detectando = false; video.pause(); video.muted = false; renderVisual(); atualizarStatusGrav();
   if (!S.buf.length) { $('#detStatus').textContent = 'Nenhuma nota encontrada. Aumente a tolerância ou confira os pontos e as cores.'; return; }
-  criarGabarito(S.buf, 'Lido do vídeo em ' + new Date().toLocaleDateString('pt-BR'), 'video');
-  $('#detStatus').textContent = 'Pronto: ' + S.buf.length + ' notas.';
+  const c = cfgAtiv(null), evs = eventosDeToques(S.buf, c.notasEsperadas >= 2 ? c.juntasMs : 0, c.notasEsperadas);
+  criarGabarito(evs, 'Lido do vídeo em ' + new Date().toLocaleDateString('pt-BR'), 'video');
+  $('#detStatus').textContent = 'Pronto: ' + evs.length + ' eventos.';
 }
 
 /* ---------- sessão ---------- */
-$('#janela').addEventListener('input', e => $('#janelaVal').textContent = e.target.value);
+/* ---------- níveis de sessão (treino / avaliação) e tela cheia ---------- */
+const palco = $('#palco');
+const FB = {ref: [], ac: 0, er: 0, perd: 0, iv: null};
+const nivelEscolhido = () => ($('input[name=nivel]:checked') || {}).value || 'treino';
+function aplicarPrefsSessao(){
+  const o = db.prefs.sessao || {};
+  if (o.nivel) $$('input[name=nivel]').forEach(r => r.checked = r.value === o.nivel);
+  if (o.faixa != null) $('#treinoFaixa').checked = o.faixa;
+  if (o.full != null) $('#autoFull').checked = o.full;
+  $('#linhaTreinoFaixa').hidden = nivelEscolhido() !== 'treino';
+}
+function salvarPrefsSessao(){
+  db.prefs.sessao = {nivel: nivelEscolhido(), faixa: $('#treinoFaixa').checked, full: $('#autoFull').checked};
+  $('#linhaTreinoFaixa').hidden = nivelEscolhido() !== 'treino'; salvar();
+}
+['input[name=nivel]', '#treinoFaixa', '#autoFull'].forEach(sel => $$(sel).forEach(el => el.addEventListener('change', salvarPrefsSessao)));
+aplicarPrefsSessao();
+
+function atualizarPlacar(){ $('#placar').innerHTML = 'Acertos <b class="ok">' + FB.ac + '</b> · Erros <b class="erro">' + FB.er + '</b> · Perdidas ' + FB.perd; }
+function flashFB(tipo, notas){
+  const cls = tipo === 'ok' ? 'fb-ok' : 'fb-erro';
+  const f = $('#fbFlash'); f.className = 'fb-flash ' + cls; void f.offsetWidth; f.classList.add('on');
+  const alvos = [$('#bolha'), ...notas.flatMap(n => $$('.tecla[data-n="' + n + '"]'))];
+  alvos.forEach(a => { a.classList.remove('fb-ok', 'fb-erro'); void a.offsetWidth; a.classList.add(cls); setTimeout(() => a.classList.remove(cls), 700); });
+}
+/* treino: cada resposta (1 toque, ou 2 toques dentro da janela "juntas") é conferida contra os eventos do gabarito ainda livres */
+const CL = {taps: [], t0: 0, timer: null};
+const candidatosFB = t => FB.ref.filter(r => !r.usado && Math.abs(r.t - t) <= S.sess.cfg.janela / 1000);
+function avaliarToque(n, t){
+  const J = S.sess.cfg.juntas;
+  const junta = J > 0 && n !== -1 && CL.taps.length && CL.taps[0].n !== -1 && t - CL.t0 <= J / 1000;
+  if (!junta) fecharResposta();
+  if (!CL.taps.length) CL.t0 = t;
+  CL.taps.push({t, n});
+  clearTimeout(CL.timer);
+  const maxEsp = Math.max(1, ...candidatosFB(CL.t0).map(r => r.notas.length));
+  if (J <= 0 || n === -1 || new Set(CL.taps.map(x => x.n)).size >= maxEsp) fecharResposta();
+  else CL.timer = setTimeout(fecharResposta, J);
+}
+function fecharResposta(){
+  clearTimeout(CL.timer);
+  if (!CL.taps.length || !S.sess) { CL.taps = []; return; }
+  const cfg = S.sess.cfg, toc = [...new Set(CL.taps.map(x => x.n))];
+  const certa = candidatosFB(CL.t0).filter(r => relacaoNotas(r.notas, toc, cfg) === 'igual').sort((a, b) => Math.abs(a.t - CL.t0) - Math.abs(b.t - CL.t0))[0];
+  if (certa) { certa.usado = true; FB.ac++; flashFB('ok', toc); } else { FB.er++; flashFB('erro', toc); }
+  CL.taps = []; atualizarPlacar();
+}
+function checarPerdidas(){
+  if (video.paused || !S.sess) return;
+  const agora = video.currentTime - S.latencia / 1000, W = S.sess.cfg.janela / 1000;
+  FB.ref.forEach(r => { if (!r.usado && !r.perdida && agora > r.t + W) { r.perdida = true; FB.perd++; atualizarPlacar(); } });
+}
+function prepararSessaoUI(){
+  const nivel = S.sess.cfg.nivel;
+  document.body.classList.add('nivel-' + nivel);
+  document.body.classList.toggle('sem-faixa', nivel === 'treino' && !$('#treinoFaixa').checked);
+  video.controls = false; atualizarPlayGrande();
+  if (nivel === 'treino') {
+    const g = db.gabaritos.find(x => x.id === S.sess.gabId);
+    FB.ref = g.eventos.map(e => ({t: e.t, notas: e.notas.slice()})); FB.ac = FB.er = FB.perd = 0; CL.taps = [];
+    atualizarPlacar(); $('#placar').hidden = false; FB.iv = setInterval(checarPerdidas, 100);
+  }
+  $('#btnEncerrarTela').hidden = false;
+  if ($('#autoFull').checked) entrarTelaCheia();
+}
+function encerrarSessaoUI(){
+  document.body.classList.remove('nivel-treino', 'nivel-avaliacao', 'sem-faixa');
+  video.controls = true; clearInterval(FB.iv); clearTimeout(CL.timer); CL.taps = []; $('#placar').hidden = true; $('#btnEncerrarTela').hidden = true;
+  sairTelaCheia();
+}
+function entrarTelaCheia(){
+  palco.classList.add('tela-cheia'); document.body.classList.add('tela-cheia-ativa');
+  const rf = palco.requestFullscreen || palco.webkitRequestFullscreen;
+  if (rf) { try { S.fsNativo = true; const r = rf.call(palco); if (r && r.catch) r.catch(() => { S.fsNativo = false; }); } catch(e) { S.fsNativo = false; } }
+  try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch(e) {}
+  setTimeout(renderCamada, 80);
+}
+function sairTelaCheia(){
+  S.fsNativo = false;
+  palco.classList.remove('tela-cheia'); document.body.classList.remove('tela-cheia-ativa');
+  try { if (document.fullscreenElement || document.webkitFullscreenElement) { const r = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (r && r.catch) r.catch(() => {}); } } catch(e) {}
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {}
+  setTimeout(renderCamada, 80);
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => {
+  if (S.fsNativo && !document.fullscreenElement && !document.webkitFullscreenElement && palco.classList.contains('tela-cheia')) sairTelaCheia();
+}));
+$('#btnTelaCheia').addEventListener('click', () => palco.classList.contains('tela-cheia') ? sairTelaCheia() : entrarTelaCheia());
+$('#btnSairTela').addEventListener('click', sairTelaCheia);
+$('#btnEncerrarTela').addEventListener('click', () => { if (S.gravando === 'sessao') pararGravacao(); });
+
 $('#btnSessao').addEventListener('click', () => {
   if (S.gravando === 'sessao') { pararGravacao(); return; }
   if (S.gravando || S.detectando) return;
@@ -1169,8 +1522,8 @@ $('#btnSessao').addEventListener('click', () => {
   if (!g || !g.eventos.length) { toast('Este vídeo ainda não tem gabarito. Crie um na aba 2.'); abrirAba('gabarito'); return; }
   if (!entradaPronta()) { toast('Ative a entrada na aba 1 antes de começar.'); abrirAba('entrada'); return; }
   S.sess = {paciente: $('#paciente').value.trim() || 'Sem nome', gabId: g.id,
-    cfg: {janela: +$('#janela').value, ignOit: $('#ignOit').checked, soRitmo: $('#soRitmo').checked, modo: S.modo, latencia: S.latencia}};
-  S.buf = []; S.gravando = 'sessao'; destravarVideo(); irParaVideo();
+    cfg: {janela: cfgAtiv(g).janela, notasEsperadas: cfgAtiv(g).notasEsperadas, juntas: juntasEf(cfgAtiv(g), S.modo), ignOit: $('#ignOit').checked, soRitmo: $('#soRitmo').checked, modo: S.modo, latencia: S.latencia, nivel: nivelEscolhido()}};
+  S.buf = []; S.gravando = 'sessao'; destravarVideo(); irParaVideo(); prepararSessaoUI();
   $('#btnSessao').textContent = 'Encerrar sessão agora'; $('#btnSessao').classList.add('parar');
   atualizarStatusGrav();
   contagem(() => { video.currentTime = 0; iniciarVideo(); });
@@ -1178,7 +1531,7 @@ $('#btnSessao').addEventListener('click', () => {
 function finalizarSessao(){
   const g = db.gabaritos.find(x => x.id === S.sess.gabId);
   const resp = S.buf.slice().sort((a,b) => a.t - b.t);
-  const ref = g.eventos.map(e => ({t: e.t, n: e.n}));
+  const ref = g.eventos.map(e => ({t: e.t, notas: e.notas.slice()}));
   const fim = video.currentTime;
   const encerradaAntes = !video.ended;
   const refConsiderado = encerradaAntes ? ref.filter(e => e.t <= fim + S.sess.cfg.janela/1000) : ref;
@@ -1191,55 +1544,78 @@ function finalizarSessao(){
 }
 
 /* ---------- pontuação ---------- */
+/* compara as notas esperadas com as tocadas: igual | incompleto (faltou nota) | extra (nota a mais) | troca */
+function relacaoNotas(esp, toc, cfg){
+  if (cfg.soRitmo) return 'igual';
+  const k = n => n < 0 ? -1 : (cfg.ignOit ? n % 12 : n);
+  const a = esp.map(k).sort((x, y) => x - y), b = toc.map(k).sort((x, y) => x - y);
+  if (a.length === b.length && a.every((v, i) => v === b[i])) return 'igual';
+  const sub = (x, y) => { const c = y.slice(); for (const v of x) { const i = c.indexOf(v); if (i < 0) return false; c.splice(i, 1); } return true; };
+  if (sub(b, a)) return 'incompleto';
+  if (sub(a, b)) return 'extra';
+  return 'troca';
+}
+const NOMES_INT = ['Uníssono', '2ª menor', '2ª maior', '3ª menor', '3ª maior', '4ª justa', 'Trítono', '5ª justa', '6ª menor', '6ª maior', '7ª menor', '7ª maior', 'Oitava'];
+const nomeIntervalo = d => d <= 12 ? NOMES_INT[d] : NOMES_INT[d % 12 || 12] + ' composta';
 function pontuar(ref, resp, cfg){
+  ref = normalizarEventos(ref);
   const W = cfg.janela / 1000;
-  const k = n => cfg.soRitmo ? 0 : (n < 0 ? -1 : (cfg.ignOit ? n % 12 : n));
-  const R = ref.map(e => ({...e, status: 'omissao', dt: null, j: -1}));
-  const P = resp.map(e => ({...e, status: 'comissao', i: -1}));
+  const J = Math.max(1, ...ref.map(e => e.notas.length)) >= 2 ? (cfg.juntas != null ? cfg.juntas : 150) : 0;
+  const taps = resp.map(e => ({t: e.t, n: e.notas ? e.notas[0] : e.n}));
+  const R = ref.map(e => ({t: e.t, notas: e.notas.slice(), status: 'omissao', dt: null, j: -1, toc: []}));
+  const P = agruparToques(taps, J).map(r => ({t: r.t, notas: r.notas, dup: r.dup, status: 'comissao', i: -1}));
   const pares = [];
   for (let i = 0; i < R.length; i++) for (let j = 0; j < P.length; j++) {
     const dt = P[j].t - R[i].t;
     if (Math.abs(dt) <= W) {
-      const mesma = cfg.soRitmo || (k(P[j].n) !== -1 && k(R[i].n) === k(P[j].n));
-      pares.push({i, j, dt, c: Math.abs(dt) + (mesma ? 0 : W + 1), mesma});
+      const rel = relacaoNotas(R[i].notas, P[j].notas, cfg);
+      pares.push({i, j, dt, rel, c: Math.abs(dt) + (rel === 'igual' ? 0 : (rel === 'troca' ? 2 * W + 2 : W + 1))});
     }
   }
   pares.sort((a, b) => a.c - b.c);
   for (const p of pares) {
     if (R[p.i].j >= 0 || P[p.j].i >= 0) continue;
-    R[p.i].j = p.j; R[p.i].dt = p.dt; R[p.i].status = p.mesma ? 'acerto' : 'troca';
-    P[p.j].i = p.i; P[p.j].status = R[p.i].status;
+    R[p.i].j = p.j; R[p.i].dt = p.dt; R[p.i].toc = P[p.j].notas; R[p.i].status = p.rel === 'igual' ? 'acerto' : p.rel;
+    P[p.j].i = p.i; P[p.j].status = p.rel === 'igual' ? 'acerto' : 'erro';
   }
   P.forEach((p, j) => {
     if (p.status !== 'comissao') return;
-    for (let q = j - 1; q >= 0 && p.t - P[q].t <= 0.25; q--) if (k(P[q].n) === k(p.n)) { p.status = 'duplicado'; break; }
+    for (let q = j - 1; q >= 0 && p.t - P[q].t <= 0.25; q--) if (relacaoNotas(P[q].notas, p.notas, cfg) === 'igual') { p.status = 'duplicado'; break; }
   });
-  const conta = (arr, s) => arr.filter(x => x.status === s).length;
-  const total = R.length, ac = conta(R, 'acerto'), tr = conta(R, 'troca'), om = conta(R, 'omissao');
-  const co = conta(P, 'comissao'), du = conta(P, 'duplicado');
+  const conta = (arr, st) => arr.filter(x => x.status === st).length;
+  const total = R.length, ac = conta(R, 'acerto'), tr = conta(R, 'troca'), inc = conta(R, 'incompleto'), ext = conta(R, 'extra'), om = conta(R, 'omissao');
+  const co = conta(P, 'comissao'), du = conta(P, 'duplicado') + P.reduce((s, p) => s + p.dup, 0);
   const dts = R.filter(r => r.status !== 'omissao').map(r => r.dt * 1000);
-  const media = dts.length ? dts.reduce((a,b) => a + b, 0) / dts.length : 0;
+  const media = dts.length ? dts.reduce((a, b) => a + b, 0) / dts.length : 0;
   const dp = dts.length > 1 ? Math.sqrt(dts.reduce((s, d) => s + (d - media) ** 2, 0) / (dts.length - 1)) : 0;
-  const absMed = dts.length ? dts.reduce((a,b) => a + Math.abs(b), 0) / dts.length : 0;
+  const absMed = dts.length ? dts.reduce((a, b) => a + Math.abs(b), 0) / dts.length : 0;
   const antes = dts.filter(d => d < -60).length, depois = dts.filter(d => d > 60).length, junto = dts.length - antes - depois;
   const tercos = [0,0,0].map(() => ({t: 0, a: 0}));
   if (total) {
     const t0 = R[0].t, span = (R[total-1].t - t0) || 1;
     R.forEach(r => { const s = Math.min(2, Math.floor((r.t - t0) / (span / 3))); tercos[s].t++; if (r.status === 'acerto') tercos[s].a++; });
   }
+  const k = n => cfg.soRitmo ? 0 : (n < 0 ? -1 : (cfg.ignOit ? n % 12 : n));
   const porNota = {};
-  R.forEach(r => {
-    const key = r.n < 0 ? -1 : r.n % 12;
-    const o = porNota[key] || (porNota[key] = {n: r.n, total: 0, ac: 0, tr: 0, om: 0, por: {}});
+  R.forEach(r => r.notas.forEach(n => {
+    const key = n < 0 ? -1 : n % 12;
+    const o = porNota[key] || (porNota[key] = {n, total: 0, ac: 0, tr: 0, om: 0, por: {}});
     o.total++;
-    if (r.status === 'acerto') o.ac++;
-    else if (r.status === 'omissao') o.om++;
-    else { o.tr++; const pn = nomeCurto(P[r.j].n); o.por[pn] = (o.por[pn] || 0) + 1; }
-  });
+    if (r.status === 'omissao') o.om++;
+    else if (cfg.soRitmo || r.toc.some(x => k(x) === k(n))) o.ac++;
+    else { o.tr++; const pn = r.toc.map(nomeCurto).join('+'); o.por[pn] = (o.por[pn] || 0) + 1; }
+  }));
   let seq = 0, maiorSeq = 0; R.forEach(r => { if (r.status === 'omissao') { seq++; maiorSeq = Math.max(maiorSeq, seq); } else seq = 0; });
-  const m = {total, acertos: ac, trocas: tr, omissoes: om, comissoes: co, duplicados: du, toques: P.length,
+  const grupo = f => { const xs = R.filter(f); return {total: xs.length, acertos: xs.filter(r => r.status === 'acerto').length}; };
+  const simples = grupo(r => r.notas.length < 2), duplas = grupo(r => r.notas.length >= 2);
+  const porIntervalo = {};
+  R.filter(r => r.notas.length >= 2 && r.notas[0] >= 0).forEach(r => {
+    const d = Math.abs(r.notas[1] - r.notas[0]), o = porIntervalo[d] || (porIntervalo[d] = {d, total: 0, ac: 0});
+    o.total++; if (r.status === 'acerto') o.ac++;
+  });
+  const m = {total, acertos: ac, trocas: tr, incompletos: inc, extras: ext, omissoes: om, comissoes: co, duplicados: du, toques: taps.length, respostas: P.length,
     taxa: pct(ac, total), precisao: pct(ac, P.length), media: Math.round(media), dp: Math.round(dp), absMed: Math.round(absMed),
-    antes, junto, depois, tercos: tercos.map(x => x.t ? pct(x.a, x.t) : null), porNota, maiorSeqOmissoes: maiorSeq};
+    antes, junto, depois, tercos: tercos.map(x => x.t ? pct(x.a, x.t) : null), porNota, maiorSeqOmissoes: maiorSeq, simples, duplas, porIntervalo};
   return {R, P, m};
 }
 
@@ -1255,22 +1631,23 @@ function mostrarResultado(s){
   el.innerHTML = `
     <div class="res-topo">
       <div><h2>Resultado: ${esc(s.paciente)}</h2>
-      <p>${dataHora(s.data)}, vídeo “${esc(s.videoNome)}”, janela ±${s.cfg.janela} ms${s.cfg.soRitmo ? ', só ritmo' : ''}${s.parcial ? '. Sessão encerrada antes do fim: só as notas até esse ponto foram contadas.' : ''}</p></div>
+      <p>${dataHora(s.data)}, vídeo “${esc(s.videoNome)}”, janela ±${s.cfg.janela} ms${s.cfg.nivel ? ', ' + (s.cfg.nivel === 'treino' ? 'treino' : 'avaliação') : ''}${s.cfg.soRitmo ? ', só ritmo' : ''}${s.parcial ? '. Sessão encerrada antes do fim: só as notas até esse ponto foram contadas.' : ''}</p></div>
       <div class="linha"><button class="btn-ghost small" id="resResumo">Ver resumo em texto</button><button class="btn-ghost small" id="resCsv">Baixar planilha (CSV)</button><button class="btn-ghost small" id="resFechar">Fechar</button></div>
     </div>
     <div class="res-grade">
       <div class="res-principal">
         <div class="num-grande">${m.taxa}%</div>
         <p><b>de acertos</b></p>
-        <small>${m.acertos} de ${m.total} notas no tempo e na cor certa</small>
-        <div class="barra-empilhada">${seg(m.acertos,'var(--good)','Acertos')}${seg(m.trocas,'var(--warn)','Trocas')}${seg(m.omissoes,'var(--lane)','Omissões')}</div>
-        <div class="legenda"><span><i style="background:var(--good)"></i>acertos</span><span><i style="background:var(--warn)"></i>trocas</span><span><i style="background:var(--lane);border:1px solid var(--line)"></i>omissões</span></div>
+        <small>${m.acertos} de ${m.total} eventos com as notas certas, no tempo certo e sem nota a mais</small>
+        <div class="barra-empilhada">${seg(m.acertos,'var(--good)','Acertos')}${seg(m.trocas + m.incompletos + m.extras,'var(--warn)','Notas erradas')}${seg(m.omissoes,'var(--lane)','Omissões')}</div>
+        <div class="legenda"><span><i style="background:var(--good)"></i>acertos</span><span><i style="background:var(--warn)"></i>notas erradas</span><span><i style="background:var(--lane);border:1px solid var(--line)"></i>omissões</span></div>
       </div>
       <div>
         <h3 style="margin-top:0">Tipos de erro</h3>
         <dl class="medidas">
           <dt>Omissões (não tocou)</dt><dd>${m.omissoes} (${pct(m.omissoes, m.total)}%)</dd>
-          <dt>Trocas (tempo certo, nota errada)</dt><dd>${m.trocas} (${pct(m.trocas, m.total)}%)</dd>
+          <dt>Notas trocadas (tempo certo, nota errada)</dt><dd>${m.trocas} (${pct(m.trocas, m.total)}%)</dd>
+          ${m.duplas.total ? `<dt>Faltou uma das 2 notas</dt><dd>${m.incompletos}</dd><dt>Nota a mais além das esperadas</dt><dd>${m.extras}</dd>` : `<dt>Nota a mais além da esperada</dt><dd>${m.extras}</dd>`}
           <dt>Comissões (toques sem estímulo)</dt><dd>${m.comissoes}</dd>
           <dt>Toques repetidos logo em seguida</dt><dd>${m.duplicados}</dd>
           <dt>Maior sequência de omissões</dt><dd>${m.maiorSeqOmissoes}</dd>
@@ -1287,6 +1664,11 @@ function mostrarResultado(s){
       <div>
         <h3 style="margin-top:0">Acertos ao longo da música</h3>
         <div class="tercos">${m.tercos.map((v, i) => `<div><strong>${v == null ? '–' : v + '%'}</strong><b style="height:${v == null ? 0 : Math.max(2, v / tercoMax * 70)}px"></b>${['início','meio','fim'][i]}</div>`).join('')}</div>
+        <h3>Notas únicas e intervalos</h3>
+        <table class="tab-int"><thead><tr><th>Tipo</th><th>Acertos</th><th>Taxa</th></tr></thead><tbody>
+          <tr><td>Nota única</td><td>${m.simples.acertos}/${m.simples.total}</td><td>${m.simples.total ? pct(m.simples.acertos, m.simples.total) + '%' : '–'}</td></tr>
+          ${m.duplas.total ? `<tr><td>Duas notas juntas</td><td>${m.duplas.acertos}/${m.duplas.total}</td><td>${pct(m.duplas.acertos, m.duplas.total)}%</td></tr>` + Object.values(m.porIntervalo).sort((a, b) => a.d - b.d).map(o => `<tr><td>&nbsp;&nbsp;${nomeIntervalo(o.d)}</td><td>${o.ac}/${o.total}</td><td>${pct(o.ac, o.total)}%</td></tr>`).join('') : ''}
+        </tbody></table>
         <h3>Por nota</h3>
         <table class="tab-nota"><thead><tr><th>Nota</th><th>Acertos</th><th>Omissões</th><th>Trocas</th></tr></thead><tbody>
         ${notas.map(o => `<tr><td><span class="pastilha" style="background:${corNota(o.n)}"></span>${nomeCurto(o.n)}</td><td>${o.ac}/${o.total}</td><td>${o.om}</td><td>${o.tr}${o.tr ? ' <span class="dica">(tocou ' + Object.entries(o.por).map(([k,v]) => k + (v > 1 ? ' ×' + v : '')).join(', ') + ')</span>' : ''}</td></tr>`).join('')}
@@ -1294,7 +1676,11 @@ function mostrarResultado(s){
       </div>
     </div>
     <div class="linha-completa"><canvas id="linhaCompleta"></canvas></div>
-    <div class="legenda" style="margin-top:.5rem"><span>Faixa de cima: gabarito (cheio = respondeu, vazado = omissão).</span><span>Faixa de baixo: toques do paciente (contorno verde = acerto, laranja = troca, vermelho = comissão).</span></div>
+    <div class="legenda" style="margin-top:.5rem"><span>Faixa de cima: gabarito (cheio = respondeu, vazado = omissão).</span><span>Faixa de baixo: toques do paciente (contorno verde = acerto, laranja = nota errada, vermelho = toque sem estímulo).</span></div>
+    <details class="como-ler"><summary>Detalhe de cada evento (${R.length})</summary><div class="lista-gab"><table class="tab-int">
+      <thead><tr><th>#</th><th>Tempo</th><th>Esperado</th><th>Tocou</th><th>Latência</th><th>Resultado</th></tr></thead><tbody>
+      ${R.map((r, i) => `<tr><td>${i + 1}</td><td>${r.t.toFixed(2).replace('.', ',')} s</td><td>${chipsMini(r.notas)}</td><td>${r.toc.length ? chipsMini(r.toc) : '–'}</td><td>${r.dt == null ? '–' : (r.dt > 0 ? '+' : '') + Math.round(r.dt * 1000) + ' ms'}</td><td>${NOME_RES[r.status]}</td></tr>`).join('')}
+      </tbody></table></div></details>
     <details class="como-ler"><summary>Como ler estes números</summary><ul>
       <li>Omissões costumam ser lidas como sinal de desatenção; uma sequência longa de omissões indica um lapso de atenção naquele trecho.</li>
       <li>Comissões e toques repetidos costumam ser lidos como sinal de impulsividade ou de dificuldade de controle inibitório.</li>
@@ -1310,15 +1696,18 @@ function mostrarResultado(s){
   $('#resCsv').onclick = () => baixar('sincronia_' + s.paciente.replace(/\W+/g,'_') + '_' + s.data.slice(0,10) + '.csv', csv(s, R, P));
   el.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
 }
+const NOME_RES = {acerto: 'acerto', troca: 'nota trocada', incompleto: 'faltou uma nota', extra: 'nota a mais', omissao: 'não tocou', erro: 'erro', comissao: 'toque sem estímulo', duplicado: 'toque repetido'};
 function resumoTexto(s, m){
   return [
     `Paciente: ${s.paciente}`,
     `Data: ${dataHora(s.data)}`,
     `Vídeo: ${s.videoNome} (gabarito: ${s.gabNome})`,
+    `Nível: ${s.cfg.nivel === 'treino' ? 'treino (com feedback)' : (s.cfg.nivel === 'avaliacao' ? 'avaliação (sem feedback)' : 'não informado')}`,
     `Critério: janela de ±${s.cfg.janela} ms${s.cfg.soRitmo ? ', apenas ritmo' : (s.cfg.ignOit ? ', nota em qualquer oitava' : ', nota e oitava exatas')}`,
     `Acertos: ${m.acertos}/${m.total} (${m.taxa}%)`,
     `Omissões: ${m.omissoes} (${pct(m.omissoes, m.total)}%); maior sequência: ${m.maiorSeqOmissoes}`,
-    `Trocas de nota: ${m.trocas} (${pct(m.trocas, m.total)}%)`,
+    `Notas trocadas: ${m.trocas} (${pct(m.trocas, m.total)}%); faltou uma nota: ${m.incompletos}; nota a mais: ${m.extras}`,
+    `Notas únicas: ${m.simples.acertos}/${m.simples.total}${m.duplas.total ? '; duas notas juntas: ' + m.duplas.acertos + '/' + m.duplas.total : ''}`,
     `Comissões: ${m.comissoes}; toques repetidos: ${m.duplicados}`,
     `Precisão das respostas: ${m.precisao}%`,
     `Sincronia: média ${m.media > 0 ? '+' : ''}${m.media} ms, desvio padrão ${m.dp} ms (antecipou ${m.antes}, junto ${m.junto}, atrasou ${m.depois})`,
@@ -1327,13 +1716,13 @@ function resumoTexto(s, m){
   ].filter(Boolean).join('\n');
 }
 function csv(s, R, P){
-  const nomes = {acerto:'acerto', troca:'troca de nota', omissao:'omissão', comissao:'comissão', duplicado:'toque repetido'};
-  const linhas = [['tempo_s','nota_esperada','nota_tocada','diferenca_ms','resultado'].join(';')];
+  const nomes = NOME_RES, lista = ns => ns.map(n => n < 0 ? 'sem nota' : nomeOitava2(n)).join('+');
+  const linhas = [['tempo_s','notas_esperadas','notas_tocadas','latencia_ms','resultado'].join(';')];
   const itens = [];
-  R.forEach(r => itens.push({t: r.t, esp: nomeCurto(r.n), toc: r.j >= 0 ? nomeCurto(P[r.j].n) : '', dt: r.dt == null ? '' : Math.round(r.dt*1000), st: nomes[r.status]}));
-  P.forEach(p => { if (p.i < 0) itens.push({t: p.t, esp: '', toc: nomeCurto(p.n), dt: '', st: nomes[p.status]}); });
+  R.forEach(r => itens.push({t: r.t, esp: lista(r.notas), toc: lista(r.toc), dt: r.dt == null ? '' : Math.round(r.dt*1000), st: nomes[r.status]}));
+  P.forEach(p => { if (p.i < 0) itens.push({t: p.t, esp: '', toc: lista(p.notas), dt: '', st: nomes[p.status]}); });
   itens.sort((a,b) => a.t - b.t).forEach(i => linhas.push([String(i.t).replace('.', ','), i.esp, i.toc, i.dt, i.st].join(';')));
-  return '\ufeff' + resumoTexto(s, s.m).split('\n').map(l => '# ' + l).join('\n') + '\n' + linhas.join('\n');
+  return '﻿' + resumoTexto(s, pontuar(s.ref, s.resp, s.cfg).m).split('\n').map(l => '# ' + l).join('\n') + '\n' + linhas.join('\n');
 }
 function desenharLinhaCompleta(R, P){
   const c = $('#linhaCompleta'); if (!c) return;
@@ -1347,18 +1736,18 @@ function desenharLinhaCompleta(R, P){
   const px = t => 12 + t / fim * (w - 24);
   x.font = '11px "Atkinson Hyperlegible", sans-serif'; x.fillStyle = tinta; x.strokeStyle = linha;
   for (let s = 0; s <= fim; s += 5) { x.beginPath(); x.moveTo(px(s), 8); x.lineTo(px(s), h - 18); x.stroke(); x.fillText(fmtTempo(s), px(s) + 3, h - 5); }
-  R.forEach(r => {
-    const X = px(r.t);
-    x.fillStyle = corNota(r.n); x.strokeStyle = corNota(r.n); x.lineWidth = 2;
-    if (r.status === 'omissao') { x.setLineDash([3,2]); rr(x, X - 6, 14, 12, 34); x.stroke(); x.setLineDash([]); }
-    else { rr(x, X - 6, 14, 12, 34); x.fill(); }
-  });
-  const cst = {acerto: cs.getPropertyValue('--good').trim(), troca: cs.getPropertyValue('--warn').trim(), comissao: cs.getPropertyValue('--bad').trim(), duplicado: cs.getPropertyValue('--bad').trim()};
-  P.forEach(p => {
-    const X = px(p.t);
-    x.beginPath(); x.arc(X, 78, 7, 0, Math.PI*2); x.fillStyle = corNota(p.n); x.fill();
+  R.forEach(r => r.notas.forEach((n, q) => {
+    const X = px(r.t), h = 34 / r.notas.length, Y = 14 + q * h;
+    x.fillStyle = corNota(n); x.strokeStyle = corNota(n); x.lineWidth = 2;
+    if (r.status === 'omissao') { x.setLineDash([3,2]); rr(x, X - 6, Y, 12, h - 1); x.stroke(); x.setLineDash([]); }
+    else { rr(x, X - 6, Y, 12, h - 1); x.fill(); }
+  }));
+  const cst = {erro: cs.getPropertyValue('--warn').trim(), separada: cs.getPropertyValue('--warn').trim(), acerto: cs.getPropertyValue('--good').trim(), troca: cs.getPropertyValue('--warn').trim(), comissao: cs.getPropertyValue('--bad').trim(), duplicado: cs.getPropertyValue('--bad').trim()};
+  P.forEach(p => p.notas.forEach((n, q) => {
+    const X = px(p.t), Y = 78 + (q - (p.notas.length - 1) / 2) * 16;
+    x.beginPath(); x.arc(X, Y, 7, 0, Math.PI*2); x.fillStyle = corNota(n); x.fill();
     x.lineWidth = 3; x.strokeStyle = cst[p.status]; x.stroke();
-  });
+  }));
 }
 function rr(x, a, b, w, h){ x.beginPath(); if (x.roundRect) x.roundRect(a, b, w, h, 4); else x.rect(a, b, w, h); }
 
@@ -1376,7 +1765,7 @@ function renderHist(){
   const lista = db.sessoes.filter(s => !pac || s.paciente === pac).sort((a,b) => a.data.localeCompare(b.data));
   if (!lista.length) { $('#histLista').innerHTML = '<p class="dica">Nenhuma sessão salva ainda. Faça uma sessão na aba 3.</p>'; $('#histGrafico').innerHTML = ''; return; }
   $('#histLista').innerHTML = '<table><thead><tr><th>Data</th>' + (pac ? '' : '<th>Paciente</th>') + '<th>Acertos</th><th>Omis.</th><th>Com.</th><th>DP</th><th></th></tr></thead><tbody>' +
-    lista.slice().reverse().map(s => `<tr class="clic" data-id="${s.id}"><td>${new Date(s.data).toLocaleDateString('pt-BR')}<br><span class="dica">${esc(s.videoNome || '')}</span></td>${pac ? '' : '<td>' + esc(s.paciente) + '</td>'}<td><b>${s.m.taxa}%</b></td><td>${s.m.omissoes}</td><td>${s.m.comissoes}</td><td>${s.m.dp} ms</td><td><button class="btn-ghost small perigo" data-del="${s.id}" aria-label="Excluir sessão">✕</button></td></tr>`).join('') + '</tbody></table>';
+    lista.slice().reverse().map(s => `<tr class="clic" data-id="${s.id}"><td>${new Date(s.data).toLocaleDateString('pt-BR')} ${s.cfg.nivel ? `<span class="nivel-tag">${s.cfg.nivel === 'treino' ? 'treino' : 'avaliação'}</span>` : ''}<br><span class="dica">${esc(s.videoNome || '')}</span></td>${pac ? '' : '<td>' + esc(s.paciente) + '</td>'}<td><b>${s.m.taxa}%</b></td><td>${s.m.omissoes}</td><td>${s.m.comissoes}</td><td>${s.m.dp} ms</td><td><button class="btn-ghost small perigo" data-del="${s.id}" aria-label="Excluir sessão">✕</button></td></tr>`).join('') + '</tbody></table>';
   $('#histGrafico').innerHTML = pac && lista.length > 1 ? graficoHist(lista) : (pac ? '' : '<p class="dica">Escolha um paciente para ver a evolução.</p>');
 }
 $('#histLista').addEventListener('click', async e => {
@@ -1408,7 +1797,7 @@ $('#arqBackup').addEventListener('change', async e => {
     for (const k of ['gabaritos','sessoes','perfis']) { const ids = new Set(db[k].map(x => x.id)); (o[k] || []).forEach(x => { if (!ids.has(x.id)) db[k].push(x); }); }
     db.visCfg = Object.assign({}, o.visCfg || {}, db.visCfg);
     for (const [k, v] of Object.entries(o.clips || {})) { try { if (!(await IDB.get(k))) await IDB.put(k, {sr: v.sr, pcm: unb64(v.pcm)}); } catch(err) {} }
-    salvar(); renderGabs(); renderHist(); if (S.modo.startsWith('mic')) renderCalib(); toast('Cópia restaurada.');
+    migrarDb(); salvar(); renderGabs(); renderHist(); if (S.modo.startsWith('mic')) renderCalib(); toast('Cópia restaurada.');
   } catch(err) { toast('Este arquivo não é uma cópia do Sincronia.'); }
   e.target.value = '';
 });
@@ -1417,6 +1806,7 @@ $('#btnOffline').addEventListener('click', () => baixar('sincronia.html', HTML_O
 /* ---------- faixa ao vivo ---------- */
 function desenharFaixa(){
   const c = $('#faixa'), dpr = devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (!w || !h) { requestAnimationFrame(desenharFaixa); return; }
   if (c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)) { c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); }
   const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
   const cs = getComputedStyle(document.documentElement);
@@ -1428,18 +1818,22 @@ function desenharFaixa(){
   const gravGab = S.gravando === 'gabarito';
   x.fillText(S.detectando ? 'Lendo' : 'Gabarito', 4, 4 + lh/2 + 4);
   x.fillText(gravGab ? 'Gravando' : 'Toques', 4, 10 + lh + lh/2 + 4);
+  const cA = S.gravando === 'sessao' ? null : cfgAtiv(gabAtual());
+  const J = S.gravando === 'sessao' ? S.sess.cfg.juntas : juntasEf(cA || CFG_ATIV, S.modo);
   let ref = [];
-  if (S.detectando) ref = S.buf;
+  if (S.detectando) ref = eventosDeToques(S.buf, J, 2);
   else { const g = S.gravando === 'sessao' ? db.gabaritos.find(z => z.id === S.sess.gabId) : gabAtual(); if (g && !gravGab) ref = g.eventos; }
-  const resp = (S.gravando) ? S.buf : [];
+  const resp = S.gravando ? agruparToques(S.buf, J) : [];
   x.save(); x.beginPath(); x.rect(80, 0, w - 80, h); x.clip();
-  for (const e of ref) {
-    if (e.t < t - antes - 0.3 || e.t > t + depois + 0.3) continue;
-    const X = x0 + (e.t - t) * pps; x.fillStyle = corNota(e.n); rr(x, X - 7, 9, 14, lh - 10); x.fill();
+  for (const ev of ref) {
+    if (ev.t < t - antes - 0.3 || ev.t > t + depois + 0.3) continue;
+    const X = x0 + (ev.t - t) * pps, hh = (lh - 10) / ev.notas.length;
+    ev.notas.forEach((n, q) => { x.fillStyle = corNota(n); rr(x, X - 7, 9 + q * hh, 14, hh - 1); x.fill(); });
   }
-  for (const e of resp) {
-    if (e.t < t - antes - 0.3 || e.t > t + depois) continue;
-    const X = x0 + (e.t - t) * pps; x.fillStyle = corNota(e.n); x.beginPath(); x.arc(X, 10 + lh + lh/2, Math.min(9, lh/2 - 4), 0, Math.PI*2); x.fill();
+  for (const r of resp) {
+    if (r.t < t - antes - 0.3 || r.t > t + depois) continue;
+    const X = x0 + (r.t - t) * pps, rd = Math.min(9, lh/2 - 4) / (r.notas.length > 1 ? 1.5 : 1);
+    r.notas.forEach((n, q) => { x.fillStyle = corNota(n); x.beginPath(); x.arc(X, 10 + lh + lh/2 + (q - (r.notas.length - 1) / 2) * rd * 1.8, rd, 0, Math.PI*2); x.fill(); });
   }
   x.restore();
   x.strokeStyle = ink; x.lineWidth = 2; x.beginPath(); x.moveTo(x0, 0); x.lineTo(x0, h - 4); x.stroke();
