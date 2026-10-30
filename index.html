@@ -171,6 +171,27 @@ details.avancado summary{cursor:pointer;font-weight:700;padding:.5rem 0}
 .modal-caixa input{width:100%;padding:.6rem;border:1px solid var(--line);border-radius:9px;background:var(--surface2);margin-bottom:.8rem}
 .modal-caixa .linha{justify-content:flex-end}
 .btn.perigo{background:var(--bad);color:#fff}
+.placar{position:absolute;left:.6rem;top:.6rem;background:rgba(0,0,0,.62);color:#fff;padding:.3rem .7rem;border-radius:999px;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums;pointer-events:none}
+.placar b.ok{color:#7BE0A4}.placar b.erro{color:#FF9C93}
+.fb-flash{position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0}
+.fb-flash.on{animation:fbflash .6s ease-out}
+.fb-flash.fb-ok{box-shadow:inset 0 0 0 10px #2E9E5B,inset 0 0 70px 6px rgba(46,158,91,.55)}
+.fb-flash.fb-erro{box-shadow:inset 0 0 0 10px #D93A2F,inset 0 0 70px 6px rgba(217,58,47,.55)}
+@keyframes fbflash{from{opacity:1}to{opacity:0}}
+.bolha.fb-ok{box-shadow:0 0 0 7px #2E9E5B}.bolha.fb-erro{box-shadow:0 0 0 7px #D93A2F}
+.tecla.fb-ok{outline:5px solid #2E9E5B;outline-offset:-2px}.tecla.fb-erro{outline:5px solid #D93A2F;outline-offset:-2px}
+.botoes-tela{position:absolute;right:.6rem;top:.6rem;display:none;gap:.4rem}
+.botoes-tela button{background:rgba(0,0,0,.62);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:.35rem .8rem;font-size:.85rem;font-weight:700;cursor:pointer}
+.palco.tela-cheia .botoes-tela{display:flex}
+body.tela-cheia-ativa{overflow:hidden}
+.palco.tela-cheia{position:fixed;inset:0;z-index:100;background:#0c1110;padding:max(.5rem,env(safe-area-inset-top,0px)) max(.5rem,env(safe-area-inset-right,0px)) max(.5rem,env(safe-area-inset-bottom,0px)) max(.5rem,env(safe-area-inset-left,0px));gap:.5rem;overflow:hidden}
+.palco.tela-cheia .caixa-video{flex:1;min-height:0;aspect-ratio:auto;max-height:none}
+.palco.tela-cheia .barra-video,.palco.tela-cheia .aovivo{display:none}
+.palco.tela-cheia .teclado-tela{position:static;border-radius:12px;box-shadow:none;padding:.4rem}
+.palco.tela-cheia .tecla{height:clamp(56px,14vh,96px)}
+.palco.tela-cheia .faixa{padding:.3rem}.palco.tela-cheia .faixa canvas{height:84px}
+body.nivel-avaliacao #faixaWrap,body.nivel-avaliacao .aovivo,body.nivel-avaliacao #statusGrav,body.sem-faixa #faixaWrap{display:none}
+.nivel-tag{font-size:.75rem;font-weight:700;padding:.05rem .45rem;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 .dois{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 @media (max-width:480px){.dois{grid-template-columns:1fr}}
 .cartao-acao{border:1px solid var(--line);border-radius:12px;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
@@ -242,10 +263,13 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
 </header>
 
 <main class="grade">
-  <section class="palco">
+  <section class="palco" id="palco">
     <div id="caixaVideo" class="caixa-video vazio">
       <video id="video" playsinline="" webkit-playsinline="" controls="" preload="auto"></video>
       <div id="camada" class="camada"></div>
+      <div id="fbFlash" class="fb-flash"></div>
+      <div id="placar" class="placar" hidden="" aria-live="off"></div>
+      <div class="botoes-tela"><button id="btnEncerrarTela" type="button" hidden="">■ Encerrar sessão</button><button id="btnSairTela" type="button">✕ Sair da tela cheia</button></div>
       <button id="btnPlayGrande" class="play-grande" aria-label="Tocar o vídeo" hidden="">▶</button>
       <div id="contagem" class="contagem" hidden=""></div>
       <div id="videoMsg" class="video-msg" hidden="" role="status"></div>
@@ -255,9 +279,9 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
         <small>ou arraste o arquivo para cá</small>
       </div>
     </div>
-    <div class="barra-video"><span id="nomeVideo">Nenhum vídeo aberto</span><label class="btn-ghost small">Trocar vídeo<input type="file" accept="video/*" id="arquivoVideo2" hidden=""></label></div>
+    <div class="barra-video"><span id="nomeVideo">Nenhum vídeo aberto</span><span class="linha" style="margin:0"><button id="btnTelaCheia" class="btn-ghost small" type="button">Tela cheia</button><label class="btn-ghost small">Trocar vídeo<input type="file" accept="video/*" id="arquivoVideo2" hidden=""></label></span></div>
     <div id="tecladoTela" class="teclado-tela" hidden="" aria-label="Teclado na tela"></div>
-    <div class="faixa"><canvas id="faixa" aria-label="Faixa de notas: gabarito em cima, toques embaixo"></canvas></div>
+    <div class="faixa" id="faixaWrap"><canvas id="faixa" aria-label="Faixa de notas: gabarito em cima, toques embaixo"></canvas></div>
     <div class="aovivo">
       <div id="bolha" class="bolha"><span id="bolhaNome">–</span></div>
       <div class="aovivo-info">
@@ -388,6 +412,14 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
       <h2>Sessão com o paciente</h2>
       <label class="campo">Paciente<input id="paciente" list="listaPac" placeholder="Nome ou código" autocomplete="off"><datalist id="listaPac"></datalist></label>
       <label class="campo">Gabarito<select id="sessGab"></select></label>
+      <h3 style="margin-top:.4rem">Nível da sessão</h3>
+      <div class="opcoes">
+        <label class="opcao"><input type="radio" name="nivel" value="treino" checked=""><span><b>Treino</b><small>O paciente vê na hora se acertou (verde) ou errou (vermelho), com contador e a faixa das próximas notas.</small></span></label>
+        <label class="opcao"><input type="radio" name="nivel" value="avaliacao"><span><b>Avaliação</b><small>Sem nenhum feedback e sem a faixa que antecipa as notas: só o vídeo e as teclas. O resultado aparece no fim.</small></span></label>
+      </div>
+      <label class="check" id="linhaTreinoFaixa"><input type="checkbox" id="treinoFaixa" checked=""> Mostrar a faixa de notas no treino</label>
+      <label class="check"><input type="checkbox" id="autoFull" checked=""> Entrar em tela cheia ao iniciar</label>
+      <label class="campo">Duas notas ao mesmo tempo (acordes)<select id="acordeModo"><option value="qualquer">Aceitar em qualquer ordem (intercaladas)</option><option value="juntas">Exigir as duas juntas</option></select></label>
       <label class="campo">Janela de acerto: ± <span id="janelaVal">300</span> ms<input type="range" id="janela" min="100" max="800" step="25" value="300"></label>
       <label class="check"><input type="checkbox" id="ignOit" checked=""> Aceitar a nota certa em qualquer oitava</label>
       <label class="check"><input type="checkbox" id="soRitmo"> Avaliar só o ritmo (qualquer nota vale)</label>
@@ -607,6 +639,7 @@ function registrarNota(n, tVideo, fonte){
   if (!S.gravando || video.paused) return;
   const t = (tVideo ?? video.currentTime) - S.latencia/1000;
   empurrar({t: Math.round(t*1000)/1000, n});
+  if (S.gravando === 'sessao' && S.sess.cfg.nivel === 'treino') avaliarToque(n, t);
   atualizarStatusGrav();
 }
 /* notas de alturas diferentes tocadas dentro da tolerância viram um grupo (acorde) */
@@ -1086,7 +1119,7 @@ function pararGravacao(){
   if (modo === 'gabarito') {
     if (!S.buf.length) { toast('Nenhuma nota foi registrada. Confira a entrada na aba 1.'); return; }
     criarGabarito(S.buf, 'Tocado em ' + new Date().toLocaleDateString('pt-BR'), 'tocado');
-  } else if (modo === 'sessao') finalizarSessao();
+  } else if (modo === 'sessao') { encerrarSessaoUI(); finalizarSessao(); }
 }
 function atualizarStatusGrav(){
   const el = $('#statusGrav');
@@ -1200,6 +1233,85 @@ function finalizarDeteccao(){
 
 /* ---------- sessão ---------- */
 $('#janela').addEventListener('input', e => $('#janelaVal').textContent = e.target.value);
+/* ---------- níveis de sessão (treino / avaliação) e tela cheia ---------- */
+const palco = $('#palco');
+const FB = {ref: [], ac: 0, er: 0, perd: 0, iv: null};
+const nivelEscolhido = () => ($('input[name=nivel]:checked') || {}).value || 'treino';
+function aplicarPrefsSessao(){
+  const o = db.prefs.sessao || {};
+  if (o.nivel) $$('input[name=nivel]').forEach(r => r.checked = r.value === o.nivel);
+  if (o.faixa != null) $('#treinoFaixa').checked = o.faixa;
+  if (o.full != null) $('#autoFull').checked = o.full;
+  if (o.acorde) $('#acordeModo').value = o.acorde;
+  $('#linhaTreinoFaixa').hidden = nivelEscolhido() !== 'treino';
+}
+function salvarPrefsSessao(){
+  db.prefs.sessao = {nivel: nivelEscolhido(), faixa: $('#treinoFaixa').checked, full: $('#autoFull').checked, acorde: $('#acordeModo').value};
+  $('#linhaTreinoFaixa').hidden = nivelEscolhido() !== 'treino'; salvar();
+}
+['input[name=nivel]', '#treinoFaixa', '#autoFull', '#acordeModo'].forEach(sel => $$(sel).forEach(el => el.addEventListener('change', salvarPrefsSessao)));
+aplicarPrefsSessao();
+
+function atualizarPlacar(){ $('#placar').innerHTML = 'Acertos <b class="ok">' + FB.ac + '</b> · Erros <b class="erro">' + FB.er + '</b> · Perdidas ' + FB.perd; }
+function flashFB(tipo, n){
+  const cls = tipo === 'ok' ? 'fb-ok' : 'fb-erro';
+  const f = $('#fbFlash'); f.className = 'fb-flash ' + cls; void f.offsetWidth; f.classList.add('on');
+  const alvos = [$('#bolha'), ...$$('.tecla[data-n="' + n + '"]')];
+  alvos.forEach(a => { a.classList.remove('fb-ok', 'fb-erro'); void a.offsetWidth; a.classList.add(cls); setTimeout(() => a.classList.remove(cls), 700); });
+}
+/* treino: confere cada toque na hora, contra as notas do gabarito ainda livres dentro da janela */
+function avaliarToque(n, t){
+  const cfg = S.sess.cfg, W = cfg.janela / 1000;
+  const k = x => cfg.soRitmo ? 0 : (x < 0 ? -1 : (cfg.ignOit ? x % 12 : x));
+  const livres = FB.ref.filter(r => !r.usado && Math.abs(r.t - t) <= W);
+  const certa = livres.filter(r => k(r.n) !== -1 && k(r.n) === k(n)).sort((a, b) => Math.abs(a.t - t) - Math.abs(b.t - t))[0];
+  if (certa) { certa.usado = true; FB.ac++; flashFB('ok', n); } else { FB.er++; flashFB('erro', n); }
+  atualizarPlacar();
+}
+function checarPerdidas(){
+  if (video.paused || !S.sess) return;
+  const agora = video.currentTime - S.latencia / 1000, W = S.sess.cfg.janela / 1000;
+  FB.ref.forEach(r => { if (!r.usado && !r.perdida && agora > r.t + W) { r.perdida = true; FB.perd++; atualizarPlacar(); } });
+}
+function prepararSessaoUI(){
+  const nivel = S.sess.cfg.nivel;
+  document.body.classList.add('nivel-' + nivel);
+  document.body.classList.toggle('sem-faixa', nivel === 'treino' && !$('#treinoFaixa').checked);
+  video.controls = false; atualizarPlayGrande();
+  if (nivel === 'treino') {
+    const g = db.gabaritos.find(x => x.id === S.sess.gabId);
+    FB.ref = g.eventos.map(e => ({t: e.t, n: e.n})); FB.ac = FB.er = FB.perd = 0;
+    atualizarPlacar(); $('#placar').hidden = false; FB.iv = setInterval(checarPerdidas, 100);
+  }
+  $('#btnEncerrarTela').hidden = false;
+  if ($('#autoFull').checked) entrarTelaCheia();
+}
+function encerrarSessaoUI(){
+  document.body.classList.remove('nivel-treino', 'nivel-avaliacao', 'sem-faixa');
+  video.controls = true; clearInterval(FB.iv); $('#placar').hidden = true; $('#btnEncerrarTela').hidden = true;
+  sairTelaCheia();
+}
+function entrarTelaCheia(){
+  palco.classList.add('tela-cheia'); document.body.classList.add('tela-cheia-ativa');
+  const rf = palco.requestFullscreen || palco.webkitRequestFullscreen;
+  if (rf) { try { S.fsNativo = true; const r = rf.call(palco); if (r && r.catch) r.catch(() => { S.fsNativo = false; }); } catch(e) { S.fsNativo = false; } }
+  try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch(e) {}
+  setTimeout(renderCamada, 80);
+}
+function sairTelaCheia(){
+  S.fsNativo = false;
+  palco.classList.remove('tela-cheia'); document.body.classList.remove('tela-cheia-ativa');
+  try { if (document.fullscreenElement || document.webkitFullscreenElement) { const r = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (r && r.catch) r.catch(() => {}); } } catch(e) {}
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {}
+  setTimeout(renderCamada, 80);
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => {
+  if (S.fsNativo && !document.fullscreenElement && !document.webkitFullscreenElement && palco.classList.contains('tela-cheia')) sairTelaCheia();
+}));
+$('#btnTelaCheia').addEventListener('click', () => palco.classList.contains('tela-cheia') ? sairTelaCheia() : entrarTelaCheia());
+$('#btnSairTela').addEventListener('click', sairTelaCheia);
+$('#btnEncerrarTela').addEventListener('click', () => { if (S.gravando === 'sessao') pararGravacao(); });
+
 $('#btnSessao').addEventListener('click', () => {
   if (S.gravando === 'sessao') { pararGravacao(); return; }
   if (S.gravando || S.detectando) return;
@@ -1208,8 +1320,8 @@ $('#btnSessao').addEventListener('click', () => {
   if (!g || !g.eventos.length) { toast('Este vídeo ainda não tem gabarito. Crie um na aba 2.'); abrirAba('gabarito'); return; }
   if (!entradaPronta()) { toast('Ative a entrada na aba 1 antes de começar.'); abrirAba('entrada'); return; }
   S.sess = {paciente: $('#paciente').value.trim() || 'Sem nome', gabId: g.id,
-    cfg: {janela: +$('#janela').value, ignOit: $('#ignOit').checked, soRitmo: $('#soRitmo').checked, modo: S.modo, latencia: S.latencia}};
-  S.buf = []; S.gravando = 'sessao'; destravarVideo(); irParaVideo();
+    cfg: {janela: +$('#janela').value, ignOit: $('#ignOit').checked, soRitmo: $('#soRitmo').checked, modo: S.modo, latencia: S.latencia, nivel: nivelEscolhido(), acorde: $('#acordeModo').value, tolAcorde: S.tolAcorde}};
+  S.buf = []; S.gravando = 'sessao'; destravarVideo(); irParaVideo(); prepararSessaoUI();
   $('#btnSessao').textContent = 'Encerrar sessão agora'; $('#btnSessao').classList.add('parar');
   atualizarStatusGrav();
   contagem(() => { video.currentTime = 0; iniciarVideo(); });
@@ -1308,7 +1420,7 @@ function mostrarResultado(s){
   el.innerHTML = `
     <div class="res-topo">
       <div><h2>Resultado: ${esc(s.paciente)}</h2>
-      <p>${dataHora(s.data)}, vídeo “${esc(s.videoNome)}”, janela ±${s.cfg.janela} ms${s.cfg.soRitmo ? ', só ritmo' : ''}${s.parcial ? '. Sessão encerrada antes do fim: só as notas até esse ponto foram contadas.' : ''}</p></div>
+      <p>${dataHora(s.data)}, vídeo “${esc(s.videoNome)}”, janela ±${s.cfg.janela} ms${s.cfg.nivel ? ', ' + (s.cfg.nivel === 'treino' ? 'treino' : 'avaliação') : ''}${s.cfg.soRitmo ? ', só ritmo' : ''}${s.parcial ? '. Sessão encerrada antes do fim: só as notas até esse ponto foram contadas.' : ''}</p></div>
       <div class="linha"><button class="btn-ghost small" id="resResumo">Ver resumo em texto</button><button class="btn-ghost small" id="resCsv">Baixar planilha (CSV)</button><button class="btn-ghost small" id="resFechar">Fechar</button></div>
     </div>
     <div class="res-grade">
@@ -1369,6 +1481,7 @@ function resumoTexto(s, m){
     `Paciente: ${s.paciente}`,
     `Data: ${dataHora(s.data)}`,
     `Vídeo: ${s.videoNome} (gabarito: ${s.gabNome})`,
+    `Nível: ${s.cfg.nivel === 'treino' ? 'treino (com feedback)' : (s.cfg.nivel === 'avaliacao' ? 'avaliação (sem feedback)' : 'não informado')}`,
     `Critério: janela de ±${s.cfg.janela} ms${s.cfg.soRitmo ? ', apenas ritmo' : (s.cfg.ignOit ? ', nota em qualquer oitava' : ', nota e oitava exatas')}`,
     `Acertos: ${m.acertos}/${m.total} (${m.taxa}%)`,
     `Omissões: ${m.omissoes} (${pct(m.omissoes, m.total)}%); maior sequência: ${m.maiorSeqOmissoes}`,
@@ -1431,7 +1544,7 @@ function renderHist(){
   const lista = db.sessoes.filter(s => !pac || s.paciente === pac).sort((a,b) => a.data.localeCompare(b.data));
   if (!lista.length) { $('#histLista').innerHTML = '<p class="dica">Nenhuma sessão salva ainda. Faça uma sessão na aba 3.</p>'; $('#histGrafico').innerHTML = ''; return; }
   $('#histLista').innerHTML = '<table><thead><tr><th>Data</th>' + (pac ? '' : '<th>Paciente</th>') + '<th>Acertos</th><th>Omis.</th><th>Com.</th><th>DP</th><th></th></tr></thead><tbody>' +
-    lista.slice().reverse().map(s => `<tr class="clic" data-id="${s.id}"><td>${new Date(s.data).toLocaleDateString('pt-BR')}<br><span class="dica">${esc(s.videoNome || '')}</span></td>${pac ? '' : '<td>' + esc(s.paciente) + '</td>'}<td><b>${s.m.taxa}%</b></td><td>${s.m.omissoes}</td><td>${s.m.comissoes}</td><td>${s.m.dp} ms</td><td><button class="btn-ghost small perigo" data-del="${s.id}" aria-label="Excluir sessão">✕</button></td></tr>`).join('') + '</tbody></table>';
+    lista.slice().reverse().map(s => `<tr class="clic" data-id="${s.id}"><td>${new Date(s.data).toLocaleDateString('pt-BR')} ${s.cfg.nivel ? `<span class="nivel-tag">${s.cfg.nivel === 'treino' ? 'treino' : 'avaliação'}</span>` : ''}<br><span class="dica">${esc(s.videoNome || '')}</span></td>${pac ? '' : '<td>' + esc(s.paciente) + '</td>'}<td><b>${s.m.taxa}%</b></td><td>${s.m.omissoes}</td><td>${s.m.comissoes}</td><td>${s.m.dp} ms</td><td><button class="btn-ghost small perigo" data-del="${s.id}" aria-label="Excluir sessão">✕</button></td></tr>`).join('') + '</tbody></table>';
   $('#histGrafico').innerHTML = pac && lista.length > 1 ? graficoHist(lista) : (pac ? '' : '<p class="dica">Escolha um paciente para ver a evolução.</p>');
 }
 $('#histLista').addEventListener('click', async e => {
@@ -1472,6 +1585,7 @@ $('#btnOffline').addEventListener('click', () => baixar('sincronia.html', HTML_O
 /* ---------- faixa ao vivo ---------- */
 function desenharFaixa(){
   const c = $('#faixa'), dpr = devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (!w || !h) { requestAnimationFrame(desenharFaixa); return; }
   if (c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)) { c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); }
   const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
   const cs = getComputedStyle(document.documentElement);
