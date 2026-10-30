@@ -165,6 +165,12 @@ details.avancado summary{cursor:pointer;font-weight:700;padding:.5rem 0}
   .toast{bottom:calc(8rem + env(safe-area-inset-bottom,0px))}
 }
 @media (max-width:600px){.marca p{display:none}.marca h1{font-size:1.4rem}.topo{padding:.6rem 1rem}.tecla{font-size:.82rem;height:76px}}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-caixa{background:var(--surface);color:var(--ink);border-radius:14px;padding:1.2rem;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.modal-caixa p{margin:0 0 .8rem;font-weight:700}
+.modal-caixa input{width:100%;padding:.6rem;border:1px solid var(--line);border-radius:9px;background:var(--surface2);margin-bottom:.8rem}
+.modal-caixa .linha{justify-content:flex-end}
+.btn.perigo{background:var(--bad);color:#fff}
 .dois{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 @media (max-width:480px){.dois{grid-template-columns:1fr}}
 .cartao-acao{border:1px solid var(--line);border-radius:12px;padding:.8rem;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
@@ -397,6 +403,7 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
 </main>
 
 <section id="resultado" class="resultado" hidden=""></section>
+<div id="modal" class="modal" hidden="" role="dialog" aria-modal="true" aria-labelledby="modalTxt"><div class="modal-caixa"><p id="modalTxt"></p><input id="modalInp" type="text" hidden="" aria-label="Resposta"><div class="linha"><button id="modalNao" class="btn-ghost" type="button">Cancelar</button><button id="modalOk" class="btn" type="button">OK</button></div></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -438,6 +445,20 @@ function carregar(){
 function salvar(){
   try { localStorage.setItem(CHAVE, JSON.stringify(db)); }
   catch(e) { toast('Não foi possível salvar neste navegador. Baixe uma cópia no Histórico.'); }
+}
+
+/* ---------- perguntas dentro da página (prompt/confirm não funcionam em todo lugar) ---------- */
+function perguntar(txt, o = {}){
+  return new Promise(res => {
+    const m = $('#modal'), inp = $('#modalInp'), ok = $('#modalOk'), nao = $('#modalNao'), antes = document.activeElement;
+    $('#modalTxt').textContent = txt; inp.hidden = !o.campo; inp.value = o.valor || '';
+    ok.textContent = o.ok || 'OK'; ok.classList.toggle('perigo', !!o.perigo); m.hidden = false;
+    (o.campo ? inp : ok).focus();
+    const fim = v => { m.hidden = true; ok.onclick = nao.onclick = m.onkeydown = null; if (antes && antes.focus) antes.focus(); res(v); };
+    ok.onclick = () => fim(o.campo ? inp.value.trim() : true);
+    nao.onclick = () => fim(o.campo ? null : false);
+    m.onkeydown = e => { if (e.key === 'Escape') nao.onclick(); if (e.key === 'Enter' && o.campo) { e.preventDefault(); ok.onclick(); } };
+  });
 }
 
 /* ---------- avisos e downloads ---------- */
@@ -938,14 +959,14 @@ function receberAmostra(v){
 $('#perfilSel').addEventListener('change', e => { S.perfilId = e.target.value; db.prefs.perfilId = S.perfilId; salvar(); renderCalib(); });
 $('#mostrarSust').addEventListener('change', renderCalib);
 $('#simMin').addEventListener('input', e => $('#simVal').textContent = e.target.value + '%');
-$('#btnNovoPerfil').addEventListener('click', () => {
-  const nome = prompt('Nome do conjunto (por exemplo: Teclado da sala 2, ou Sinos coloridos)');
+$('#btnNovoPerfil').addEventListener('click', async () => {
+  const nome = await perguntar('Nome do conjunto (por exemplo: Teclado da sala 2, ou Sinos coloridos)', {campo: true, ok: 'Criar'});
   if (!nome) return;
   const p = {id: uid(), nome, modelos: {}}; db.perfis.push(p); S.perfilId = p.id; db.prefs.perfilId = p.id; salvar(); renderCalib();
 });
-$('#btnExcluirPerfil').addEventListener('click', () => {
+$('#btnExcluirPerfil').addEventListener('click', async () => {
   const p = perfilAtual(); if (!p) return;
-  if (!confirm('Excluir o conjunto “' + p.nome + '” e as amostras de som dele?')) return;
+  if (!await perguntar('Excluir o conjunto “' + p.nome + '” e as amostras de som dele?', {ok: 'Excluir', perigo: true})) return;
   Object.keys(p.clips || {}).forEach(n => IDB.del(p.id + '|' + n).catch(() => {}));
   db.perfis = db.perfis.filter(x => x.id !== p.id); S.perfilId = null; salvar(); renderCalib();
 });
@@ -994,8 +1015,8 @@ $('#listaGab').addEventListener('click', e => {
 });
 $('#gabSel').addEventListener('change', e => { S.gabSel = e.target.value; renderGabs(); });
 $('#sessGab').addEventListener('change', e => { S.gabSel = e.target.value; renderGabs(); });
-$('#gabRenomear').addEventListener('click', () => { const g = gabAtual(); if (!g) return; const n = prompt('Novo nome do gabarito', g.nome); if (n) { g.nome = n; salvar(); renderGabs(); } });
-$('#gabExcluir').addEventListener('click', () => { const g = gabAtual(); if (!g || !confirm('Excluir o gabarito “' + g.nome + '”? As sessões já salvas continuam no histórico.')) return; db.gabaritos = db.gabaritos.filter(x => x.id !== g.id); const gs = gabsDoVideo(); S.gabSel = gs.length ? gs[0].id : null; salvar(); renderGabs(); });
+$('#gabRenomear').addEventListener('click', async () => { const g = gabAtual(); if (!g) return; const n = await perguntar('Novo nome do gabarito', {campo: true, valor: g.nome, ok: 'Salvar'}); if (n) { g.nome = n; salvar(); renderGabs(); } });
+$('#gabExcluir').addEventListener('click', async () => { const g = gabAtual(); if (!g || !await perguntar('Excluir o gabarito “' + g.nome + '”? As sessões já salvas continuam no histórico.', {ok: 'Excluir', perigo: true})) return; db.gabaritos = db.gabaritos.filter(x => x.id !== g.id); const gs = gabsDoVideo(); S.gabSel = gs.length ? gs[0].id : null; salvar(); renderGabs(); });
 $('#btnAddNota').addEventListener('click', () => {
   let g = gabAtual();
   if (!g) { criarGabarito([], 'Gabarito manual', 'manual'); g = gabAtual(); }
@@ -1358,9 +1379,9 @@ function renderHist(){
     lista.slice().reverse().map(s => `<tr class="clic" data-id="${s.id}"><td>${new Date(s.data).toLocaleDateString('pt-BR')}<br><span class="dica">${esc(s.videoNome || '')}</span></td>${pac ? '' : '<td>' + esc(s.paciente) + '</td>'}<td><b>${s.m.taxa}%</b></td><td>${s.m.omissoes}</td><td>${s.m.comissoes}</td><td>${s.m.dp} ms</td><td><button class="btn-ghost small perigo" data-del="${s.id}" aria-label="Excluir sessão">✕</button></td></tr>`).join('') + '</tbody></table>';
   $('#histGrafico').innerHTML = pac && lista.length > 1 ? graficoHist(lista) : (pac ? '' : '<p class="dica">Escolha um paciente para ver a evolução.</p>');
 }
-$('#histLista').addEventListener('click', e => {
+$('#histLista').addEventListener('click', async e => {
   const del = e.target.closest('[data-del]');
-  if (del) { e.stopPropagation(); if (confirm('Excluir esta sessão do histórico?')) { db.sessoes = db.sessoes.filter(s => s.id !== del.dataset.del); salvar(); renderHist(); } return; }
+  if (del) { e.stopPropagation(); if (await perguntar('Excluir esta sessão do histórico?', {ok: 'Excluir', perigo: true})) { db.sessoes = db.sessoes.filter(s => s.id !== del.dataset.del); salvar(); renderHist(); } return; }
   const tr = e.target.closest('tr[data-id]'); if (!tr) return;
   const s = db.sessoes.find(x => x.id === tr.dataset.id); if (s) mostrarResultado(s);
 });
@@ -1383,7 +1404,7 @@ $('#arqBackup').addEventListener('change', async e => {
   try {
     const o = JSON.parse(await f.text());
     if (!o.gabaritos || !o.sessoes) throw 0;
-    if (!confirm('Juntar a cópia com os dados atuais? Itens repetidos são ignorados.')) return;
+    if (!await perguntar('Juntar a cópia com os dados atuais? Itens repetidos são ignorados.', {ok: 'Juntar'})) return;
     for (const k of ['gabaritos','sessoes','perfis']) { const ids = new Set(db[k].map(x => x.id)); (o[k] || []).forEach(x => { if (!ids.has(x.id)) db[k].push(x); }); }
     db.visCfg = Object.assign({}, o.visCfg || {}, db.visCfg);
     for (const [k, v] of Object.entries(o.clips || {})) { try { if (!(await IDB.get(k))) await IDB.put(k, {sr: v.sr, pcm: unb64(v.pcm)}); } catch(err) {} }
