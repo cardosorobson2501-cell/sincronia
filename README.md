@@ -44,6 +44,13 @@ Tudo está em um único arquivo, `index.html`. Não precisa instalar nada.
 - **Diagnóstico** (aba Teste): grava 15 s, mostra o espectrograma, deixa ouvir a gravação e gera um relatório com cada ataque, as alturas encontradas e o motivo de aceitar ou recusar. Se o cancelamento estiver ligado, o relatório compara "sem" e "com" cancelamento.
 - **Roteiro no iPad (4 gravações):** (1) vídeo sem som e 5 notas; (2) vídeo no alto-falante, sem cancelar; (3) com "Modo eco do navegador" (recarregue a página e ative o microfone de novo); (4) com "Cancelar o som do vídeo" depois de medir o eco. Copie cada relatório e cole na conversa.
 
+## Notas rápidas (v6)
+- **Velocidade das notas** (aba Gabarito → Configuração da atividade): Lenta, Normal ou Rápida. A Rápida serve para notas a cada ~150 ms (intervalo mínimo 70 ms, nota firme em 30 ms). O app aplica o perfil ao começar a sessão.
+- **Como funciona:** cada toque é analisado só entre o seu começo e o começo do toque seguinte, e a nota sai assim que fica firme (sem esperar 200 ms). O horário gravado é o do começo real do som. Uma nota que muda sem o volume subir também é pega, e uma nota não é contada duas vezes quando o som só "balança".
+- **Em simulação** (teclado sintético, 96 notas por andamento em sequências diferentes, repetidas e mistas): perfil Rápido acerta 100% a 300, 200 e 150 ms e cerca de 96% a 100 ms, com 1 a 3 notas fantasmas. No celular real o resultado pode ser menor.
+- **Áudio da sessão:** em sessão com microfone, o resultado tem o botão "Baixar áudio do microfone (WAV)", para analisar o que o aparelho realmente ouviu.
+- **Medir o eco do vídeo** agora testa vários atrasos e fica com o que mais reduz o som do vídeo (mais confiável em aparelhos diferentes).
+
 ## Tela de teste (aba 5)
 - **Ao vivo:** o que o app entendeu em cada entrada (MIDI, toque, microfone), com confiança.
 - **Teste guiado:** o app pede notas e intervalos e mostra a taxa de acerto separada para nota única e para cada intervalo, e o que foi ouvido nos erros.

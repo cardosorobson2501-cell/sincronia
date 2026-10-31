@@ -393,7 +393,7 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
           <p class="dica">Se o vídeo toca no alto-falante, o microfone ouve a música do vídeo junto com o teclado. Estas duas chaves tentam separar os sons. Ligue uma de cada vez e compare em "Gravar diagnóstico" (aba Teste). O fone de ouvido continua sendo o jeito mais seguro.</p>
           <label class="check"><input type="checkbox" id="chkEcoNav"> Modo eco do navegador (experimental; vale na próxima ativação do microfone)</label>
           <label class="check"><input type="checkbox" id="chkEcoSoft"> Cancelar o som do vídeo pelo app (experimental)</label>
-          <div class="linha"><button id="btnEco" class="btn-ghost small" type="button">Medir o eco do vídeo (8 s)</button></div>
+          <div class="linha"><button id="btnEco" class="btn-ghost small" type="button">Medir o eco do vídeo (cerca de 10 s)</button></div>
           <p id="ecoStatus" class="nota-status"></p>
         </div>
         <p id="bpStatus" class="bp-status"></p>
@@ -454,6 +454,8 @@ textarea.resumo{width:100%;min-height:150px;margin-top:.6rem;border:1px solid va
         <label class="campo">Tolerância de tempo: ± <span id="atvJanelaVal">300 ms</span><input type="range" id="atvJanela" min="100" max="800" step="25"></label>
         <label class="campo">Som do vídeo durante a sessão
           <select id="atvSomVideo"><option value="alto">Alto-falante (o microfone vai ouvir o vídeo)</option><option value="fone">Fone de ouvido (melhor para o microfone)</option><option value="sem">Sem som (o paciente toca pelas cores)</option></select></label>
+        <label class="campo">Velocidade das notas
+          <select id="atvVel"><option value="lento">Lenta (músicas calmas)</option><option value="normal">Normal</option><option value="rapido">Rápida (notas a cada ~150 ms)</option></select></label>
         <div id="atvJuntasBox" hidden="">
           <label class="campo">Duas notas "juntas" no toque e no MIDI: dentro de <span id="atvJuntasVal">150 ms</span><input type="range" id="atvJuntas" min="50" max="400" step="10"></label>
           <label class="campo">Duas notas "juntas" no microfone: dentro de <span id="atvJuntasMicVal">250 ms</span><input type="range" id="atvJuntasMic" min="100" max="600" step="10"></label>
@@ -626,7 +628,8 @@ function perguntar(txt, o = {}){
 }
 
 /* ---------- eventos do gabarito: um tempo e 1 ou 2 notas ---------- */
-const CFG_ATIV = {notasEsperadas: 1, janela: 300, juntasMs: 150, juntasMic: 250, somVideo: 'alto'};
+const CFG_ATIV = {notasEsperadas: 1, janela: 300, juntasMs: 150, juntasMic: 250, somVideo: 'alto', velocidade: 'normal'};
+const VELOCIDADES = {lento: {intervalo: 140, estab: 80, ataque: 1.6}, normal: {intervalo: 100, estab: 60, ataque: 1.5}, rapido: {intervalo: 70, estab: 30, ataque: 1.3}};
 const cfgAtiv = g => Object.assign({}, CFG_ATIV, g ? (g.cfg || {}) : (db.prefs.atividade || {}));
 const juntasEf = (c, modo) => c.notasEsperadas >= 2 ? (String(modo).startsWith('mic') ? c.juntasMic : c.juntasMs) : 0;
 /* aceita o formato novo {t, notas:[..]} e o antigo, plano {t, n, g} */
@@ -1081,7 +1084,7 @@ const ECO = {
   zerar(){ if (this.w) this.w.fill(0); this.h.fill(0); this.en = 0; this.rhoLento = 0; Mic.ecoDb = null; },
   ms(){ return Math.round(this.D * this.Q / this.sr * 1000); }
 };
-Object.assign(Mic, {ringBruto: null, merger: null, vsrc: null, refOk: false, ecoDb: null, fundo: 0, trilhaCfg: null});
+Object.assign(Mic, {pico2: 0, vale2: 0, ultReg: null, nAbs: 0, toques: [], rec: null, ringBruto: null, merger: null, vsrc: null, refOk: false, ecoDb: null, fundo: 0, trilhaCfg: null});
 const Diag = {ativo: false, n: 0, bruto: null, limpo: null, ref: null};
 function ligarReferencia(){
   if (Mic.refOk) return true;
@@ -1100,7 +1103,7 @@ function ecoProcessar(e){
   const o = e.outputBuffer.getChannelData(0), o1 = e.outputBuffer.getChannelData(1), n = m.length;
   const E = ECO, Q = E.Q, H = E.h, M = H.length - 1, W = E.w, N = E.N, D = E.D, ring = Mic.ring, rb = Mic.ringBruto, L = ring.length, F = E.fifo, FM = F.length - 1;
   const usa = (E.ativo || E.medindo) && Mic.refOk, adapta = usa && E.adapta, mu = E.medindo ? 0.6 : E.mu;
-  let em = 0, ee = 0, er = 0, nl = 0, en = E.en, rp = Mic.rp;
+  let em = 0, ee = 0, er = 0, nl = 0, en = E.en, rp = Mic.rp, na = Mic.nAbs;
   for (let i = 0; i < n; i++) {
     E.am += m[i]; E.ar += r[i]; E.blk[E.cnt++] = m[i];
     if (E.cnt < Q) continue;
@@ -1119,14 +1122,15 @@ function ecoProcessar(e){
     if (E.tem) for (let q = 0; q < Q; q++) {
       const u = (q - (Q - 1) / 2) / Q, pv = u <= 0 ? E.p2 + (E.p1 - E.p2) * (u + 1) : E.p1 + (E.p0 - E.p1) * u, x = E.prev[q], y = x - pv;
       F[E.ft] = y; E.ft = (E.ft + 1) & FM;
-      ring[rp] = y; rb[rp] = x; rp = rp + 1 === L ? 0 : rp + 1;
+      ring[rp] = y; rb[rp] = x; rp = rp + 1 === L ? 0 : rp + 1; na++;
+      if (Mic.rec) Mic.rec.push(x, y);
       if (Diag.ativo && Diag.n < Diag.bruto.length) { Diag.bruto[Diag.n] = x; Diag.limpo[Diag.n] = y; Diag.n++; }
     }
     E.prev.set(E.blk); E.tem = true;
     if (Diag.ativo && Diag.n < Diag.ref.length) Diag.ref[Math.max(0, Diag.n - 1)] = rL;
   }
   for (let i = 0; i < n; i++) { o[i] = E.fh !== E.ft ? F[E.fh] : 0; if (E.fh !== E.ft) E.fh = (E.fh + 1) & FM; o1[i] = m[i]; }
-  Mic.rp = rp; E.en = en;
+  Mic.rp = rp; Mic.nAbs = na; E.en = en;
   if (E.rec) { E.rec.m.push(m.slice()); E.rec.r.push(r.slice()); }
   if (!nl) return;
   em /= nl; ee /= nl; er /= nl;
@@ -1152,11 +1156,29 @@ function atrasoEco(m, r, sr){
   }
   fft(a, ai);
   const LMAX = Math.min(n >> 1, Math.round(fs * 0.6));
-  let pico = 0, bl = 0; for (let l = 0; l <= LMAX; l++) { const v = Math.abs(a[l]); if (v > pico) { pico = v; bl = l; } }
-  let seg = 0; for (let l = 0; l <= LMAX; l++) if (Math.abs(l - bl) > 4) seg = Math.max(seg, Math.abs(a[l]));
-  return {lag: bl * f, q: seg > 0 ? Math.max(0, 1 - seg / pico) : 1};
+  const pk = []; for (let l = 0; l <= LMAX; l++) { const v = Math.abs(a[l]); if ((l === 0 || v >= Math.abs(a[l - 1])) && v >= Math.abs(a[l + 1] || 0)) pk.push({l, v}); }
+  pk.sort((x, y) => y.v - x.v);
+  const top = []; pk.forEach(c => { if (top.length < 4 && top.every(t => Math.abs(t.l - c.l) > 6)) top.push(c); });
+  const pico = top[0] ? top[0].v : 1, seg = top[1] ? top[1].v : 0;
+  return {lag: (top[0] ? top[0].l : 0) * f, cands: top.map(t => t.l * f), q: seg > 0 ? Math.max(0, 1 - seg / pico) : 1};
 }
 const esperar = ms => new Promise(ok => setTimeout(ok, ms));
+/* testa cada atraso candidato num filtro de teste com a gravação e fica com o que mais reduz o eco; o filtro já sai treinado */
+function decimarQ(x, Q){ const n = Math.floor(x.length / Q), o = new Float32Array(n); for (let i = 0; i < n; i++) { let t = 0; for (let k = 0; k < Q; k++) t += x[i * Q + k]; o[i] = t / Q; } return o; }
+function nlmsOffline(m, r, D, N, passadas){
+  const w = new Float32Array(N); let em = 0, ee = 0; const ini = Math.floor(m.length * 0.6);
+  for (let ps = 0; ps < passadas; ps++) {
+    let en = 0; for (let k = 0; k < N; k++) { const q = D + k; en += q < r.length ? 0 : 0; }
+    for (let n = D + N; n < m.length; n++) {
+      const b = n - D; let pred = 0, e2 = 0;
+      for (let k = 0; k < N; k++) { const v = r[b - k]; pred += w[k] * v; e2 += v * v; }
+      const err = m[n] - pred, g = 0.6 * err / (e2 + 1e-4 * N);
+      for (let k = 0; k < N; k++) w[k] += g * r[b - k];
+      if (ps === passadas - 1 && n >= ini) { em += m[n] * m[n]; ee += err * err; }
+    }
+  }
+  return {w, erle: 10 * Math.log10((em + 1e-12) / (ee + 1e-12))};
+}
 async function tocarVideoPor(ms){
   const t0 = video.currentTime, estava = !video.paused;
   if (!estava) { try { await video.play(); } catch(e) {} }
@@ -1170,7 +1192,7 @@ async function ecoMedir(){
   if (ECO.medindo) return;
   if (!ligarReferencia()) return erro('Não consegui acompanhar o som do vídeo neste navegador.');
   video.muted = false;
-  st.className = 'nota-status'; st.textContent = 'Medindo o eco… fique em silêncio. O vídeo vai tocar por 8 segundos.';
+  st.className = 'nota-status'; st.textContent = 'Medindo o eco… fique em silêncio. O vídeo vai tocar por cerca de 10 segundos.';
   ECO.medindo = true; ECO.ativo = false; ECO.zerar(); ECO.adapta = false;
   const fim = () => { ECO.medindo = false; ECO.rec = null; };
   try {
@@ -1182,8 +1204,16 @@ async function ecoMedir(){
     const m = junta(rec.m), r = junta(rec.r);
     let er = 0; for (let i = 0; i < r.length; i += 7) er += r[i] * r[i];
     if (er / (r.length / 7) < 1e-8) { fim(); if (!estava) { video.pause(); video.currentTime = t0; } return erro('O app não recebeu som do vídeo. Confira se o vídeo tem áudio, se o volume do aparelho está alto e se o vídeo não está mudo.'); }
-    const at = atrasoEco(m, r, Mic.sr);
-    ECO.D = Math.max(0, Math.round(at.lag / ECO.Q) - 16); ECO.en = 0;
+    const at = atrasoEco(m, r, Mic.sr), Q = ECO.Q, ml = decimarQ(m, Q), rl = decimarQ(r, Q);
+    st.textContent = 'Analisando o eco…'; await esperar(30);
+    let melhor = null;
+    for (const lag of at.cands) {
+      const Dl = Math.max(0, Math.round(lag / Q) - 16), t = nlmsOffline(ml, rl, Dl, ECO.N, 2);
+      if (!melhor || t.erle > melhor.erle) melhor = {Dl, lag, erle: t.erle, w: t.w};
+      await esperar(0);
+    }
+    at.lag = melhor.lag; ECO.w.set(melhor.w);
+    ECO.D = melhor.Dl; ECO.en = 0;
     for (let k = 0; k < ECO.N; k++) { const q = (ECO.pos - ECO.D - k) & (ECO.h.length - 1); ECO.en += ECO.h[q] * ECO.h[q]; }
     ECO.adapta = true; ECO.rhoLento = 0; Mic.ecoDb = null;
     await esperar(4000);
@@ -1241,7 +1271,7 @@ function ataquesDe(x, sr){
   for (let i = W; i <= x.length; i += hop) {
     let sm = 0; for (let k = i - W; k < i; k++) sm += x[k] * x[k];
     const rms = Math.sqrt(sm / W), t = i / sr * 1000;
-    if (rms > Mic.thr && rms > prev * micCfg.ataque + 0.002 && rms > fundo * 1.4 && t - ult > micCfg.intervalo) { ult = t; out.push({i, t: i / sr, rms, fundo}); }
+    if (rms > Mic.thr && rms > prev * micCfg.ataque + 0.002 && rms > fundo * fundoRazao() && t - ult > micCfg.intervalo) { ult = t; out.push({i, t: i / sr, rms, fundo}); }
     prev = prev * 0.6 + rms * 0.4;
     fundo = rms < fundo ? rms * 0.3 + fundo * 0.7 : fundo + (rms - fundo) * 0.0015;
   }
@@ -1477,12 +1507,94 @@ function agendarDuasNotas(tv, tOn){
   }, Math.max(0, 380 - (performance.now() - tOn)));
 }
 
+
+/* ---- 1 nota pela altura, rápido: cada toque é analisado só entre o seu ataque e o ataque seguinte; a nota sai assim que fica firme ---- */
+function pegarAbs(a, n){
+  const L = Mic.ring.length, out = new Float32Array(n), ini = ((a % L) + L) % L;
+  for (let i = 0; i < n; i++) { let q = ini + i; if (q >= L) q -= L; out[i] = Mic.ring[q]; }
+  return out;
+}
+/* volta do instante em que o ataque foi notado até o começo real da subida do som */
+function refinarInicio(aDet){
+  const B = 48, nb = 40, aIni = aDet - nb * B;
+  if (aIni < Mic.nAbs - Mic.ring.length + 200 || aIni < 0) return Math.max(0, aDet - 300);
+  const x = pegarAbs(aIni, nb * B), r = [];
+  for (let b = 0; b < nb; b++) { let sm = 0; for (let i = 0; i < B; i++) sm += x[b * B + i] * x[b * B + i]; r.push(Math.sqrt(sm / B)); }
+  for (let b = 6; b < nb; b++) {
+    const ant = r.slice(b - 6, b).sort((p, q) => p - q)[3];
+    if (r[b] > Math.max(Mic.thr * 0.35, 3 * ant)) return aIni + b * B;
+  }
+  return Math.max(0, aDet - 300);
+}
+function criarToque(tv, tOn){
+  const modoMic = S.modo.startsWith('mic') ? S.modo : 'mic-altura';
+  const alt = !!Mic.ring && !S.calib && modoMic === 'mic-altura' && !esperaDuas();
+  const dip = Mic.pico2 > 0 ? Mic.vale2 / Mic.pico2 : 0; Mic.pico2 = Mic.vale2 = Mic.rms;
+  const e = {alt, dip, estado: 'aberto', tOn, a0: 0, tv, frames: [], off: null, regs: 0, notas: [], rk: null, rkOk: false, simMin: 0.6, fechado: false};
+  if (!alt) return e;
+  e.a0 = refinarInicio(Mic.nAbs);
+  e.tv = Math.max(0, tv - (Mic.nAbs - e.a0) / Mic.sr);
+  const p = perfilAtual(); e.precisaRk = !!(p && p.modelos && Object.keys(p.modelos).length >= 2);
+  Mic.toques.push(e);
+  return e;
+}
+function segmentosEstaveis(frames, precisa){
+  const sel = suavizar(frames), segs = []; let i = 0;
+  while (i < sel.length) {
+    const a = sel[i];
+    if (a.midi == null || a.conf < micCfg.confMin) { i++; continue; }
+    let j = i + 1, lo = a.mf, hi = a.mf;
+    while (j < sel.length && sel[j].midi === a.midi && sel[j].conf >= micCfg.confMin && Math.max(hi, sel[j].mf) - Math.min(lo, sel[j].mf) <= 0.5) { lo = Math.min(lo, sel[j].mf); hi = Math.max(hi, sel[j].mf); j++; }
+    if (j - i >= precisa) { const cs = sel.slice(i, j).map(x => x.conf); segs.push({midi: a.midi, conf: cs.reduce((x, y) => x + y, 0) / cs.length, i0: i}); }
+    i = j;
+  }
+  return segs;
+}
+function registrarToque(e, seg){
+  /* o som subiu de novo sem ter caído antes (batimento da própria nota) e é a mesma nota: não é um toque novo */
+  const u = Mic.ultReg;
+  if (!e.regs && u && u.midi === seg.midi && e.dip > 0.6 && e.tOn - u.tOn < 450) return;
+  /* o toque anterior já tinha pego esta nota no fim da sua janela (o ataque desta chegou um pouco depois): não conta duas vezes */
+  if (!e.regs && u && u.sub && u.midi === seg.midi && (e.a0 - u.a) / Mic.sr < 0.12) { u.sub = false; return; }
+  Mic.ultReg = {midi: seg.midi, tOn: e.tOn, sub: e.regs > 0, a: e.regs > 0 ? e.frames[seg.i0].a : 0};
+  const dt = seg.i0 ? (e.frames[seg.i0].a - e.a0) / Mic.sr : 0, tv = e.tv + dt;
+  const prox = e.rk && e.rk.find(c => Math.abs(c.n - seg.midi) <= 2 && c.sim >= e.simMin);
+  if (prox) registrarNota(prox.n, tv, 'Microfone + amostra: ' + nomeOitava(prox.n) + ' (' + Math.round(prox.sim * 100) + '% parecido)', 'mic', {conf: seg.conf});
+  else registrarNota(seg.midi, tv, 'Microfone: ' + nomeOitava(seg.midi) + ', confiança ' + Math.round(seg.conf * 100) + '%', 'mic', {conf: seg.conf});
+}
+function decidirToques(){
+  if (!Mic.toques.length || !Mic.ring) return;
+  const sr = Mic.sr, na = Mic.nAbs, W = micCfg.intervalo < 100 ? 512 : 768, tMax = tauMax(), hop = Math.round(sr * 0.005), precisa = Math.max(3, Math.ceil(micCfg.estab / 5)), L = Mic.ring.length;
+  Mic.toques.forEach((e, k) => {
+    if (e.fechado) return;
+    const prox = Mic.toques[k + 1], fimMax = e.a0 + Math.round(0.35 * sr);
+    const limite = prox ? Math.min(fimMax, prox.a0 - Math.round(0.004 * sr)) : fimMax;
+    if (e.off == null) e.off = e.a0 + Math.round((micCfg.intervalo < 100 ? 0.012 : 0.02) * sr);
+    let n = 0;
+    while (e.off + W + tMax + 2 <= Math.min(na, limite) && n < 40) {
+      if (na - e.off > L - 200) { e.off += hop; continue; }
+      const clip = pegarAbs(e.off, W + tMax + 2); let sm = 0; for (let i = 0; i < W; i++) sm += clip[i] * clip[i];
+      const rms = Math.sqrt(sm / W);
+      e.frames.push({cands: rms < Mic.thr * 0.7 ? [] : pyinQuadro(clip, 0, W), rms, a: e.off}); e.off += hop; n++;
+    }
+    if (n && (!e.precisaRk || e.rkOk)) {
+      const segs = segmentosEstaveis(e.frames, precisa);
+      for (let s = e.regs; s < segs.length; s++) { if (s > 0 && segs[s].midi === e.notas[s - 1]) { e.notas.push(segs[s].midi); e.regs++; continue; } registrarToque(e, segs[s]); e.notas.push(segs[s].midi); e.regs++; }
+    }
+    const fim = (prox || na >= fimMax) && e.off + W + tMax + 2 > limite;
+    if (fim || na - e.a0 > 0.8 * sr) { e.fechado = true; if (!e.notas.length) $('#aovivoFonte').textContent = 'Som instável ou pouco claro: ignorado'; }
+  });
+  while (Mic.toques.length && Mic.toques[0].fechado && na - Mic.toques[0].a0 > sr) Mic.toques.shift();
+}
+setInterval(decidirToques, 15);
+
 /* ---- gatilho: ataque do som; depois a nota precisa ficar estável ---- */
 function esperaDuas(){
   if (typeof TESTE !== 'undefined' && TESTE.ativo) return TESTE.esperaDuas();
   if (S.gravando === 'sessao') return S.sess.cfg.notasEsperadas >= 2;
   return cfgAtiv(gabAtual()).notasEsperadas >= 2;
 }
+const fundoRazao = () => micCfg.intervalo < 100 ? 1.15 : 1.4;
 function micTick(){
   const escuta = S.modo.startsWith('mic') || TESTE.escutaMic();
   const mostrar = !$('#cfg-mic').hidden && $('#aba-entrada').classList.contains('ativa');
@@ -1493,11 +1605,12 @@ function micTick(){
   if (Mic.medindo) Mic.medindo.push(rms);
   const agora = performance.now();
   if (mostrar && agora - Mic.tNota > 120) { Mic.tNota = agora; atualizarNotaAoVivo(rms); }
-  if (escuta && rms > Mic.thr && rms > Mic.prev * micCfg.ataque + 0.002 && rms > Mic.fundo * 1.4 && agora - Mic.ultimo > micCfg.intervalo) {
+  if (escuta && rms > Mic.thr && rms > Mic.prev * micCfg.ataque + 0.002 && rms > Mic.fundo * fundoRazao() && agora - Mic.ultimo > micCfg.intervalo) {
     Mic.ultimo = agora;
-    const tv = video.currentTime, tOn = agora;
-    setTimeout(() => analisarAtaque(tv, tOn), ESCUTA_AMOSTRA);
+    const tv = video.currentTime, tOn = agora, e = criarToque(tv, tOn);
+    setTimeout(() => analisarAtaque(tv, tOn, e), ESCUTA_AMOSTRA);
   }
+  if (rms > Mic.pico2) { Mic.pico2 = rms; Mic.vale2 = rms; } else if (rms < Mic.vale2) Mic.vale2 = rms;
   Mic.prev = Mic.prev * 0.6 + rms * 0.4;
   Mic.fundo = rms < Mic.fundo ? rms * 0.3 + Mic.fundo * 0.7 : Mic.fundo + (rms - Mic.fundo) * 0.0015;
 }
@@ -1534,13 +1647,14 @@ function duasAlturas(){
   return [n1, n2].sort((a, b) => a - b);
 }
 const ranquear = (v, p) => p ? Object.entries(p.modelos).map(([n, m]) => ({n: +n, sim: cosseno(v, m)})).sort((a, b) => b.sim - a.sim) : [];
-function analisarAtaque(tv, tOn){
+function analisarAtaque(tv, tOn, e){
   if (!Mic.an) return;
   const modoMic = S.modo.startsWith('mic') ? S.modo : 'mic-altura';
   Mic.an.getFloatFrequencyData(Mic.freq);
   const v = espectro(Mic.freq, Mic.sr);
   if (S.calib) { receberAmostra(v); return; }
   const p = perfilAtual(), simMin = +$('#simMin').value / 100, rk = ranquear(v, p), duas = esperaDuas();
+  if (e && e.alt) { e.rk = rk; e.simMin = simMin; e.rkOk = true; return; }   /* 1 nota pela altura: quem decide é o decidirToques */
   if (modoMic === 'mic-calib') {
     if (duas) { const par = duasPorAmostras(v, p, simMin); if (par) { par.forEach(n => registrarNota(n, tv, 'Amostras: 2 notas', 'mic')); return; } }
     if (!rk.length) return;
@@ -1739,7 +1853,7 @@ function renderAtv(){
   const g = gabAtual(), c = cfgAtiv(g);
   $('#atvNotas').value = String(c.notasEsperadas);
   $('#atvJanela').value = c.janela; $('#atvJanelaVal').textContent = c.janela + ' ms';
-  $('#atvSomVideo').value = c.somVideo;
+  $('#atvSomVideo').value = c.somVideo; $('#atvVel').value = c.velocidade;
   $('#atvJuntas').value = c.juntasMs; $('#atvJuntasVal').textContent = c.juntasMs + ' ms';
   $('#atvJuntasMic').value = c.juntasMic; $('#atvJuntasMicVal').textContent = c.juntasMic + ' ms';
   $('#atvJuntasBox').hidden = c.notasEsperadas < 2;
@@ -1766,6 +1880,8 @@ async function mudarAtv(patch){
 $('#atvNotas').addEventListener('change', e => mudarAtv({notasEsperadas: +e.target.value}));
 $('#atvJanela').addEventListener('input', e => mudarAtv({janela: +e.target.value}));
 $('#atvSomVideo').addEventListener('change', e => mudarAtv({somVideo: e.target.value}));
+$('#atvVel').addEventListener('change', e => { mudarAtv({velocidade: e.target.value}); aplicarVelocidade(e.target.value); toast('Velocidade ajustada: ' + e.target.selectedOptions[0].textContent + '.'); });
+function aplicarVelocidade(v){ const p = VELOCIDADES[v]; if (!p) return; Object.assign(micCfg, p); aplicarMicCfg(true); }
 $('#atvJuntas').addEventListener('input', e => mudarAtv({juntasMs: +e.target.value}));
 $('#atvJuntasMic').addEventListener('input', e => mudarAtv({juntasMic: +e.target.value}));
 
@@ -2096,14 +2212,39 @@ $('#btnSessao').addEventListener('click', () => {
   S.sess = {paciente: $('#paciente').value.trim() || 'Sem nome', gabId: g.id,
     cfg: {janela: cfgAtiv(g).janela, notasEsperadas: cfgAtiv(g).notasEsperadas, juntas: juntasEf(cfgAtiv(g), S.modo), ignOit: $('#ignOit').checked, soRitmo: $('#soRitmo').checked, modo: S.modo, latencia: S.latencia, nivel: nivelEscolhido()}};
   S.buf = []; S.gravando = 'sessao'; destravarVideo(); irParaVideo(); prepararSessaoUI();
-  video.muted = cfgAtiv(g).somVideo === 'sem';
+  video.muted = cfgAtiv(g).somVideo === 'sem'; aplicarVelocidade(cfgAtiv(g).velocidade);
+  if (S.modo.startsWith('mic') && Mic.ring) iniciarRecSessao();
   if (cfgAtiv(g).somVideo === 'fone' && S.modo.startsWith('mic')) toast('Use o fone de ouvido para o som do vídeo.');
   $('#btnSessao').textContent = 'Encerrar sessão agora'; $('#btnSessao').classList.add('parar');
   atualizarStatusGrav();
   contagem(() => { video.currentTime = 0; iniciarVideo(); });
 });
+/* grava o áudio do microfone durante a sessão (até 10 min) para análise: depois dá para baixar em WAV */
+function iniciarRecSessao(){
+  const T = 32768;
+  Mic.rec = {b: [], l: [], cb: new Int16Array(T), cl: new Int16Array(T), i: 0, n: 0,
+    push(x, y){ this.cb[this.i] = Math.max(-1, Math.min(1, x)) * 32767; this.cl[this.i] = Math.max(-1, Math.min(1, y)) * 32767;
+      if (++this.i === T) { this.b.push(this.cb); this.l.push(this.cl); this.cb = new Int16Array(T); this.cl = new Int16Array(T); this.i = 0; }
+      if (++this.n > Mic.sr * 600) Mic.rec = null; }};
+}
+function fecharRecSessao(){
+  const r = Mic.rec; Mic.rec = null;
+  if (!r || r.n < Mic.sr) return null;
+  const junta = (ch, cur) => { const o = new Int16Array(r.n); let p = 0; ch.forEach(c => { o.set(c, p); p += c.length; }); o.set(cur.subarray(0, r.i), p); return o; };
+  const bruto = junta(r.b, r.cb), limpo = junta(r.l, r.cl);
+  let dif = 0; for (let i = 0; i < bruto.length; i += 97) if (bruto[i] !== limpo[i]) { dif = 1; break; }
+  return {sr: Mic.sr, bruto, limpo: dif ? limpo : null};
+}
+function wav16(pcm, sr){
+  const b = new ArrayBuffer(44 + pcm.length * 2), v = new DataView(b), w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, pcm.length * 2, true);
+  new Int16Array(b, 44).set(pcm);
+  return b;
+}
 function finalizarSessao(){
   video.muted = false;
+  const audio = fecharRecSessao();
   const g =db.gabaritos.find(x => x.id === S.sess.gabId);
   const resp = S.buf.slice().sort((a,b) => a.t - b.t);
   const ref = g.eventos.map(e => ({t: e.t, notas: e.notas.slice()}));
@@ -2114,6 +2255,7 @@ function finalizarSessao(){
   const sess = {id: uid(), paciente: S.sess.paciente, data: new Date().toISOString(), videoNome: S.videoNome, gabId: g.id, gabNome: g.nome,
     cfg: S.sess.cfg, ref: refConsiderado, resp, m: r.m, parcial: encerradaAntes};
   db.sessoes.push(sess); salvar(); renderPacientes();
+  S.audioSessao = audio ? Object.assign(audio, {sessId: sess.id}) : null;
   mostrarResultado(sess);
   toast('Sessão salva no histórico.');
 }
@@ -2207,7 +2349,7 @@ function mostrarResultado(s){
     <div class="res-topo">
       <div><h2>Resultado: ${esc(s.paciente)}</h2>
       <p>${dataHora(s.data)}, vídeo “${esc(s.videoNome)}”, janela ±${s.cfg.janela} ms${s.cfg.nivel ? ', ' + (s.cfg.nivel === 'treino' ? 'treino' : 'avaliação') : ''}${s.cfg.soRitmo ? ', só ritmo' : ''}${s.parcial ? '. Sessão encerrada antes do fim: só as notas até esse ponto foram contadas.' : ''}</p></div>
-      <div class="linha"><button class="btn-ghost small" id="resResumo">Ver resumo em texto</button><button class="btn-ghost small" id="resCsv">Baixar planilha (CSV)</button><button class="btn-ghost small" id="resFechar">Fechar</button></div>
+      <div class="linha"><button class="btn-ghost small" id="resResumo">Ver resumo em texto</button><button class="btn-ghost small" id="resCsv">Baixar planilha (CSV)</button><button class="btn-ghost small" id="resWav" hidden>Baixar áudio do microfone (WAV)</button><button class="btn-ghost small" id="resFechar">Fechar</button></div>
     </div>
     <div class="res-grade">
       <div class="res-principal">
@@ -2268,6 +2410,8 @@ function mostrarResultado(s){
   desenharLinhaCompleta(R, P);
   $('#resFechar').onclick = () => { el.hidden = true; };
   $('#resResumo').onclick = () => { const t = $('#resumoTxt'); t.hidden = !t.hidden; t.value = resumoTexto(s, m); if (!t.hidden) t.select(); };
+  const au = S.audioSessao;
+  if (au && au.sessId === s.id) { $('#resWav').hidden = false; $('#resWav').onclick = () => { baixar('sincronia_audio_microfone_' + s.data.slice(0, 10) + '.wav', wav16(au.bruto, au.sr)); if (au.limpo) baixar('sincronia_audio_sem_eco_' + s.data.slice(0, 10) + '.wav', wav16(au.limpo, au.sr)); }; }
   $('#resCsv').onclick = () => baixar('sincronia_' + s.paciente.replace(/\W+/g,'_') + '_' + s.data.slice(0,10) + '.csv', csv(s, R, P));
   el.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
 }
